@@ -1,0 +1,33 @@
+{
+  "name": "@sistema-erp/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "dev": "tsx watch src/main.ts",
+    "prebuild": "pnpm --filter @sistema-erp/database build",
+    "predev": "pnpm --filter @sistema-erp/database build",
+    "prestart": "pnpm --filter @sistema-erp/database build",
+    "pretest": "pnpm --filter @sistema-erp/database build",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "typecheck": "tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/static": "10.1.3",
+    "@nestjs/common": "12.0.1",
+    "@nestjs/core": "12.0.1",
+    "@nestjs/platform-fastify": "12.0.1",
+    "@nestjs/swagger": "12.0.1",
+    "@sistema-erp/database": "workspace:*",
+    "fastify": "5.12.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "tsx": "4.23.13",
+    "vitest": "4.1.11"
+  }
+}

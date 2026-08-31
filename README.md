@@ -6,7 +6,7 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-As Fases 1 a 3 disponibilizam o workspace pnpm, ferramentas compartilhadas de qualidade, PostgreSQL local e o pacote de persistência com Prisma. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
+As Fases 1 a 4 disponibilizam o workspace pnpm, ferramentas compartilhadas de qualidade, PostgreSQL local, persistência com Prisma e a API NestJS/Fastify com health checks, contexto de requisição, erros estruturados e OpenAPI. A próxima etapa é a Fase 5 (web), seguindo a ordem definida em [Fundação](docs/architecture/foundation.md).
 
 ## Início rápido
 

@@ -30,6 +30,8 @@ Copie `.env.example` para `.env` antes de iniciar a infraestrutura. Os valores d
 | `POSTGRES_USER`     | Usuário de desenvolvimento         | `sistema_erp`              |
 | `POSTGRES_PASSWORD` | Senha exclusivamente local         | `local_development_only`   |
 | `DATABASE_URL`      | Conexão futura do Prisma           | derivada dos valores acima |
+| `API_HOST`          | Interface de escuta da API         | `0.0.0.0`                  |
+| `API_PORT`          | Porta HTTP da API                  | `3000`                     |
 
 ## Comandos esperados
 
@@ -68,5 +70,7 @@ pnpm verify
 8. Executar `pnpm verify` antes de enviar alterações.
 
 Os comandos de workspace, infraestrutura e banco listados acima estão disponíveis. `db:migrate` cria migrations apenas em desenvolvimento; ambientes compartilhados usam exclusivamente `db:migrate:deploy`.
+
+Com o PostgreSQL saudável, `pnpm dev` inicia a API em `http://localhost:3000`. O endpoint de processo está em `/api/v1/health`, a prontidão com PostgreSQL em `/api/v1/health/ready`, a interface Swagger em `/docs` e o contrato em `/openapi.json`.
 
 O baseline inicial não cria tabelas de domínio. Isso é intencional: organizações, identidade, autorização e auditoria serão modeladas na Fase 7, quando seus requisitos e isolamento de tenant puderem ser implementados e testados em conjunto. O seed atual apenas valida a conexão, não grava registros e pode ser executado repetidamente.
