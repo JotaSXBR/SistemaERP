@@ -1,4 +1,11 @@
-import { Controller, Get, HttpCode, HttpStatus, ServiceUnavailableException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Inject,
+  ServiceUnavailableException,
+} from "@nestjs/common";
 import {
   ApiOkResponse,
   ApiOperation,
@@ -13,7 +20,7 @@ import { HealthResponseDto, ReadinessResponseDto } from "./health.dto.js";
 @ApiTags("health")
 @Controller("health")
 export class HealthController {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)

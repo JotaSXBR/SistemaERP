@@ -6,7 +6,7 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-As Fases 1 a 4 disponibilizam o workspace pnpm, ferramentas compartilhadas de qualidade, PostgreSQL local, persistência com Prisma e a API NestJS/Fastify com health checks, contexto de requisição, erros estruturados e OpenAPI. A próxima etapa é a Fase 5 (web), seguindo a ordem definida em [Fundação](docs/architecture/foundation.md).
+As Fases 1 a 5 disponibilizam o workspace pnpm, PostgreSQL local, persistência com Prisma, API NestJS/Fastify e a aplicação React/Vite. O frontend usa roteamento, TanStack Query, Tailwind CSS e um SDK TypeScript gerado do OpenAPI. A próxima etapa é a Fase 6 (qualidade e entrega), seguindo a ordem definida em [Fundação](docs/architecture/foundation.md).
 
 ## Início rápido
 
@@ -20,7 +20,9 @@ pnpm db:seed
 pnpm verify
 ```
 
-Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. O schema Prisma ainda não possui entidades de domínio; elas serão adicionadas junto das primitivas de plataforma. Os comandos das aplicações serão disponibilizados nas fases seguintes.
+Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. O schema Prisma ainda não possui entidades de domínio; elas serão adicionadas junto das primitivas de plataforma.
+
+Com API e web em execução, acesse `http://localhost:5173/diagnostics`. Quando o contrato HTTP mudar, execute `pnpm contracts:generate` para exportar o OpenAPI e regerar o SDK em `packages/contracts`.
 
 ## Documentos principais
 

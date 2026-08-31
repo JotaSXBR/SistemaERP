@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { ServerResponse } from "node:http";
 
-import { Injectable, Logger, type NestMiddleware } from "@nestjs/common";
+import { Inject, Injectable, Logger, type NestMiddleware } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
 
 import { RequestContextService } from "./request-context.service.js";
@@ -25,7 +25,7 @@ function readCorrelationId(request: FastifyRequest): string {
 export class RequestContextMiddleware implements NestMiddleware {
   private readonly logger = new Logger(RequestContextMiddleware.name);
 
-  constructor(private readonly context: RequestContextService) {}
+  constructor(@Inject(RequestContextService) private readonly context: RequestContextService) {}
 
   use(request: FastifyRequest, response: ServerResponse, next: () => void): void {
     const requestId = createIdentifier("req");

@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "pnpm --recursive --parallel --if-present run dev",
     "build": "pnpm db:generate && pnpm --recursive --if-present run build",
+    "contracts:generate": "pnpm --filter @sistema-erp/api openapi:export && pnpm --filter @sistema-erp/contracts generate",
     "db:generate": "pnpm --filter @sistema-erp/database db:generate",
     "db:migrate": "pnpm --filter @sistema-erp/database db:migrate",
     "db:migrate:deploy": "pnpm --filter @sistema-erp/database db:migrate:deploy",

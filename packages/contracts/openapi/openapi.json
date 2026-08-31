@@ -1,0 +1,158 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_liveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verifica se o processo da API está ativo",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_readiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponseDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verifica se a API e suas dependências estão prontas",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Sistema ERP API",
+    "description": "Contrato HTTP público do Sistema ERP",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ReadinessChecksDto": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "enum": [
+              "up"
+            ],
+            "example": "up"
+          }
+        },
+        "required": [
+          "database"
+        ]
+      },
+      "ReadinessResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/ReadinessChecksDto"
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ]
+      },
+      "ApiErrorBodyDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "RESOURCE_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "example": "Recurso não encontrado"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "requestId": {
+            "type": "string",
+            "example": "req_019..."
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "details",
+          "requestId"
+        ]
+      },
+      "ApiErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorBodyDto"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  }
+}

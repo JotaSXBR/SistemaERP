@@ -1,15 +1,16 @@
 import { Injectable, type OnModuleDestroy } from "@nestjs/common";
-import { createDatabaseClient } from "@sistema-erp/database";
+import { createDatabaseClient, type DatabaseClient } from "@sistema-erp/database";
 
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
-  private readonly client = createDatabaseClient();
+  private client?: DatabaseClient;
 
   async ping(): Promise<void> {
+    this.client ??= createDatabaseClient();
     await this.client.$queryRaw`SELECT 1`;
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.client.$disconnect();
+    await this.client?.$disconnect();
   }
 }

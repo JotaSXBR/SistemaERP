@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "dev": "tsx watch src/main.ts",
+    "openapi:export": "tsx scripts/export-openapi.ts",
     "prebuild": "pnpm --filter @sistema-erp/database build",
     "predev": "pnpm --filter @sistema-erp/database build",
     "prestart": "pnpm --filter @sistema-erp/database build",

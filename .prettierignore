@@ -6,4 +6,6 @@ node_modules
 playwright-report
 pnpm-lock.yaml
 packages/database/src/generated/prisma
+packages/contracts/src/generated
+packages/contracts/openapi/openapi.json
 test-results

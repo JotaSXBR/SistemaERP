@@ -29,9 +29,10 @@ Copie `.env.example` para `.env` antes de iniciar a infraestrutura. Os valores d
 | `POSTGRES_DB`       | Banco de desenvolvimento           | `sistema_erp`              |
 | `POSTGRES_USER`     | Usuário de desenvolvimento         | `sistema_erp`              |
 | `POSTGRES_PASSWORD` | Senha exclusivamente local         | `local_development_only`   |
-| `DATABASE_URL`      | Conexão futura do Prisma           | derivada dos valores acima |
+| `DATABASE_URL`      | Conexão do Prisma e readiness      | derivada dos valores acima |
 | `API_HOST`          | Interface de escuta da API         | `0.0.0.0`                  |
 | `API_PORT`          | Porta HTTP da API                  | `3000`                     |
+| `VITE_API_BASE_URL` | URL pública da API no bundle web   | vazio (mesma origem)       |
 
 ## Comandos esperados
 
@@ -51,6 +52,7 @@ pnpm db:migrate
 pnpm db:migrate:deploy
 pnpm db:migrate:status
 pnpm db:seed
+pnpm contracts:generate
 pnpm infra:up
 pnpm infra:down
 pnpm infra:status
@@ -71,6 +73,8 @@ pnpm verify
 
 Os comandos de workspace, infraestrutura e banco listados acima estão disponíveis. `db:migrate` cria migrations apenas em desenvolvimento; ambientes compartilhados usam exclusivamente `db:migrate:deploy`.
 
-Com o PostgreSQL saudável, `pnpm dev` inicia a API em `http://localhost:3000`. O endpoint de processo está em `/api/v1/health`, a prontidão com PostgreSQL em `/api/v1/health/ready`, a interface Swagger em `/docs` e o contrato em `/openapi.json`.
+Com o PostgreSQL saudável, `pnpm dev` inicia a API em `http://localhost:3000` e a aplicação web em `http://localhost:5173`. O endpoint de processo está em `/api/v1/health`, a prontidão com PostgreSQL em `/api/v1/health/ready`, a interface Swagger em `/docs`, o contrato em `/openapi.json` e a página web de diagnóstico em `/diagnostics`.
+
+`pnpm contracts:generate` exporta o OpenAPI diretamente da aplicação NestJS e regenera o SDK TypeScript consumido pela web. Os arquivos em `packages/contracts/src/generated` são artefatos e nunca devem ser editados manualmente.
 
 O baseline inicial não cria tabelas de domínio. Isso é intencional: organizações, identidade, autorização e auditoria serão modeladas na Fase 7, quando seus requisitos e isolamento de tenant puderem ser implementados e testados em conjunto. O seed atual apenas valida a conexão, não grava registros e pode ser executado repetidamente.
