@@ -80,3 +80,7 @@ A fundação está pronta quando um desenvolvedor consegue clonar o repositório
 ## Gate para a primeira funcionalidade
 
 Nenhum módulo funcional deve começar antes de: CI verde, migration reproduzível, contrato API gerado, teste E2E mínimo e contexto de tenant disponível.
+
+O gate foi atendido pelas fases 1 a 7. O desenvolvimento funcional segue o
+[roteiro do produto](../product/README.md), começando pela
+[Fase 8 — Catálogo, entrada fiscal e estoque rastreável](../product/phase-8-receiving-inventory.md).
