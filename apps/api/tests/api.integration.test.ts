@@ -80,6 +80,9 @@ describe("API integration", () => {
     expect(document.openapi).toMatch(/^3\./);
     expect(document.paths).toHaveProperty("/api/v1/health");
     expect(document.paths).toHaveProperty("/api/v1/health/ready");
+    expect(document.paths).toHaveProperty("/api/v1/auth/sessions");
+    expect(document.paths).toHaveProperty("/api/v1/organizations/current");
+    expect(document.paths).toHaveProperty("/api/v1/audit/events");
   });
 
   it("uses the public error envelope without exposing internals", async () => {

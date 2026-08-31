@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses } from './types.gen.js';
+import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,55 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+export const auditControllerList = <ThrowOnError extends boolean = false>(options?: Options<AuditControllerListData, ThrowOnError>): RequestResult<AuditControllerListResponses, AuditControllerListErrors, ThrowOnError> => (options?.client ?? client).get<AuditControllerListResponses, AuditControllerListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/audit/events',
+    ...options
+});
+
+export const authControllerCreateSession = <ThrowOnError extends boolean = false>(options: Options<AuthControllerCreateSessionData, ThrowOnError>): RequestResult<AuthControllerCreateSessionResponses, AuthControllerCreateSessionErrors, ThrowOnError> => (options.client ?? client).post<AuthControllerCreateSessionResponses, AuthControllerCreateSessionErrors, ThrowOnError>({
+    url: '/api/v1/auth/sessions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const authControllerCurrentSession = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerCurrentSessionData, ThrowOnError>): RequestResult<AuthControllerCurrentSessionResponses, AuthControllerCurrentSessionErrors, ThrowOnError> => (options?.client ?? client).get<AuthControllerCurrentSessionResponses, AuthControllerCurrentSessionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/auth/session',
+    ...options
+});
+
+export const authControllerRevokeSession = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerRevokeSessionData, ThrowOnError>): RequestResult<AuthControllerRevokeSessionResponses, AuthControllerRevokeSessionErrors, ThrowOnError> => (options?.client ?? client).post<AuthControllerRevokeSessionResponses, AuthControllerRevokeSessionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/auth/sessions/current/revoke',
+    ...options
+});
+
+export const organizationsControllerGetCurrent = <ThrowOnError extends boolean = false>(options?: Options<OrganizationsControllerGetCurrentData, ThrowOnError>): RequestResult<OrganizationsControllerGetCurrentResponses, OrganizationsControllerGetCurrentErrors, ThrowOnError> => (options?.client ?? client).get<OrganizationsControllerGetCurrentResponses, OrganizationsControllerGetCurrentErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/organizations/current',
+    ...options
+});
+
+export const organizationsControllerListMemberships = <ThrowOnError extends boolean = false>(options?: Options<OrganizationsControllerListMembershipsData, ThrowOnError>): RequestResult<OrganizationsControllerListMembershipsResponses, OrganizationsControllerListMembershipsErrors, ThrowOnError> => (options?.client ?? client).get<OrganizationsControllerListMembershipsResponses, OrganizationsControllerListMembershipsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/organizations/current/memberships',
+    ...options
+});
+
+export const organizationsControllerAddMembership = <ThrowOnError extends boolean = false>(options: Options<OrganizationsControllerAddMembershipData, ThrowOnError>): RequestResult<OrganizationsControllerAddMembershipResponses, OrganizationsControllerAddMembershipErrors, ThrowOnError> => (options.client ?? client).post<OrganizationsControllerAddMembershipResponses, OrganizationsControllerAddMembershipErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/organizations/current/memberships',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Verifica se o processo da API está ativo

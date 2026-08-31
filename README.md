@@ -6,7 +6,7 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-As Fases 1 a 6 disponibilizam o workspace pnpm, PostgreSQL local, persistência com Prisma, API NestJS/Fastify, aplicação React/Vite e a esteira de qualidade. O projeto conta com testes Vitest, fluxo E2E no Playwright, CI e verificação de artefatos gerados. A próxima etapa é a Fase 7 (primitivas de plataforma), seguindo a ordem definida em [Fundação](docs/architecture/foundation.md).
+As Fases 1 a 7 disponibilizam a fundação técnica completa: workspace pnpm, PostgreSQL/Prisma, API NestJS/Fastify, aplicação React/Vite, esteira de qualidade, identidade e sessão, organizações e memberships, RBAC, auditoria imutável, idempotência e isolamento de tenant testado. O gate para a primeira funcionalidade do ERP está liberado, seguindo os critérios definidos em [Fundação](docs/architecture/foundation.md).
 
 ## Início rápido
 
@@ -20,7 +20,7 @@ pnpm db:seed
 pnpm verify
 ```
 
-Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. O schema Prisma ainda não possui entidades de domínio; elas serão adicionadas junto das primitivas de plataforma.
+Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. O seed cria a organização `demo` e o usuário sintético `admin@example.test` para desenvolvimento local.
 
 Com API e web em execução, acesse `http://localhost:5173/diagnostics`. Quando o contrato HTTP mudar, execute `pnpm contracts:generate` para exportar o OpenAPI e regerar o SDK em `packages/contracts`.
 

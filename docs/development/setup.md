@@ -22,17 +22,18 @@ O serviço `postgres` usa PostgreSQL 18.6, persiste dados no volume nomeado `sis
 
 Copie `.env.example` para `.env` antes de iniciar a infraestrutura. Os valores do exemplo são exclusivos para desenvolvimento local e não devem ser reutilizados em ambientes compartilhados.
 
-| Variável            | Finalidade                         | Valor local padrão         |
-| ------------------- | ---------------------------------- | -------------------------- |
-| `POSTGRES_HOST`     | Host usado pelas aplicações locais | `localhost`                |
-| `POSTGRES_PORT`     | Porta publicada pelo Compose       | `5432`                     |
-| `POSTGRES_DB`       | Banco de desenvolvimento           | `sistema_erp`              |
-| `POSTGRES_USER`     | Usuário de desenvolvimento         | `sistema_erp`              |
-| `POSTGRES_PASSWORD` | Senha exclusivamente local         | `local_development_only`   |
-| `DATABASE_URL`      | Conexão do Prisma e readiness      | derivada dos valores acima |
-| `API_HOST`          | Interface de escuta da API         | `0.0.0.0`                  |
-| `API_PORT`          | Porta HTTP da API                  | `3000`                     |
-| `VITE_API_BASE_URL` | URL pública da API no bundle web   | vazio (mesma origem)       |
+| Variável              | Finalidade                         | Valor local padrão         |
+| --------------------- | ---------------------------------- | -------------------------- |
+| `POSTGRES_HOST`       | Host usado pelas aplicações locais | `localhost`                |
+| `POSTGRES_PORT`       | Porta publicada pelo Compose       | `5432`                     |
+| `POSTGRES_DB`         | Banco de desenvolvimento           | `sistema_erp`              |
+| `POSTGRES_USER`       | Usuário de desenvolvimento         | `sistema_erp`              |
+| `POSTGRES_PASSWORD`   | Senha exclusivamente local         | `local_development_only`   |
+| `DATABASE_URL`        | Conexão do Prisma e readiness      | derivada dos valores acima |
+| `API_HOST`            | Interface de escuta da API         | `0.0.0.0`                  |
+| `API_PORT`            | Porta HTTP da API                  | `3000`                     |
+| `VITE_API_BASE_URL`   | URL pública da API no bundle web   | vazio (mesma origem)       |
+| `SEED_ADMIN_PASSWORD` | Senha do administrador sintético   | `local_admin_only`         |
 
 ## Comandos esperados
 
@@ -86,4 +87,13 @@ O workflow de CI aplica migrations em um PostgreSQL efêmero e executa formataç
 testes, build, checagem do contrato gerado e E2E. A política de manutenção está em
 [Atualização de dependências](dependency-updates.md).
 
-O baseline inicial não cria tabelas de domínio. Isso é intencional: organizações, identidade, autorização e auditoria serão modeladas na Fase 7, quando seus requisitos e isolamento de tenant puderem ser implementados e testados em conjunto. O seed atual apenas valida a conexão, não grava registros e pode ser executado repetidamente.
+O seed cria de forma idempotente a organização `demo`, o usuário sintético
+`admin@example.test` e sua membership `OWNER`. A senha vem de `SEED_ADMIN_PASSWORD` e é exclusiva
+do ambiente local. Para abrir uma sessão, envie `email`, `password` e `organizationSlug` para
+`POST /api/v1/auth/sessions`; use o token opaco como `Authorization: Bearer <token>`.
+
+Rotas autenticadas derivam usuário, papel e organização da sessão persistida. O endpoint
+`GET /api/v1/organizations/current` expõe o tenant atual, memberships administrativas ficam em
+`/api/v1/organizations/current/memberships` e eventos auditáveis em `/api/v1/audit/events`.
+Criações reexecutáveis exigem `Idempotency-Key` e rejeitam a reutilização da chave com outro
+payload.

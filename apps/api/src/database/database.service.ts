@@ -5,9 +5,14 @@ import { createDatabaseClient, type DatabaseClient } from "@sistema-erp/database
 export class DatabaseService implements OnModuleDestroy {
   private client?: DatabaseClient;
 
-  async ping(): Promise<void> {
+  get value(): DatabaseClient {
     this.client ??= createDatabaseClient();
-    await this.client.$queryRaw`SELECT 1`;
+
+    return this.client;
+  }
+
+  async ping(): Promise<void> {
+    await this.value.$queryRaw`SELECT 1`;
   }
 
   async onModuleDestroy(): Promise<void> {

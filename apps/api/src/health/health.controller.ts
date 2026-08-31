@@ -15,10 +15,12 @@ import {
 
 import { DatabaseService } from "../database/database.service.js";
 import { ApiErrorResponseDto } from "../errors/api-error.dto.js";
+import { Public } from "../identity/public.decorator.js";
 import { HealthResponseDto, ReadinessResponseDto } from "./health.dto.js";
 
 @ApiTags("health")
 @Controller("health")
+@Public()
 export class HealthController {
   constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
 

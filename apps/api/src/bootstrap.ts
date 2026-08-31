@@ -26,6 +26,7 @@ export async function createApplication(
     .setTitle("Sistema ERP API")
     .setDescription("Contrato HTTP público do Sistema ERP")
     .setVersion("1.0.0")
+    .addBearerAuth({ bearerFormat: "opaque", type: "http" })
     .build();
   const documentFactory = () => SwaggerModule.createDocument(application, openApiConfiguration);
 

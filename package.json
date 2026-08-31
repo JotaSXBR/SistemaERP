@@ -25,7 +25,7 @@
     "infra:logs": "docker compose logs --follow postgres",
     "infra:status": "docker compose ps",
     "infra:up": "docker compose up --detach --wait",
-    "lint": "eslint .",
+    "lint": "pnpm db:generate && pnpm --filter @sistema-erp/contracts build && eslint .",
     "typecheck": "pnpm db:generate && tsc --project tsconfig.json --noEmit && pnpm --recursive --if-present run typecheck",
     "test": "pnpm db:generate && pnpm --recursive --if-present run test",
     "test:e2e": "pnpm --recursive --if-present run test:e2e",

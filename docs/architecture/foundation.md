@@ -58,12 +58,12 @@ A fundação está pronta quando um desenvolvedor consegue clonar o repositório
 
 ## Fase 7 — Primitivas de plataforma
 
-- identidade e sessão;
-- organizações e memberships;
-- RBAC;
-- auditoria;
-- idempotência;
-- isolamento de tenant testado.
+- [x] identidade e sessão;
+- [x] organizações e memberships;
+- [x] RBAC;
+- [x] auditoria;
+- [x] idempotência;
+- [x] isolamento de tenant testado.
 
 ## Fora da fundação inicial
 

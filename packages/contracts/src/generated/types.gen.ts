@@ -4,6 +4,84 @@ export type ClientOptions = {
     baseUrl: string;
 };
 
+export type ApiErrorBodyDto = {
+    code: string;
+    message: string;
+    details: {
+        [key: string]: unknown;
+    };
+    requestId: string;
+};
+
+export type ApiErrorResponseDto = {
+    error: ApiErrorBodyDto;
+};
+
+export type AuditEventDto = {
+    action: string;
+    actorUserId: string | null;
+    correlationId: string;
+    entityId: string | null;
+    entityType: string;
+    id: string;
+    metadata: {
+        [key: string]: unknown;
+    };
+    occurredAt: string;
+    requestId: string;
+};
+
+export type CreateSessionRequestDto = {
+    email: string;
+    organizationSlug: string;
+    password: string;
+};
+
+export type CreateSessionResponseDto = {
+    organizationId: string;
+    role: 'OWNER' | 'ADMIN' | 'MEMBER';
+    userId: string;
+    expiresAt: string;
+    /**
+     * Token opaco retornado somente na criação da sessão
+     */
+    token: string;
+};
+
+export type SessionIdentityDto = {
+    organizationId: string;
+    role: 'OWNER' | 'ADMIN' | 'MEMBER';
+    userId: string;
+};
+
+export type OrganizationDto = {
+    id: string;
+    name: string;
+    slug: string;
+};
+
+export type MembershipDto = {
+    email: string;
+    id: string;
+    name: string;
+    role: 'OWNER' | 'ADMIN' | 'MEMBER';
+    status: 'ACTIVE' | 'SUSPENDED';
+    userId: string;
+};
+
+export type AddMembershipRequestDto = {
+    email: string;
+    role: 'ADMIN' | 'MEMBER';
+};
+
+export type AddMembershipResponseDto = {
+    membership: MembershipDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
 export type HealthResponseDto = {
     status: 'ok';
 };
@@ -17,18 +95,148 @@ export type ReadinessResponseDto = {
     checks: ReadinessChecksDto;
 };
 
-export type ApiErrorBodyDto = {
-    code: string;
-    message: string;
-    details: {
-        [key: string]: unknown;
-    };
-    requestId: string;
+export type AuditControllerListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/audit/events';
 };
 
-export type ApiErrorResponseDto = {
-    error: ApiErrorBodyDto;
+export type AuditControllerListErrors = {
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
 };
+
+export type AuditControllerListError = AuditControllerListErrors[keyof AuditControllerListErrors];
+
+export type AuditControllerListResponses = {
+    200: Array<AuditEventDto>;
+};
+
+export type AuditControllerListResponse = AuditControllerListResponses[keyof AuditControllerListResponses];
+
+export type AuthControllerCreateSessionData = {
+    body: CreateSessionRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/sessions';
+};
+
+export type AuthControllerCreateSessionErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    429: ApiErrorResponseDto;
+};
+
+export type AuthControllerCreateSessionError = AuthControllerCreateSessionErrors[keyof AuthControllerCreateSessionErrors];
+
+export type AuthControllerCreateSessionResponses = {
+    201: CreateSessionResponseDto;
+};
+
+export type AuthControllerCreateSessionResponse = AuthControllerCreateSessionResponses[keyof AuthControllerCreateSessionResponses];
+
+export type AuthControllerCurrentSessionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/session';
+};
+
+export type AuthControllerCurrentSessionErrors = {
+    401: ApiErrorResponseDto;
+};
+
+export type AuthControllerCurrentSessionError = AuthControllerCurrentSessionErrors[keyof AuthControllerCurrentSessionErrors];
+
+export type AuthControllerCurrentSessionResponses = {
+    200: SessionIdentityDto;
+};
+
+export type AuthControllerCurrentSessionResponse = AuthControllerCurrentSessionResponses[keyof AuthControllerCurrentSessionResponses];
+
+export type AuthControllerRevokeSessionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/sessions/current/revoke';
+};
+
+export type AuthControllerRevokeSessionErrors = {
+    401: ApiErrorResponseDto;
+};
+
+export type AuthControllerRevokeSessionError = AuthControllerRevokeSessionErrors[keyof AuthControllerRevokeSessionErrors];
+
+export type AuthControllerRevokeSessionResponses = {
+    204: void;
+};
+
+export type AuthControllerRevokeSessionResponse = AuthControllerRevokeSessionResponses[keyof AuthControllerRevokeSessionResponses];
+
+export type OrganizationsControllerGetCurrentData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/organizations/current';
+};
+
+export type OrganizationsControllerGetCurrentErrors = {
+    401: ApiErrorResponseDto;
+};
+
+export type OrganizationsControllerGetCurrentError = OrganizationsControllerGetCurrentErrors[keyof OrganizationsControllerGetCurrentErrors];
+
+export type OrganizationsControllerGetCurrentResponses = {
+    200: OrganizationDto;
+};
+
+export type OrganizationsControllerGetCurrentResponse = OrganizationsControllerGetCurrentResponses[keyof OrganizationsControllerGetCurrentResponses];
+
+export type OrganizationsControllerListMembershipsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/organizations/current/memberships';
+};
+
+export type OrganizationsControllerListMembershipsErrors = {
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+};
+
+export type OrganizationsControllerListMembershipsError = OrganizationsControllerListMembershipsErrors[keyof OrganizationsControllerListMembershipsErrors];
+
+export type OrganizationsControllerListMembershipsResponses = {
+    200: Array<MembershipDto>;
+};
+
+export type OrganizationsControllerListMembershipsResponse = OrganizationsControllerListMembershipsResponses[keyof OrganizationsControllerListMembershipsResponses];
+
+export type OrganizationsControllerAddMembershipData = {
+    body: AddMembershipRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/organizations/current/memberships';
+};
+
+export type OrganizationsControllerAddMembershipErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type OrganizationsControllerAddMembershipError = OrganizationsControllerAddMembershipErrors[keyof OrganizationsControllerAddMembershipErrors];
+
+export type OrganizationsControllerAddMembershipResponses = {
+    201: AddMembershipResponseDto;
+};
+
+export type OrganizationsControllerAddMembershipResponse = OrganizationsControllerAddMembershipResponses[keyof OrganizationsControllerAddMembershipResponses];
 
 export type HealthControllerLivenessData = {
     body?: never;

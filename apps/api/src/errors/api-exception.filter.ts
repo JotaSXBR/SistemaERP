@@ -12,6 +12,7 @@ type PublicError = {
 
 const STATUS_ERRORS: Partial<Record<number, Omit<PublicError, "details">>> = {
   [HttpStatus.BAD_REQUEST]: { code: "INVALID_REQUEST", message: "Requisição inválida" },
+  [HttpStatus.CONFLICT]: { code: "CONFLICT", message: "Conflito com o estado atual" },
   [HttpStatus.FORBIDDEN]: { code: "FORBIDDEN", message: "Acesso negado" },
   [HttpStatus.NOT_FOUND]: { code: "RESOURCE_NOT_FOUND", message: "Recurso não encontrado" },
   [HttpStatus.SERVICE_UNAVAILABLE]: {
