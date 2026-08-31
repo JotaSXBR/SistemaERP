@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build and test artifacts
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local tooling
+.turbo/
+.cache/
+
