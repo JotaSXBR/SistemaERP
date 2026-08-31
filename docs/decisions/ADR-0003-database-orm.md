@@ -14,4 +14,3 @@ PostgreSQL será a fonte de verdade transacional. Prisma será usado para schema
 - alterações de dados e backfills têm scripts explícitos e observáveis;
 - tipos monetários usam `numeric`;
 - extensões como pgvector são adicionadas por migration somente quando necessárias.
-

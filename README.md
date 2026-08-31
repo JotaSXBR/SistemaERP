@@ -6,7 +6,17 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-Este repositório contém inicialmente apenas a documentação da fundação. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
+A Fase 1 foi iniciada com o workspace pnpm, TypeScript strict e ferramentas compartilhadas de qualidade. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
+
+## Início rápido
+
+```bash
+corepack enable
+pnpm install
+pnpm verify
+```
+
+Os comandos de infraestrutura e execução das aplicações serão disponibilizados nas fases seguintes.
 
 ## Documentos principais
 
@@ -32,4 +42,3 @@ Este repositório contém inicialmente apenas a documentação da fundação. A 
 - OpenAPI como contrato da API
 
 Redis, BullMQ, armazenamento S3, pgvector, OpenTelemetry, Sentry, Langfuse e LangGraph são capacidades progressivas e só devem ser ativadas quando houver um caso de uso concreto.
-

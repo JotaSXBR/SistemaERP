@@ -80,4 +80,3 @@ A fundação está pronta quando um desenvolvedor consegue clonar o repositório
 ## Gate para a primeira funcionalidade
 
 Nenhum módulo funcional deve começar antes de: CI verde, migration reproduzível, contrato API gerado, teste E2E mínimo e contexto de tenant disponível.
-

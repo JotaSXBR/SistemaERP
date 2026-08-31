@@ -38,4 +38,3 @@ Uma mudança só está concluída quando:
 - informa claramente o que foi validado e o que não pôde ser validado.
 
 Quando disponível, execute `pnpm verify` antes de concluir.
-

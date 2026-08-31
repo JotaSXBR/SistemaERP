@@ -10,4 +10,3 @@ A API REST produz uma especificação OpenAPI. O frontend utiliza um cliente Typ
 ## Consequências
 
 Mudanças incompatíveis ficam visíveis, o consumidor não depende da estrutura interna da API e futuros clientes móveis ou integrações podem reutilizar o contrato.
-

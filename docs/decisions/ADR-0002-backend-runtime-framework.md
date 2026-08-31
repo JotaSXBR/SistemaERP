@@ -14,4 +14,3 @@ Usar a versão Active LTS do Node.js, NestJS e o adapter Fastify. Usar pnpm para
 ## Consequências
 
 Há mais estrutura que em frameworks minimalistas, mas controllers, providers, guards e módulos ficam previsíveis para manutenção humana e por IA. Bun e Elysia podem ser reavaliados em outro contexto, mas não compõem o runtime inicial.
-

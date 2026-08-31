@@ -54,4 +54,3 @@ Formato público:
 - Tenant vem do contexto autenticado.
 - Segredos nunca aparecem em logs.
 - Rate limiting deve ser aplicado a autenticação, recuperação e endpoints caros.
-

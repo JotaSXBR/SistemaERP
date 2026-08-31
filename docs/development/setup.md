@@ -3,8 +3,8 @@
 ## Ambiente-alvo
 
 - Windows com WSL2 e Ubuntu, ou Linux/macOS equivalente;
-- Node.js Active LTS fixado pelo repositório;
-- pnpm via Corepack;
+- Node.js 24.16.0, fixado em `.nvmrc`;
+- pnpm 11.24.0 via Corepack, fixado em `package.json`;
 - Docker com Compose;
 - Git;
 - editor conectado ao ambiente Linux quando estiver no Windows.
@@ -48,5 +48,4 @@ pnpm verify
 7. Confirmar health check da API e página de diagnóstico da web.
 8. Executar `pnpm verify` antes de enviar alterações.
 
-Até o scaffold ser implementado, esses comandos são contratos planejados, não garantias de disponibilidade.
-
+Durante a Fase 1, `dev`, `build`, `format`, `lint`, `typecheck`, `test`, `test:e2e` e `verify` estão disponíveis. Os comandos de banco e infraestrutura permanecem contratos planejados até as respectivas fases.

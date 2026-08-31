@@ -1,0 +1,31 @@
+{
+  "name": "sistema-erp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ERP web multiempresa em monorepo TypeScript",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11 <12"
+  },
+  "scripts": {
+    "dev": "pnpm --recursive --parallel --if-present run dev",
+    "build": "pnpm --recursive --if-present run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "tsc --project tsconfig.json --noEmit && pnpm --recursive --if-present run typecheck",
+    "test": "pnpm --recursive --if-present run test",
+    "test:e2e": "pnpm --recursive --if-present run test:e2e",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.9.1",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.68.0"
+  }
+}

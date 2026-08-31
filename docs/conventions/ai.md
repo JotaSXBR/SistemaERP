@@ -34,4 +34,3 @@ Não registrar prompts completos quando contiverem dados pessoais ou segredos. R
 4. LangGraph quando houver estado persistente, ramificações, retries complexos ou human-in-the-loop.
 
 Modelos e prompts nunca são fonte de verdade para cálculos financeiros, tributários ou decisões de autorização.
-

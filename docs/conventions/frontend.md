@@ -32,4 +32,3 @@ src/
 ## Design system
 
 Tailwind define tokens e composição visual. Componentes base acessíveis podem usar Radix UI/shadcn. Evite classes arbitrárias repetidas; promova padrões recorrentes para tokens ou componentes.
-

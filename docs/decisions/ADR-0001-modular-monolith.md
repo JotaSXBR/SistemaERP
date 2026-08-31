@@ -14,4 +14,3 @@ Usar monorepo TypeScript e um monólito modular para a API. Módulos têm fronte
 ## Consequências
 
 Implantação, testes e transações permanecem simples. Extração para serviço separado só ocorrerá com evidência de necessidade de escala, segurança, disponibilidade ou autonomia operacional e exigirá novo ADR.
-

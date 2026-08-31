@@ -27,4 +27,3 @@ format check -> lint -> typecheck -> unit/integration -> build -> e2e
 ```
 
 Falhas não podem ser ignoradas para permitir merge. Testes instáveis devem ser corrigidos ou removidos com justificativa, nunca apenas repetidos indefinidamente.
-

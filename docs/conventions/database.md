@@ -33,4 +33,3 @@ Soft delete não é padrão universal. Use apenas quando houver requisito de res
 ## pgvector
 
 Antes de habilitar, documente modelo de embedding, dimensão, distância, estratégia de atualização e isolamento por tenant. Comece com busca exata; adicione HNSW/IVFFlat após medir volume, latência e recall.
-

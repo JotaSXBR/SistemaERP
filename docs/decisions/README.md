@@ -9,4 +9,3 @@ ADRs registram decisões difíceis de reverter. Uma decisão aceita não deve se
 - [ADR-0003 — PostgreSQL e Prisma](ADR-0003-database-orm.md)
 - [ADR-0004 — OpenAPI como contrato](ADR-0004-api-contract.md)
 - [ADR-0005 — Infraestrutura progressiva de IA](ADR-0005-progressive-ai.md)
-

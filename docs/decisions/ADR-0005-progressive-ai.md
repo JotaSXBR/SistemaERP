@@ -16,4 +16,3 @@ Recursos de IA começam como um módulo isolado da API, atrás de interfaces pr�
 - autorização igual ou mais restrita que a do usuário solicitante;
 - aprovação humana para ações críticas;
 - auditoria de proposta, aprovação e execução.
-
