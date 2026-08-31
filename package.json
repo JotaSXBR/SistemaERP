@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "pnpm --recursive --parallel --if-present run dev",
     "build": "pnpm db:generate && pnpm --recursive --if-present run build",
+    "contracts:check": "pnpm contracts:generate && git diff --exit-code -- packages/contracts/openapi packages/contracts/src/generated",
     "contracts:generate": "pnpm --filter @sistema-erp/api openapi:export && pnpm --filter @sistema-erp/contracts generate",
     "db:generate": "pnpm --filter @sistema-erp/database db:generate",
     "db:migrate": "pnpm --filter @sistema-erp/database db:migrate",
@@ -28,7 +29,8 @@
     "typecheck": "pnpm db:generate && tsc --project tsconfig.json --noEmit && pnpm --recursive --if-present run typecheck",
     "test": "pnpm db:generate && pnpm --recursive --if-present run test",
     "test:e2e": "pnpm --recursive --if-present run test:e2e",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "test:e2e:install": "pnpm --filter @sistema-erp/web exec playwright install --with-deps chromium",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm contracts:check"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -50,11 +50,11 @@ A fundação está pronta quando um desenvolvedor consegue clonar o repositório
 
 ## Fase 6 — Qualidade e entrega
 
-- testes unitários e de integração com Vitest;
-- fluxo mínimo E2E com Playwright;
-- CI para install, lint, typecheck, migrations, testes e build;
-- checagem de divergência de artefatos gerados;
-- política de atualização de dependências.
+- [x] testes unitários e de integração com Vitest;
+- [x] fluxo mínimo E2E com Playwright;
+- [x] CI para install, lint, typecheck, migrations, testes e build;
+- [x] checagem de divergência de artefatos gerados;
+- [x] política de atualização de dependências.
 
 ## Fase 7 — Primitivas de plataforma
 

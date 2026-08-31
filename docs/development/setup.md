@@ -77,4 +77,13 @@ Com o PostgreSQL saudável, `pnpm dev` inicia a API em `http://localhost:3000` e
 
 `pnpm contracts:generate` exporta o OpenAPI diretamente da aplicação NestJS e regenera o SDK TypeScript consumido pela web. Os arquivos em `packages/contracts/src/generated` são artefatos e nunca devem ser editados manualmente.
 
+Antes do primeiro E2E local, instale o Chromium gerenciado pelo Playwright com
+`pnpm test:e2e:install`. O comando `pnpm test:e2e` inicia API e web, reutiliza processos locais
+quando disponíveis e valida o fluxo de diagnóstico contra o PostgreSQL. A infraestrutura e as
+migrations devem estar prontas.
+
+O workflow de CI aplica migrations em um PostgreSQL efêmero e executa formatação, lint, typecheck,
+testes, build, checagem do contrato gerado e E2E. A política de manutenção está em
+[Atualização de dependências](dependency-updates.md).
+
 O baseline inicial não cria tabelas de domínio. Isso é intencional: organizações, identidade, autorização e auditoria serão modeladas na Fase 7, quando seus requisitos e isolamento de tenant puderem ser implementados e testados em conjunto. O seed atual apenas valida a conexão, não grava registros e pode ser executado repetidamente.

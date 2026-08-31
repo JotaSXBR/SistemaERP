@@ -6,7 +6,7 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-As Fases 1 a 5 disponibilizam o workspace pnpm, PostgreSQL local, persistência com Prisma, API NestJS/Fastify e a aplicação React/Vite. O frontend usa roteamento, TanStack Query, Tailwind CSS e um SDK TypeScript gerado do OpenAPI. A próxima etapa é a Fase 6 (qualidade e entrega), seguindo a ordem definida em [Fundação](docs/architecture/foundation.md).
+As Fases 1 a 6 disponibilizam o workspace pnpm, PostgreSQL local, persistência com Prisma, API NestJS/Fastify, aplicação React/Vite e a esteira de qualidade. O projeto conta com testes Vitest, fluxo E2E no Playwright, CI e verificação de artefatos gerados. A próxima etapa é a Fase 7 (primitivas de plataforma), seguindo a ordem definida em [Fundação](docs/architecture/foundation.md).
 
 ## Início rápido
 
@@ -29,6 +29,7 @@ Com API e web em execução, acesse `http://localhost:5173/diagnostics`. Quando 
 - [Visão arquitetural](docs/architecture/overview.md)
 - [Fundação e sequência de implementação](docs/architecture/foundation.md)
 - [Ambiente de desenvolvimento](docs/development/setup.md)
+- [Política de atualização de dependências](docs/development/dependency-updates.md)
 - [Convenções de backend](docs/conventions/backend.md)
 - [Convenções de frontend](docs/conventions/frontend.md)
 - [Convenções de banco de dados](docs/conventions/database.md)

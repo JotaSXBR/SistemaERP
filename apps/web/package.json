@@ -9,8 +9,10 @@
     "prebuild": "pnpm --filter @sistema-erp/contracts build",
     "predev": "pnpm --filter @sistema-erp/contracts build",
     "pretest": "pnpm --filter @sistema-erp/contracts build",
+    "pretest:e2e": "pnpm --filter @sistema-erp/database build && pnpm --filter @sistema-erp/contracts build",
     "pretypecheck": "pnpm --filter @sistema-erp/contracts build",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -21,6 +23,7 @@
     "react-router": "8.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "1.61.0",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
