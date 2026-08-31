@@ -6,17 +6,19 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-A Fase 1 foi iniciada com o workspace pnpm, TypeScript strict e ferramentas compartilhadas de qualidade. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
+As Fases 1 e 2 disponibilizam o workspace pnpm, TypeScript strict, ferramentas compartilhadas de qualidade e PostgreSQL local com Docker Compose. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
 
 ## Início rápido
 
 ```bash
 corepack enable
 pnpm install
+cp .env.example .env
+pnpm infra:up
 pnpm verify
 ```
 
-Os comandos de infraestrutura e execução das aplicações serão disponibilizados nas fases seguintes.
+Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. Os comandos das aplicações serão disponibilizados nas fases seguintes.
 
 ## Documentos principais
 

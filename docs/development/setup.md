@@ -16,6 +16,21 @@
 - Prefira armazenar o repositório no filesystem do WSL se file watching ou I/O em volume montado ficar lento.
 - Serviços locais usam nomes e portas documentados no Compose.
 
+## PostgreSQL local
+
+O serviço `postgres` usa PostgreSQL 18.6, persiste dados no volume nomeado `sistema-erp_postgres-data` e publica a porta somente em `127.0.0.1`. O health check usa `pg_isready` e o servidor opera em UTC.
+
+Copie `.env.example` para `.env` antes de iniciar a infraestrutura. Os valores do exemplo são exclusivos para desenvolvimento local e não devem ser reutilizados em ambientes compartilhados.
+
+| Variável            | Finalidade                         | Valor local padrão         |
+| ------------------- | ---------------------------------- | -------------------------- |
+| `POSTGRES_HOST`     | Host usado pelas aplicações locais | `localhost`                |
+| `POSTGRES_PORT`     | Porta publicada pelo Compose       | `5432`                     |
+| `POSTGRES_DB`       | Banco de desenvolvimento           | `sistema_erp`              |
+| `POSTGRES_USER`     | Usuário de desenvolvimento         | `sistema_erp`              |
+| `POSTGRES_PASSWORD` | Senha exclusivamente local         | `local_development_only`   |
+| `DATABASE_URL`      | Conexão futura do Prisma           | derivada dos valores acima |
+
 ## Comandos esperados
 
 Estes scripts deverão ser implementados na raiz:
@@ -34,6 +49,8 @@ pnpm db:migrate
 pnpm db:seed
 pnpm infra:up
 pnpm infra:down
+pnpm infra:status
+pnpm infra:logs
 pnpm verify
 ```
 
@@ -48,4 +65,4 @@ pnpm verify
 7. Confirmar health check da API e página de diagnóstico da web.
 8. Executar `pnpm verify` antes de enviar alterações.
 
-Durante a Fase 1, `dev`, `build`, `format`, `lint`, `typecheck`, `test`, `test:e2e` e `verify` estão disponíveis. Os comandos de banco e infraestrutura permanecem contratos planejados até as respectivas fases.
+Durante as Fases 1 e 2, os comandos de workspace e infraestrutura listados acima estão disponíveis. Os comandos de banco permanecem contratos planejados até a Fase 3.
