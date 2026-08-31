@@ -1,3 +1,13 @@
 packages:
   - apps/*
   - packages/*
+
+allowBuilds:
+  "@prisma/engines": true
+  "esbuild@0.28.2": true
+  prisma: true
+
+engineStrict: true
+saveExact: true
+sharedWorkspaceLockfile: true
+strictPeerDependencies: true

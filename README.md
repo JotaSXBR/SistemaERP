@@ -6,7 +6,7 @@ O projeto será desenvolvido por uma pessoa com apoio intensivo de agentes de IA
 
 ## Estado atual
 
-As Fases 1 e 2 disponibilizam o workspace pnpm, TypeScript strict, ferramentas compartilhadas de qualidade e PostgreSQL local com Docker Compose. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
+As Fases 1 a 3 disponibilizam o workspace pnpm, ferramentas compartilhadas de qualidade, PostgreSQL local e o pacote de persistência com Prisma. A implementação deve seguir a ordem definida em [Fundação](docs/architecture/foundation.md).
 
 ## Início rápido
 
@@ -15,10 +15,12 @@ corepack enable
 pnpm install
 cp .env.example .env
 pnpm infra:up
+pnpm db:migrate:deploy
+pnpm db:seed
 pnpm verify
 ```
 
-Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. Os comandos das aplicações serão disponibilizados nas fases seguintes.
+Use `pnpm infra:status`, `pnpm infra:logs` e `pnpm infra:down` para operar o PostgreSQL local. O schema Prisma ainda não possui entidades de domínio; elas serão adicionadas junto das primitivas de plataforma. Os comandos das aplicações serão disponibilizados nas fases seguintes.
 
 ## Documentos principais
 

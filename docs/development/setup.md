@@ -46,6 +46,8 @@ pnpm test
 pnpm test:e2e
 pnpm db:generate
 pnpm db:migrate
+pnpm db:migrate:deploy
+pnpm db:migrate:status
 pnpm db:seed
 pnpm infra:up
 pnpm infra:down
@@ -65,4 +67,6 @@ pnpm verify
 7. Confirmar health check da API e página de diagnóstico da web.
 8. Executar `pnpm verify` antes de enviar alterações.
 
-Durante as Fases 1 e 2, os comandos de workspace e infraestrutura listados acima estão disponíveis. Os comandos de banco permanecem contratos planejados até a Fase 3.
+Os comandos de workspace, infraestrutura e banco listados acima estão disponíveis. `db:migrate` cria migrations apenas em desenvolvimento; ambientes compartilhados usam exclusivamente `db:migrate:deploy`.
+
+O baseline inicial não cria tabelas de domínio. Isso é intencional: organizações, identidade, autorização e auditoria serão modeladas na Fase 7, quando seus requisitos e isolamento de tenant puderem ser implementados e testados em conjunto. O seed atual apenas valida a conexão, não grava registros e pode ser executado repetidamente.

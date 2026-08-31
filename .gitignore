@@ -27,3 +27,5 @@ Thumbs.db
 .turbo/
 .cache/
 
+# Generated database client
+packages/database/src/generated/prisma/

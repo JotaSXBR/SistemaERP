@@ -5,4 +5,5 @@ dist
 node_modules
 playwright-report
 pnpm-lock.yaml
+packages/database/src/generated/prisma
 test-results

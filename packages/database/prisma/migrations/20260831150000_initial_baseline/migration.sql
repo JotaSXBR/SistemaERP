@@ -1,0 +1,2 @@
+-- Baseline intencionalmente vazio.
+-- As tabelas serão criadas quando seus requisitos de domínio e tenant forem definidos.
