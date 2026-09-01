@@ -344,6 +344,327 @@
         ]
       }
     },
+    "/api/v1/partners": {
+      "post": {
+        "operationId": "PartnersController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartnerRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatePartnerResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "partners"
+        ]
+      }
+    },
+    "/api/v1/catalog/products": {
+      "post": {
+        "operationId": "CatalogController_createProduct",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/supplier-mappings": {
+      "post": {
+        "operationId": "CatalogController_createSupplierMapping",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierProductMappingRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateSupplierProductMappingResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/supplier-mappings/resolve": {
+      "post": {
+        "operationId": "CatalogController_resolveSupplierProduct",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveSupplierProductRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolveSupplierProductResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController_liveness",
@@ -683,6 +1004,403 @@
         "required": [
           "membership",
           "replayed"
+        ]
+      },
+      "CreatePartnerRequestDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SUPPLIER",
+                "CUSTOMER",
+                "CARRIER"
+              ]
+            }
+          },
+          "taxId": {
+            "type": "string",
+            "description": "CPF ou CNPJ; pontuação é removida antes da persistência"
+          },
+          "tradeName": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ORGANIZATION",
+              "PERSON"
+            ]
+          }
+        },
+        "required": [
+          "legalName",
+          "roles",
+          "taxId",
+          "type"
+        ]
+      },
+      "PartnerDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "legalName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SUPPLIER",
+                "CUSTOMER",
+                "CARRIER"
+              ]
+            }
+          },
+          "taxId": {
+            "type": "string",
+            "description": "CPF ou CNPJ normalizado"
+          },
+          "tradeName": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ORGANIZATION",
+              "PERSON"
+            ]
+          }
+        },
+        "required": [
+          "active",
+          "id",
+          "legalName",
+          "roles",
+          "taxId",
+          "type"
+        ]
+      },
+      "CreatePartnerResponseDto": {
+        "type": "object",
+        "properties": {
+          "partner": {
+            "$ref": "#/components/schemas/PartnerDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "partner",
+          "replayed"
+        ]
+      },
+      "CreateProductUnitRequestDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "decimalScale": {
+            "type": "number",
+            "default": 4,
+            "maximum": 10,
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "CreateProductRequestDto": {
+        "type": "object",
+        "properties": {
+          "baseUnit": {
+            "$ref": "#/components/schemas/CreateProductUnitRequestDto"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "technicalDescription": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "baseUnit",
+          "shortDescription",
+          "sku"
+        ]
+      },
+      "UnitOfMeasureDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "decimalScale": {
+            "type": "number",
+            "maximum": 10,
+            "minimum": 0
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "decimalScale",
+          "id",
+          "name"
+        ]
+      },
+      "ProductPresentationDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "conversionMode": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "VARIABLE"
+            ]
+          },
+          "conversionFactor": {
+            "type": "string",
+            "description": "Decimal serializado como texto"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/UnitOfMeasureDto"
+          }
+        },
+        "required": [
+          "code",
+          "conversionMode",
+          "id",
+          "name",
+          "unit"
+        ]
+      },
+      "ProductDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "basePresentation": {
+            "$ref": "#/components/schemas/ProductPresentationDto"
+          },
+          "baseUnit": {
+            "$ref": "#/components/schemas/UnitOfMeasureDto"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "technicalDescription": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "basePresentation",
+          "baseUnit",
+          "id",
+          "shortDescription",
+          "sku"
+        ]
+      },
+      "CreateProductResponseDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "product",
+          "replayed"
+        ]
+      },
+      "CreateSupplierProductMappingRequestDto": {
+        "type": "object",
+        "properties": {
+          "productPresentationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "productPresentationId",
+          "supplierCode",
+          "supplierId"
+        ]
+      },
+      "MappedProductDto": {
+        "type": "object",
+        "properties": {
+          "presentationCode": {
+            "type": "string"
+          },
+          "presentationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "presentationName": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/UnitOfMeasureDto"
+          }
+        },
+        "required": [
+          "presentationCode",
+          "presentationId",
+          "presentationName",
+          "productId",
+          "shortDescription",
+          "sku",
+          "unit"
+        ]
+      },
+      "SupplierProductMappingDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "product": {
+            "$ref": "#/components/schemas/MappedProductDto"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "active",
+          "id",
+          "product",
+          "supplierCode",
+          "supplierId"
+        ]
+      },
+      "CreateSupplierProductMappingResponseDto": {
+        "type": "object",
+        "properties": {
+          "mapping": {
+            "$ref": "#/components/schemas/SupplierProductMappingDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "mapping",
+          "replayed"
+        ]
+      },
+      "ResolveSupplierProductRequestDto": {
+        "type": "object",
+        "properties": {
+          "supplierCode": {
+            "type": "string"
+          },
+          "supplierTaxId": {
+            "type": "string",
+            "description": "CPF ou CNPJ do fornecedor lido do XML"
+          }
+        },
+        "required": [
+          "supplierCode",
+          "supplierTaxId"
+        ]
+      },
+      "ResolveSupplierProductResponseDto": {
+        "type": "object",
+        "properties": {
+          "mapping": {
+            "$ref": "#/components/schemas/SupplierProductMappingDto"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MATCHED",
+              "SUPPLIER_NOT_FOUND",
+              "UNMAPPED"
+            ]
+          }
+        },
+        "required": [
+          "status"
         ]
       },
       "HealthResponseDto": {

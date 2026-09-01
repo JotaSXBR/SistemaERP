@@ -19,6 +19,22 @@ enum MembershipStatus {
   SUSPENDED
 }
 
+enum PartnerType {
+  ORGANIZATION
+  PERSON
+}
+
+enum PartnerRole {
+  SUPPLIER
+  CUSTOMER
+  CARRIER
+}
+
+enum ProductConversionMode {
+  FIXED
+  VARIABLE
+}
+
 model User {
   id           String       @id @default(uuid()) @db.Uuid
   email        String       @unique @db.VarChar(320)
@@ -34,16 +50,121 @@ model User {
 }
 
 model Organization {
-  id                 String              @id @default(uuid()) @db.Uuid
-  name               String              @db.VarChar(160)
-  slug               String              @unique @db.VarChar(80)
-  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
-  memberships        Membership[]
-  auditEvents        AuditEvent[]
-  idempotencyRecords IdempotencyRecord[]
+  id                      String                   @id @default(uuid()) @db.Uuid
+  name                    String                   @db.VarChar(160)
+  slug                    String                   @unique @db.VarChar(80)
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships             Membership[]
+  auditEvents             AuditEvent[]
+  idempotencyRecords      IdempotencyRecord[]
+  partners                Partner[]
+  products                Product[]
+  productPresentations    ProductPresentation[]
+  supplierProductMappings SupplierProductMapping[]
+  unitsOfMeasure          UnitOfMeasure[]
 
   @@map("organizations")
+}
+
+model Partner {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  organizationId          String                   @map("organization_id") @db.Uuid
+  type                    PartnerType
+  legalName               String                   @map("legal_name") @db.VarChar(160)
+  tradeName               String?                  @map("trade_name") @db.VarChar(160)
+  taxId                   String                   @map("tax_id") @db.VarChar(32)
+  roles                   PartnerRole[]
+  active                  Boolean                  @default(true)
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  supplierProductMappings SupplierProductMapping[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, taxId])
+  @@index([organizationId, legalName])
+  @@map("partners")
+}
+
+model UnitOfMeasure {
+  id                   String                @id @default(uuid()) @db.Uuid
+  organizationId       String                @map("organization_id") @db.Uuid
+  code                 String                @db.VarChar(16)
+  name                 String                @db.VarChar(80)
+  decimalScale         Int                   @default(4) @map("decimal_scale")
+  active               Boolean               @default(true)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  baseProducts         Product[]             @relation("ProductBaseUnit")
+  productPresentations ProductPresentation[] @relation("PresentationUnit")
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, code])
+  @@map("units_of_measure")
+}
+
+model Product {
+  id                   String                @id @default(uuid()) @db.Uuid
+  organizationId       String                @map("organization_id") @db.Uuid
+  sku                  String                @db.VarChar(80)
+  shortDescription     String                @map("short_description") @db.VarChar(240)
+  technicalDescription String?               @map("technical_description") @db.Text
+  baseUnitId           String                @map("base_unit_id") @db.Uuid
+  active               Boolean               @default(true)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  baseUnit             UnitOfMeasure         @relation("ProductBaseUnit", fields: [baseUnitId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  presentations        ProductPresentation[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, sku])
+  @@index([organizationId, shortDescription])
+  @@map("products")
+}
+
+model ProductPresentation {
+  id                      String                   @id @default(uuid()) @db.Uuid
+  organizationId          String                   @map("organization_id") @db.Uuid
+  productId               String                   @map("product_id") @db.Uuid
+  unitOfMeasureId         String                   @map("unit_of_measure_id") @db.Uuid
+  code                    String                   @db.VarChar(80)
+  name                    String                   @db.VarChar(160)
+  conversionMode          ProductConversionMode    @map("conversion_mode")
+  conversionFactor        Decimal?                 @map("conversion_factor") @db.Decimal(24, 10)
+  active                  Boolean                  @default(true)
+  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product                 Product                  @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  unitOfMeasure           UnitOfMeasure            @relation("PresentationUnit", fields: [unitOfMeasureId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  supplierProductMappings SupplierProductMapping[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, productId, code])
+  @@index([organizationId, unitOfMeasureId])
+  @@map("product_presentations")
+}
+
+model SupplierProductMapping {
+  id                     String              @id @default(uuid()) @db.Uuid
+  organizationId         String              @map("organization_id") @db.Uuid
+  supplierId             String              @map("supplier_id") @db.Uuid
+  productPresentationId  String              @map("product_presentation_id") @db.Uuid
+  supplierCode           String              @map("supplier_code") @db.VarChar(120)
+  normalizedSupplierCode String              @map("normalized_supplier_code") @db.VarChar(120)
+  active                 Boolean             @default(true)
+  createdAt              DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization           Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  supplier               Partner             @relation(fields: [supplierId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  productPresentation    ProductPresentation @relation(fields: [productPresentationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([organizationId, supplierId, normalizedSupplierCode])
+  @@index([organizationId, productPresentationId])
+  @@map("supplier_product_mappings")
 }
 
 model Membership {

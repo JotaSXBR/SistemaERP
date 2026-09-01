@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses } from './types.gen.js';
+import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -60,6 +60,46 @@ export const organizationsControllerListMemberships = <ThrowOnError extends bool
 export const organizationsControllerAddMembership = <ThrowOnError extends boolean = false>(options: Options<OrganizationsControllerAddMembershipData, ThrowOnError>): RequestResult<OrganizationsControllerAddMembershipResponses, OrganizationsControllerAddMembershipErrors, ThrowOnError> => (options.client ?? client).post<OrganizationsControllerAddMembershipResponses, OrganizationsControllerAddMembershipErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/organizations/current/memberships',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const partnersControllerCreate = <ThrowOnError extends boolean = false>(options: Options<PartnersControllerCreateData, ThrowOnError>): RequestResult<PartnersControllerCreateResponses, PartnersControllerCreateErrors, ThrowOnError> => (options.client ?? client).post<PartnersControllerCreateResponses, PartnersControllerCreateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/partners',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const catalogControllerCreateProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogControllerCreateProductData, ThrowOnError>): RequestResult<CatalogControllerCreateProductResponses, CatalogControllerCreateProductErrors, ThrowOnError> => (options.client ?? client).post<CatalogControllerCreateProductResponses, CatalogControllerCreateProductErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/products',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const catalogControllerCreateSupplierMapping = <ThrowOnError extends boolean = false>(options: Options<CatalogControllerCreateSupplierMappingData, ThrowOnError>): RequestResult<CatalogControllerCreateSupplierMappingResponses, CatalogControllerCreateSupplierMappingErrors, ThrowOnError> => (options.client ?? client).post<CatalogControllerCreateSupplierMappingResponses, CatalogControllerCreateSupplierMappingErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/supplier-mappings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const catalogControllerResolveSupplierProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogControllerResolveSupplierProductData, ThrowOnError>): RequestResult<CatalogControllerResolveSupplierProductResponses, CatalogControllerResolveSupplierProductErrors, ThrowOnError> => (options.client ?? client).post<CatalogControllerResolveSupplierProductResponses, CatalogControllerResolveSupplierProductErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/supplier-mappings/resolve',
     ...options,
     headers: {
         'Content-Type': 'application/json',

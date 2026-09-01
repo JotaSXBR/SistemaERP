@@ -48,6 +48,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm test:e2e
+pnpm test:e2e:docker
 pnpm db:generate
 pnpm db:migrate
 pnpm db:migrate:deploy
@@ -82,6 +83,12 @@ Antes do primeiro E2E local, instale o Chromium gerenciado pelo Playwright com
 `pnpm test:e2e:install`. O comando `pnpm test:e2e` inicia API e web, reutiliza processos locais
 quando disponíveis e valida o fluxo de diagnóstico contra o PostgreSQL. A infraestrutura e as
 migrations devem estar prontas.
+
+Em WSL sem as bibliotecas gráficas do Chromium, use preferencialmente `pnpm test:e2e:docker`. O
+comando executa API, Vite e Playwright na imagem oficial fixada na mesma versão do projeto, conecta
+ao serviço `postgres` pela rede privada do Compose e não publica novas portas. A imagem E2E instala
+dependências em uma camada isolada e reaproveitável; XMLs locais, `.env`, `node_modules`, builds e
+relatórios não entram no contexto nem são escritos pelo contêiner no workspace.
 
 O workflow de CI aplica migrations em um PostgreSQL efêmero e executa formatação, lint, typecheck,
 testes, build, checagem do contrato gerado e E2E. A política de manutenção está em

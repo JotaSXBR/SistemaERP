@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/playwright:v1.62.1-noble
+
+WORKDIR /workspace
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/database/package.json packages/database/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+RUN DATABASE_URL=postgresql://prisma:prisma@localhost:5432/prisma pnpm db:generate
+
+CMD ["pnpm", "test:e2e:container"]

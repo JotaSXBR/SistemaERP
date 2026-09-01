@@ -296,6 +296,17 @@ dependência. Armazenar temporariamente não pode significar descartar o origina
 - mapeamento de códigos de fornecedor;
 - testes de isolamento de tenant e CNPJ alfanumérico.
 
+Primeira fatia implementada:
+
+- parceiros com papel de fornecedor e CPF/CNPJ normalizado;
+- unidade base, produto e apresentação-base com fator decimal exato;
+- correspondência única por organização, fornecedor e código externo normalizado;
+- resolução determinística em estados `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`;
+- criação idempotente, RBAC, auditoria e isolamento de tenant testados.
+
+Telas, apresentações adicionais, atributos técnicos e manutenção dos cadastros permanecem pendentes
+para concluir o incremento 8.1.
+
 ### 8.2 — Caixa de entrada fiscal
 
 - armazenamento seguro de arquivos;
