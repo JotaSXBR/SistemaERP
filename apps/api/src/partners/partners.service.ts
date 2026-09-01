@@ -5,6 +5,7 @@ import { DatabaseService } from "../database/database.service.js";
 import { IdempotencyService } from "../idempotency/idempotency.service.js";
 import { RequestContextService } from "../request-context/request-context.service.js";
 import type { CreatePartnerResponseDto, PartnerDto } from "./partners.dto.js";
+import { normalizeTaxId } from "./tax-id.js";
 
 type CreatePartnerInput = {
   legalName: string;
@@ -13,13 +14,6 @@ type CreatePartnerInput = {
   tradeName?: string;
   type: PartnerType;
 };
-
-export function normalizeTaxId(value: string): string {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/[.\-/\s]/g, "");
-}
 
 @Injectable()
 export class PartnersService {

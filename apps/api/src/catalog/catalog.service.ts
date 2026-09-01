@@ -3,6 +3,7 @@ import { PartnerRole, ProductConversionMode, type Prisma } from "@sistema-erp/da
 
 import { DatabaseService } from "../database/database.service.js";
 import { IdempotencyService } from "../idempotency/idempotency.service.js";
+import { normalizeTaxId } from "../partners/tax-id.js";
 import { RequestContextService } from "../request-context/request-context.service.js";
 import type {
   CreateProductRequestDto,
@@ -16,13 +17,6 @@ import type {
 
 function normalizeCode(value: string): string {
   return value.trim().toUpperCase();
-}
-
-function normalizeTaxId(value: string): string {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/[.\-/\s]/g, "");
 }
 
 type MappingWithRelations = Prisma.SupplierProductMappingGetPayload<{
