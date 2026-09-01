@@ -25,6 +25,17 @@ type MappingWithRelations = Prisma.SupplierProductMappingGetPayload<{
   };
 }>;
 
+export type SupplierProductResolution =
+  | {
+      mapping: SupplierProductMappingDto;
+      status: "MATCHED";
+      supplierCode: string;
+    }
+  | {
+      status: "SUPPLIER_NOT_FOUND" | "UNMAPPED";
+      supplierCode: string;
+    };
+
 function mappingResponse(mapping: MappingWithRelations): Prisma.JsonObject {
   const { product, unitOfMeasure } = mapping.productPresentation;
 
@@ -110,6 +121,25 @@ export class CatalogService {
     supplierTaxId: string,
     supplierCode: string,
   ): Promise<ResolveSupplierProductResponseDto> {
+    const [resolution] = await this.resolveSupplierProducts(supplierTaxId, [supplierCode]);
+
+    if (!resolution) {
+      return { status: "UNMAPPED" };
+    }
+
+    return resolution.status === "MATCHED"
+      ? { mapping: resolution.mapping, status: resolution.status }
+      : { status: resolution.status };
+  }
+
+  async resolveSupplierProducts(
+    supplierTaxId: string,
+    supplierCodes: readonly string[],
+  ): Promise<SupplierProductResolution[]> {
+    if (supplierCodes.length === 0) {
+      return [];
+    }
+
     const { organizationId } = this.requestContext.getAuthenticated();
     const supplier = await this.database.value.partner.findUnique({
       where: {
@@ -118,32 +148,42 @@ export class CatalogService {
     });
 
     if (!supplier?.active || !supplier.roles.includes(PartnerRole.SUPPLIER)) {
-      return { status: "SUPPLIER_NOT_FOUND" };
+      return supplierCodes.map((supplierCode) => ({
+        status: "SUPPLIER_NOT_FOUND",
+        supplierCode,
+      }));
     }
 
-    const mapping = await this.database.value.supplierProductMapping.findUnique({
+    const normalizedCodes = supplierCodes.map(normalizeCode);
+    const mappings = await this.database.value.supplierProductMapping.findMany({
       include: { productPresentation: { include: { product: true, unitOfMeasure: true } } },
       where: {
-        organizationId_supplierId_normalizedSupplierCode: {
-          normalizedSupplierCode: normalizeCode(supplierCode),
-          organizationId,
-          supplierId: supplier.id,
-        },
+        normalizedSupplierCode: { in: [...new Set(normalizedCodes)] },
+        organizationId,
+        supplierId: supplier.id,
       },
     });
+    const mappingsByCode = new Map(
+      mappings.map((mapping) => [mapping.normalizedSupplierCode, mapping] as const),
+    );
 
-    if (
-      !mapping?.active ||
-      !mapping.productPresentation.active ||
-      !mapping.productPresentation.product.active
-    ) {
-      return { status: "UNMAPPED" };
-    }
+    return supplierCodes.map((supplierCode, index) => {
+      const mapping = mappingsByCode.get(normalizedCodes[index] ?? "");
 
-    return {
-      mapping: mappingResponse(mapping) as unknown as SupplierProductMappingDto,
-      status: "MATCHED",
-    };
+      if (
+        !mapping?.active ||
+        !mapping.productPresentation.active ||
+        !mapping.productPresentation.product.active
+      ) {
+        return { status: "UNMAPPED", supplierCode };
+      }
+
+      return {
+        mapping: mappingResponse(mapping) as unknown as SupplierProductMappingDto,
+        status: "MATCHED",
+        supplierCode,
+      };
+    });
   }
 
   private async createProductTransaction(

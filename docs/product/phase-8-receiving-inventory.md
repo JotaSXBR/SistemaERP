@@ -314,6 +314,11 @@ para concluir o incremento 8.1.
 - parser, validação, hash, proveniência e deduplicação;
 - prévia sem efeitos no estoque.
 
+Fundação interna implementada: o XML parseado já pode ser combinado com a resolução em lote dos
+códigos do fornecedor, preservando os campos originais de cada item e resumindo os estados
+`MATCHED`, `UNMAPPED` e `SUPPLIER_NOT_FOUND`. Endpoint de upload, armazenamento, proveniência e
+persistência idempotente continuam pendentes; essa prévia ainda não produz efeitos no estoque.
+
 ### 8.3 — Recebimento e estoque
 
 - confirmação transacional do recebimento;

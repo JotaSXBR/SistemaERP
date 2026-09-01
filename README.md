@@ -29,6 +29,7 @@ Com API e web em execução, acesse `http://localhost:5173/diagnostics`. Quando 
 - [Visão arquitetural](docs/architecture/overview.md)
 - [Fundação e sequência de implementação](docs/architecture/foundation.md)
 - [Ambiente de desenvolvimento](docs/development/setup.md)
+- [Handoff do projeto para agentes de IA](docs/development/ai-handoff.md)
 - [Política de atualização de dependências](docs/development/dependency-updates.md)
 - [Convenções de backend](docs/conventions/backend.md)
 - [Convenções de frontend](docs/conventions/frontend.md)
