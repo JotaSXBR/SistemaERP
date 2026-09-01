@@ -10,9 +10,8 @@ Entregar a primeira funcionalidade de negócio do ERP: receber documentos fiscai
 relacionar os itens dos fornecedores a um catálogo enriquecido e produzir saldo de estoque
 auditável.
 
-O fluxo deve aproveitar o serviço fiscal já utilizado para obter XMLs, aceitar importação manual
-como contingência e preparar os dados que alimentarão vendas, compras, financeiro e obrigações
-fiscais nas fases seguintes.
+O fluxo começa pela importação manual e controlada de XMLs de NF-e de entrada e prepara os dados que
+alimentarão vendas, compras, financeiro e obrigações fiscais nas fases seguintes.
 
 ## Contexto confirmado
 
@@ -20,8 +19,6 @@ fiscais nas fases seguintes.
 - Um mesmo material pode ser vendido em apresentação, dimensão e unidade solicitadas pelo cliente.
 - Há certificados de qualidade para a maioria dos produtos, mas ainda não há controle formal por
   lote, corrida ou rastreabilidade até a saída.
-- O recebimento de documentos fiscais usa SIEG.
-- O sistema legado tem mais de vinte anos e usa um banco Firebird em arquivo.
 - A empresa não usa NFC-e atualmente. A aplicabilidade da NFC-e à operação real deve ser validada
   com a contabilidade antes da Fase 10.
 - A data de abertura é um fato cadastral distinto das alterações posteriores de sócios, natureza ou
@@ -34,7 +31,7 @@ seeds, documentação de exemplo ou testes.
 
 Ao concluir a fase, um usuário autorizado deve conseguir:
 
-1. obter uma NF-e de entrada pela integração SIEG ou fornecer seu XML manualmente;
+1. fornecer manualmente o XML de uma NF-e de entrada;
 2. visualizar a origem e a validação do arquivo antes de qualquer efeito no estoque;
 3. identificar o fornecedor e mapear cada código do fornecedor para um produto interno;
 4. criar ou complementar um produto sem perder o texto original do documento;
@@ -57,7 +54,7 @@ Dados mínimos desta fase:
 - inscrições e indicador de contribuinte quando aplicável;
 - endereços com vigência ou histórico suficiente para documentos;
 - situação interna ativa ou inativa;
-- códigos usados pelo sistema legado e por integrações externas.
+- códigos usados por fornecedores e integrações externas futuras.
 
 O `organizationId` vem exclusivamente do contexto autenticado. Identificadores fiscais informados
 em payload não concedem acesso ao tenant.
@@ -118,6 +115,11 @@ O mapeamento não pode usar somente descrição aproximada. Sugestões automáti
 usuário, mas a primeira associação ou uma associação ambígua exige confirmação determinística e
 auditada.
 
+Correspondências confirmadas são reutilizadas em novas entradas do mesmo fornecedor. Se o código do
+fornecedor for novo, tiver mudado ou apontar para mais de uma apresentação possível, o item permanece
+pendente até confirmação humana. O texto, código, unidade e quantidades originais do XML nunca são
+substituídos pelos dados internos do catálogo.
+
 ### Documentos e recebimento
 
 O documento fiscal de entrada preserva:
@@ -134,8 +136,8 @@ O documento fiscal de entrada preserva:
 A chave de acesso deve ser única por organização. Reimportar o mesmo documento retorna o resultado
 existente; não cria uma segunda entrada nem duplica estoque.
 
-O XML obtido da SIEG e o XML fornecido manualmente passam pelo mesmo pipeline. A origem é registrada
-como proveniência e não altera as regras de validação.
+Todo XML fornecido manualmente passa pelo mesmo pipeline idempotente. A origem, o hash e o instante
+de ingestão são registrados como proveniência.
 
 ### Estoque
 
@@ -181,7 +183,7 @@ não ativa rastreabilidade por lote; essa será uma decisão posterior baseada n
 ## Fluxo principal
 
 ```text
-SIEG ou upload manual
+upload manual de XML
         |
         v
 caixa de entrada fiscal idempotente
@@ -205,27 +207,39 @@ saldo, histórico e documentos recuperáveis
 Falha em armazenamento, validação ou movimento impede a confirmação parcial. Reprocessamento usa a
 mesma chave de idempotência e deve poder reconciliar o resultado.
 
-## Integração SIEG
+## Amostras de produção e testes de ingestão
 
-A documentação pública da SIEG expõe API para sistemas externos e operações de download de XML
-específico e em lote. A integração da fase será somente de leitura e terá três passos antes da
-implementação definitiva:
+XMLs reais de NF-e de entrada podem ser usados somente em execução local ou ambiente controlado,
+com acesso restrito e sem copiar identificadores, endereços, chaves de acesso, certificados ou
+outros dados reais para Git, fixtures, documentação, relatórios de teste ou logs.
 
-1. confirmar no contrato atual se a API está habilitada e obter credenciais próprias de integração;
-2. levantar autenticação, paginação, filtros, limites, retenção, eventos e comportamento de erro na
-   versão efetivamente contratada;
-3. executar uma prova com documentos sintéticos ou devidamente protegidos, sem registrar segredo ou
-   XML real em logs e fixtures.
+O primeiro ciclo de descoberta deve:
 
-A API não será a única forma de entrada. Upload manual de XML permanece como contingência e facilita
-testes. Consulta direta à Distribuição DF-e poderá ser outro adaptador futuro, sem alterar o caso de
-uso de recebimento.
+1. selecionar amostras representativas das famílias, unidades e formas de apresentação compradas;
+2. executar a leitura sem efeitos em estoque e registrar somente métricas e divergências
+   minimizadas;
+3. identificar os campos efetivamente usados para reconhecer fornecedor, item, unidade, quantidade,
+   classificação e valores;
+4. produzir fixtures sintéticas ou anonimizadas que preservem as estruturas necessárias aos testes
+   automatizados, sem alegar validade de assinatura depois da anonimização;
+5. cobrir XML válido, duplicado, malformado, de outro destinatário e com item ainda não mapeado.
 
-Referências consultadas em 2026-08-31:
+O XML de produção valida a compatibilidade do parser em ambiente controlado. A suíte automatizada
+deve ser reexecutável sem depender de dados de produção.
 
-- [Portal de integrações SIEG](https://integracoes.sieg.com/)
-- [Swagger público da API SIEG](https://api.sieg.com/swagger/ui/index)
-- [Portal Nacional — Distribuição de DF-e](https://www.nfe.fazenda.gov.br/POrtal/exibirArquivo.aspx?conteudo=155Wx5%2FJB5A%3D)
+A primeira leitura controlada confirmou que GTIN não está disponível de forma suficiente para ser a
+chave primária de correspondência. A combinação `fornecedor + código do fornecedor` apresentou
+estabilidade maior, embora o texto descritivo possa variar entre documentos. Portanto, descrição,
+NCM, GTIN e unidade ajudam na conferência, mas não substituem a associação explícita e auditada.
+
+Essa leitura prova compatibilidade estrutural com as amostras, não validade fiscal completa. A
+validação de schema oficial, assinatura, protocolo, destinatário e demais regras fiscais permanece
+obrigatória antes de qualquer efeito no estoque.
+
+Para uma validação local minimizada, o arquivo pode permanecer fora do repositório ou em
+`.local-data/` e ser lido com `pnpm nfe:validate -- <caminho-do-xml>`. O comando não exibe chave de
+acesso, identificadores fiscais, nomes, descrições ou valores. O caminho também pode apontar para um
+diretório; nesse caso, o resultado apresenta somente contagens, versões e unidades agregadas.
 
 ## Arquivos e armazenamento
 
@@ -238,49 +252,15 @@ arquitetura. A implementação deve:
 - negar URLs públicas e usar autorização por organização;
 - verificar tipo, tamanho e conteúdo antes de aceitar upload;
 - ter política de backup, retenção e restauração testada;
-- não depender da retenção exclusiva da SIEG ou do futuro emissor fiscal.
+- não depender da retenção exclusiva de qualquer sistema externo ou futuro emissor fiscal.
 
 A escolha definitiva do backend e sua operação devem ser registradas antes de adicionar a
 dependência. Armazenar temporariamente não pode significar descartar o original após o recebimento.
 
-## Migração do Firebird legado
-
-A migração será repetível e reconciliável, nunca uma cópia direta de tabelas para o novo schema.
-
-### Descoberta segura
-
-- identificar versão do Firebird, dialect, charset, tamanho e dependências do arquivo;
-- obter backup ou cópia consistente com o sistema legado parado ou por ferramenta apropriada;
-- nunca experimentar sobre o único arquivo ativo da operação;
-- catalogar tabelas, chaves reais, códigos duplicados, campos livres e dados inválidos;
-- registrar consultas de contagem e totais para reconciliação.
-
-### Escopo inicial
-
-Importar primeiro somente o necessário para operar a Fase 8:
-
-- parceiros ativos relevantes ao recebimento;
-- produtos ativos e seus códigos legados;
-- unidades, classificações e saldos iniciais verificáveis;
-- vínculos de código do fornecedor quando existirem.
-
-Histórico fiscal deve ser recuperado preferencialmente de XMLs confiáveis, inclusive da SIEG. Não se
-deve migrar vinte anos de tabelas operacionais sem um caso de uso definido. Títulos em aberto,
-vendas e compras históricas pertencem aos planos das fases correspondentes.
-
-### Processo
-
-```text
-cópia consistente -> extração somente leitura -> staging -> validação/mapeamento
-                  -> importação idempotente -> reconciliação -> relatório de divergências
-```
-
-Cada execução gera versão, contagens, rejeições e checksums. O saldo inicial entra como movimento de
-abertura auditado e só é aceito após reconciliação com o inventário operacional.
-
 ## Segurança e auditoria
 
-- Credenciais da SIEG, Firebird, certificados digitais e arquivos PFX não entram no Git nem em logs.
+- XMLs de produção, certificados digitais, arquivos PFX, segredos e dados pessoais reais não entram
+  no Git nem em logs.
 - Visualização e download de XML ou certificado exigem permissão e tenant autenticado.
 - Importação, mapeamento, confirmação, ajuste e download relevante produzem auditoria estruturada.
 - Dados pessoais são minimizados nas telas, logs e ambientes não produtivos.
@@ -296,17 +276,17 @@ abertura auditado e só é aceito após reconciliação com o inventário operac
 - apuração de tributos, EFD, ECD ou ECF;
 - custeio contábil definitivo;
 - rastreabilidade garantida por lote ou corrida;
-- migração integral de todo o histórico do legado;
+- integração automática para captura de documentos fiscais;
+- migração ou sincronização de sistemas legados;
 - geração automática de descrição fiscal por IA sem confirmação.
 
 ## Incrementos
 
 ### 8.0 — Descoberta e provas
 
-- validar acesso de API da SIEG e baixar documentos em ambiente seguro;
-- inventariar o Firebird a partir de cópia consistente;
-- coletar amostras anonimizadas das famílias, unidades e certificados;
-- obter decisão contábil documentada sobre os documentos fiscais usados na venda atual;
+- validar a leitura controlada de amostras representativas de XMLs de entrada da operação;
+- derivar fixtures sintéticas ou anonimizadas para os testes automatizados;
+- levantar famílias, unidades, códigos de fornecedor, conversões e certificados encontrados;
 - confirmar depósitos, locais e política operacional de recebimento.
 
 ### 8.1 — Parceiros e catálogo
@@ -319,7 +299,7 @@ abertura auditado e só é aceito após reconciliação com o inventário operac
 ### 8.2 — Caixa de entrada fiscal
 
 - armazenamento seguro de arquivos;
-- upload manual e adaptador SIEG;
+- upload manual de XML;
 - parser, validação, hash, proveniência e deduplicação;
 - prévia sem efeitos no estoque.
 
@@ -330,16 +310,16 @@ abertura auditado e só é aceito após reconciliação com o inventário operac
 - ajustes com motivo e auditoria;
 - reconciliação e testes concorrentes/idempotentes.
 
-### 8.4 — Certificados e carga inicial
+### 8.4 — Certificados e validação operacional
 
 - armazenamento e vínculo de certificados;
 - pesquisa e recuperação por entrada e produto;
-- importação repetível do escopo aprovado do Firebird;
-- relatório de divergências e saldo inicial reconciliado.
+- validação controlada com amostras representativas da operação;
+- relatório de divergências do mapeamento e estoque reconciliado.
 
 ## Critérios de aceitação
 
-- O mesmo XML, pela SIEG ou upload, nunca duplica documento ou estoque.
+- O mesmo XML reenviado nunca duplica documento ou estoque.
 - XML inválido, não autorizado ou destinado a outra empresa não gera recebimento.
 - Nenhuma quantidade fracionária ou valor monetário usa ponto flutuante.
 - Uma conversão variável preserva valores de origem, fator efetivo e responsável.
@@ -347,7 +327,7 @@ abertura auditado e só é aceito após reconciliação com o inventário operac
 - Certificados podem ser recuperados sem afirmar rastreabilidade inexistente.
 - Ajustes não apagam movimentos anteriores.
 - Consultas e arquivos permanecem isolados por organização.
-- A carga Firebird pode ser reexecutada e produz reconciliação equivalente.
+- Os testes automatizados de ingestão não dependem de arquivos ou dados reais de produção.
 - OpenAPI e cliente gerado são atualizados junto com o contrato.
 - Formatação, lint, TypeScript strict, testes pertinentes e `pnpm verify` passam.
 
@@ -359,8 +339,6 @@ abertura auditado e só é aceito após reconciliação com o inventário operac
 - Há corte, sobra reaproveitável, perda ou transformação interna?
 - Certificados trazem lote, corrida, norma e composição em formato consistente?
 - Quantos depósitos e localizações físicas precisam ser controlados?
-- Qual versão, charset e estrutura do Firebird legado?
-- O contrato SIEG atual inclui API, qual sua cota e qual período de retenção?
 - A operação de varejo atual exige NFC-e ou está enquadrada em fluxo documental diferente? A resposta
   deve vir da contabilidade responsável.
 

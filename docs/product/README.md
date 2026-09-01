@@ -60,4 +60,4 @@ A Fase 9 só deve ser detalhada quando a Fase 8 tiver validado em uso real:
 - recebimento de XML e mapeamento fornecedor-produto;
 - saldo de estoque reconciliado;
 - armazenamento e recuperação de certificados de qualidade;
-- estratégia repetível de extração do sistema legado.
+- validação do fluxo com amostras representativas da operação.

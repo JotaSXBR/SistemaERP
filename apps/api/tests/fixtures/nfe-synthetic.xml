@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe Id="NFe11111111111111111111111111111111111111111111" versao="4.00">
+      <ide>
+        <natOp>COMPRA PARA COMERCIALIZACAO</natOp>
+        <serie>1</serie>
+        <nNF>42</nNF>
+        <dhEmi>2026-08-31T10:30:00-03:00</dhEmi>
+      </ide>
+      <emit>
+        <CNPJ>11111111111111</CNPJ>
+        <xNome>FORNECEDOR SINTETICO</xNome>
+      </emit>
+      <dest>
+        <CNPJ>22222222222222</CNPJ>
+        <xNome>DESTINATARIO SINTETICO</xNome>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>000123</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>PERFIL METALICO SINTETICO</xProd>
+          <NCM>00000000</NCM>
+          <CFOP>1102</CFOP>
+          <uCom>KG</uCom>
+          <qCom>0.1000</qCom>
+          <vUnCom>12345.6000000000</vUnCom>
+          <vProd>1234.5600</vProd>
+          <uTrib>KG</uTrib>
+          <qTrib>0.1000</qTrib>
+          <vUnTrib>12345.6000000000</vUnTrib>
+        </prod>
+      </det>
+      <total>
+        <ICMSTot><vNF>1234.5600</vNF></ICMSTot>
+      </total>
+    </infNFe>
+  </NFe>
+  <protNFe>
+    <infProt><nProt>000000000000000</nProt></infProt>
+  </protNFe>
+</nfeProc>

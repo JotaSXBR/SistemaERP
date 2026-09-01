@@ -27,6 +27,8 @@ Thumbs.db
 # Local tooling
 .turbo/
 .cache/
+.local-data/
+/files/
 
 # Generated database client
 packages/database/src/generated/prisma/

@@ -103,5 +103,5 @@ O comportamento da fase possui cobertura em
 Recuperação de senha, MFA, convites, rotação de sessão, permissões customizadas e exposição
 pública da API permanecem como trabalhos futuros.
 
-A Fase 7 também não implementa integração direta com o SIEG. Na Fase 8, o XML fiscal pode ser
-baixado do SIEG e importado manualmente; a integração automática fica para uma etapa posterior.
+A Fase 7 também não implementa o domínio fiscal. Na Fase 8, a ingestão começa pelo upload manual e
+controlado de XML de NF-e de entrada.

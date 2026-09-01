@@ -1,44 +1,20 @@
 # Provedores e integração fiscal
 
-- Estado: Recomendação provisória para prova técnica e comercial
+- Estado: Recomendação provisória para prova técnica e comercial de emissão
 - Pesquisa atualizada em: 2026-08-31
-- Aplicação prevista: entrada na Fase 8 e emissão na Fase 10
+- Aplicação prevista: emissão na Fase 10
 
 ## Decisão provisória
 
-| Papel                    | Escolha              | Motivo principal                                                                                                         |
-| ------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Entrada e arquivo fiscal | SIEG                 | Já faz parte da operação e possui API pública para integração e download de XML                                          |
-| Emissor principal        | Focus NFe            | Documentação pública clara, NF-e/NFC-e, homologação, webhooks, referência única, recebimento e adequação publicada à RTC |
-| Primeiro backup          | Nuvem Fiscal         | API REST abrangente, OAuth2 com escopos, Distribuição NF-e, eventos e recursos de diagnóstico                            |
-| Segundo backup           | PlugNotas/TecnoSpeed | API REST madura, NF-e/NFC-e, fluxo assíncrono com webhook e atualização documentada para a RTC                           |
+| Papel             | Escolha              | Motivo principal                                                                                                         |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Emissor principal | Focus NFe            | Documentação pública clara, NF-e/NFC-e, homologação, webhooks, referência única, recebimento e adequação publicada à RTC |
+| Primeiro backup   | Nuvem Fiscal         | API REST abrangente, OAuth2 com escopos, Distribuição NF-e, eventos e recursos de diagnóstico                            |
+| Segundo backup    | PlugNotas/TecnoSpeed | API REST madura, NF-e/NFC-e, fluxo assíncrono com webhook e atualização documentada para a RTC                           |
 
 Essa escolha não autoriza contratação nem integração de produção. O emissor principal só será
 confirmado depois de prova técnica, proposta comercial, avaliação contratual e validação da
 contabilidade.
-
-## SIEG na Fase 8
-
-O portal de integrações e o Swagger públicos mostram download de XML específico e em lote, incluindo
-filtros de eventos. Isso torna a SIEG a primeira fonte candidata para alimentar a caixa de entrada
-fiscal.
-
-Antes de implementar, ainda é necessário confirmar com a SIEG:
-
-- se o plano atual habilita API para sistemas externos;
-- mecanismo de autenticação e segregação de credenciais;
-- paginação, cotas, limites de data e retenção;
-- entrega de eventos e documentos cancelados;
-- disponibilidade de ambiente de teste;
-- SLA, suporte e exportação completa em encerramento do contrato.
-
-O ERP manterá cópia própria dos XMLs, metadados e hashes. SIEG não será a única fonte de retenção nem
-uma dependência dentro do domínio de estoque.
-
-Fontes:
-
-- [Portal de integrações SIEG](https://integracoes.sieg.com/)
-- [Swagger público da API SIEG](https://api.sieg.com/swagger/ui/index)
 
 ## Comparação dos emissores
 
