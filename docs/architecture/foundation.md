@@ -58,6 +58,8 @@ A fundação está pronta quando um desenvolvedor consegue clonar o repositório
 
 ## Fase 7 — Primitivas de plataforma
 
+Documentação consolidada da implementação: [Fase 7 — Primitivas de plataforma](phase-7-platform-primitives.md).
+
 - [x] identidade e sessão;
 - [x] organizações e memberships;
 - [x] RBAC;
