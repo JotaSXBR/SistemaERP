@@ -141,6 +141,15 @@ endpoint, região, bucket, acesso privado e capacidades antes da ativação; cre
 texto aberto ou retornam pela API. Download começa mediado pela API após autorização por tenant. A
 implementação do adapter, do MinIO local, da configuração e da reconciliação ainda não existe.
 
+### Schema da caixa de entrada fiscal
+
+O Prisma contém `InboundFiscalDocument`, `InboundFiscalDocumentItem`,
+`FiscalDocumentIngestion` e `InboundFiscalDocumentItemMapping`. As constraints garantem tenant nas
+relações, chave de acesso única por organização, decimais exatos, metadados mínimos do objeto e
+formatos fiscais básicos. Fornecedor ainda não cadastrado e item ainda não mapeado continuam
+representáveis. Não existe serviço de persistência e nenhuma dessas tabelas produz efeito no
+estoque.
+
 ## Mapa do código relevante
 
 ```text
@@ -223,7 +232,7 @@ exigem regeneração enquanto não houver controller/DTO público.
 
 Na implementação da prévia HTTP, `pnpm verify` validou:
 
-- 39 testes da API em 8 arquivos, 2 testes do banco e 2 testes da web;
+- 39 testes da API em 8 arquivos, 5 testes do banco e 2 testes da web;
 - formatação e lint;
 - TypeScript strict;
 - build de todos os workspaces;
@@ -246,7 +255,6 @@ Para concluir 8.1:
 Para 8.2:
 
 - upload manual durável, com armazenamento privado e proveniência;
-- persistir documento, itens, hash, proveniência e estados por organização;
 - deduplicar por `organizationId + chave de acesso` e tratar reimportação idempotente;
 - validar schema XSD oficial, assinatura, protocolo, destinatário e totais;
 - expor a prévia autenticada sem efeitos no estoque;
@@ -261,11 +269,10 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve continuar pequeno: definir o modelo persistente da caixa de entrada fiscal,
-incluindo documento, item, proveniência, hash, estados e constraints de tenant/idempotência. A
-fronteira de objetos foi definida na ADR-0007; ainda não adicione o adapter ou o MinIO no mesmo PR do
-schema. Depois, implemente em PRs separados o MinIO no Compose e a configuração multiempresa do
-serviço S3. Não conecte a caixa de entrada ao estoque.
+O próximo recorte deve adicionar MinIO ao Docker Compose para desenvolvimento e testes, com imagem
+fixada, volume nomeado, health check e provisionamento idempotente do bucket privado. Não adicione
+no mesmo PR o adapter AWS SDK nem a configuração multiempresa do serviço S3. Depois implemente cada
+um em uma entrega própria. Não conecte a caixa de entrada ao estoque.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente

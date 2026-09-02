@@ -1,6 +1,8 @@
 export { createDatabaseClient, type DatabaseClient } from "./client.js";
 export { Prisma } from "./generated/prisma/client.js";
 export {
+  FiscalDocumentStatus,
+  FiscalIngestionSource,
   MembershipRole,
   MembershipStatus,
   PartnerRole,

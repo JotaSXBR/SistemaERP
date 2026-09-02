@@ -35,6 +35,17 @@ enum ProductConversionMode {
   VARIABLE
 }
 
+enum FiscalDocumentStatus {
+  PENDING_VALIDATION
+  VALIDATION_FAILED
+  PENDING_MAPPING
+  READY_FOR_REVIEW
+}
+
+enum FiscalIngestionSource {
+  MANUAL_UPLOAD
+}
+
 model User {
   id           String       @id @default(uuid()) @db.Uuid
   email        String       @unique @db.VarChar(320)
@@ -50,11 +61,11 @@ model User {
 }
 
 model Organization {
-  id                      String                   @id @default(uuid()) @db.Uuid
-  name                    String                   @db.VarChar(160)
-  slug                    String                   @unique @db.VarChar(80)
-  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                      String                             @id @default(uuid()) @db.Uuid
+  name                    String                             @db.VarChar(160)
+  slug                    String                             @unique @db.VarChar(80)
+  createdAt               DateTime                           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                           @updatedAt @map("updated_at") @db.Timestamptz(3)
   memberships             Membership[]
   auditEvents             AuditEvent[]
   idempotencyRecords      IdempotencyRecord[]
@@ -63,6 +74,10 @@ model Organization {
   productPresentations    ProductPresentation[]
   supplierProductMappings SupplierProductMapping[]
   unitsOfMeasure          UnitOfMeasure[]
+  inboundFiscalDocuments  InboundFiscalDocument[]
+  inboundFiscalItems      InboundFiscalDocumentItem[]
+  fiscalIngestions        FiscalDocumentIngestion[]
+  fiscalItemMappings      InboundFiscalDocumentItemMapping[]
 
   @@map("organizations")
 }
@@ -126,21 +141,22 @@ model Product {
 }
 
 model ProductPresentation {
-  id                      String                   @id @default(uuid()) @db.Uuid
-  organizationId          String                   @map("organization_id") @db.Uuid
-  productId               String                   @map("product_id") @db.Uuid
-  unitOfMeasureId         String                   @map("unit_of_measure_id") @db.Uuid
-  code                    String                   @db.VarChar(80)
-  name                    String                   @db.VarChar(160)
-  conversionMode          ProductConversionMode    @map("conversion_mode")
-  conversionFactor        Decimal?                 @map("conversion_factor") @db.Decimal(24, 10)
-  active                  Boolean                  @default(true)
-  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt               DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
-  organization            Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  product                 Product                  @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
-  unitOfMeasure           UnitOfMeasure            @relation("PresentationUnit", fields: [unitOfMeasureId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  id                      String                             @id @default(uuid()) @db.Uuid
+  organizationId          String                             @map("organization_id") @db.Uuid
+  productId               String                             @map("product_id") @db.Uuid
+  unitOfMeasureId         String                             @map("unit_of_measure_id") @db.Uuid
+  code                    String                             @db.VarChar(80)
+  name                    String                             @db.VarChar(160)
+  conversionMode          ProductConversionMode              @map("conversion_mode")
+  conversionFactor        Decimal?                           @map("conversion_factor") @db.Decimal(24, 10)
+  active                  Boolean                            @default(true)
+  createdAt               DateTime                           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization            Organization                       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product                 Product                            @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  unitOfMeasure           UnitOfMeasure                      @relation("PresentationUnit", fields: [unitOfMeasureId, organizationId], references: [id, organizationId], onDelete: Restrict)
   supplierProductMappings SupplierProductMapping[]
+  fiscalDocumentMappings  InboundFiscalDocumentItemMapping[]
 
   @@unique([id, organizationId])
   @@unique([organizationId, productId, code])
@@ -165,6 +181,102 @@ model SupplierProductMapping {
   @@unique([organizationId, supplierId, normalizedSupplierCode])
   @@index([organizationId, productPresentationId])
   @@map("supplier_product_mappings")
+}
+
+model InboundFiscalDocument {
+  id                String                      @id @default(uuid()) @db.Uuid
+  organizationId    String                      @map("organization_id") @db.Uuid
+  accessKey         String                      @map("access_key") @db.VarChar(44)
+  status            FiscalDocumentStatus        @default(PENDING_VALIDATION)
+  schemaVersion     String                      @map("schema_version") @db.VarChar(10)
+  documentNumber    String                      @map("document_number") @db.VarChar(20)
+  series            String                      @db.VarChar(10)
+  protocol          String?                     @db.VarChar(32)
+  issuedAt          DateTime                    @map("issued_at") @db.Timestamptz(3)
+  supplierTaxId     String                      @map("supplier_tax_id") @db.VarChar(32)
+  supplierName      String                      @map("supplier_name") @db.VarChar(160)
+  recipientTaxId    String                      @map("recipient_tax_id") @db.VarChar(32)
+  natureOfOperation String                      @map("nature_of_operation") @db.VarChar(255)
+  documentTotal     Decimal                     @map("document_total") @db.Decimal(24, 4)
+  createdAt         DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization      Organization                @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  items             InboundFiscalDocumentItem[]
+  ingestions        FiscalDocumentIngestion[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, accessKey])
+  @@index([organizationId, status, createdAt])
+  @@index([organizationId, supplierTaxId, issuedAt])
+  @@map("inbound_fiscal_documents")
+}
+
+model InboundFiscalDocumentItem {
+  id                     String                            @id @default(uuid()) @db.Uuid
+  organizationId         String                            @map("organization_id") @db.Uuid
+  documentId             String                            @map("document_id") @db.Uuid
+  itemNumber             String                            @map("item_number") @db.VarChar(16)
+  supplierCode           String                            @map("supplier_code") @db.VarChar(120)
+  description            String                            @db.VarChar(240)
+  ncm                    String                            @db.VarChar(8)
+  cest                   String?                           @db.VarChar(7)
+  gtin                   String?                           @db.VarChar(14)
+  cfop                   String                            @db.VarChar(4)
+  commercialUnit         String                            @map("commercial_unit") @db.VarChar(16)
+  commercialQuantity     Decimal                           @map("commercial_quantity") @db.Decimal(24, 10)
+  commercialUnitValue    Decimal                           @map("commercial_unit_value") @db.Decimal(24, 10)
+  taxableUnit            String                            @map("taxable_unit") @db.VarChar(16)
+  taxableQuantity        Decimal                           @map("taxable_quantity") @db.Decimal(24, 10)
+  taxableUnitValue       Decimal                           @map("taxable_unit_value") @db.Decimal(24, 10)
+  totalValue             Decimal                           @map("total_value") @db.Decimal(24, 4)
+  createdAt              DateTime                          @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization           Organization                      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  document               InboundFiscalDocument             @relation(fields: [documentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  internalProductMapping InboundFiscalDocumentItemMapping?
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, documentId, itemNumber])
+  @@index([organizationId, supplierCode])
+  @@map("inbound_fiscal_document_items")
+}
+
+model FiscalDocumentIngestion {
+  id              String                @id @default(uuid()) @db.Uuid
+  organizationId  String                @map("organization_id") @db.Uuid
+  documentId      String                @map("document_id") @db.Uuid
+  source          FiscalIngestionSource
+  hashSha256      String                @map("hash_sha256") @db.VarChar(64)
+  objectKey       String                @map("object_key") @db.VarChar(1024)
+  objectVersionId String?               @map("object_version_id") @db.VarChar(1024)
+  contentType     String                @map("content_type") @db.VarChar(100)
+  byteSize        BigInt                @map("byte_size")
+  requestId       String                @map("request_id") @db.VarChar(80)
+  correlationId   String                @map("correlation_id") @db.VarChar(128)
+  ingestedAt      DateTime              @default(now()) @map("ingested_at") @db.Timestamptz(3)
+  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  document        InboundFiscalDocument @relation(fields: [documentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, documentId, hashSha256])
+  @@unique([organizationId, objectKey])
+  @@index([organizationId, ingestedAt])
+  @@map("fiscal_document_ingestions")
+}
+
+model InboundFiscalDocumentItemMapping {
+  id                    String                    @id @default(uuid()) @db.Uuid
+  organizationId        String                    @map("organization_id") @db.Uuid
+  documentItemId        String                    @map("document_item_id") @db.Uuid
+  productPresentationId String                    @map("product_presentation_id") @db.Uuid
+  createdAt             DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization          Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  documentItem          InboundFiscalDocumentItem @relation(fields: [documentItemId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  productPresentation   ProductPresentation       @relation(fields: [productPresentationId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([id, organizationId])
+  @@unique([documentItemId, organizationId])
+  @@index([organizationId, productPresentationId])
+  @@map("inbound_fiscal_document_item_mappings")
 }
 
 model Membership {

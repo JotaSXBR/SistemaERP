@@ -1,6 +1,6 @@
 # Fase 8 — Catálogo, entrada fiscal e estoque rastreável
 
-- Estado: Em andamento — 8.1 parcial / 8.2 prévia HTTP e armazenamento definido
+- Estado: Em andamento — 8.1 parcial / 8.2 schema persistente
 - Data da definição: 2026-08-31
 - Predecessora: Fase 7 — Primitivas de plataforma
 
@@ -324,6 +324,12 @@ pendentes; essa prévia ainda não produz efeitos no estoque.
 A ADR-0007 definiu a fronteira S3, configuração do serviço por organização no sistema e no
 onboarding futuro, e MinIO no Docker Compose para desenvolvimento e testes. A infraestrutura, a
 configuração persistente e o adapter ainda não foram implementados.
+
+O schema persistente da caixa de entrada contém documento, itens, ingestões e vínculos opcionais
+com apresentações internas. Chave de acesso, objetos e relações são isolados por organização;
+quantidades e valores usam `numeric`; a ingestão preserva origem, SHA-256, tamanho, tipo de conteúdo,
+chave/versão do objeto e correlação. Os estados atuais cobrem validação pendente ou falha, mapeamento
+pendente e documento pronto para revisão. Ainda não há serviço que grave esses modelos.
 
 ### 8.3 — Recebimento e estoque
 
