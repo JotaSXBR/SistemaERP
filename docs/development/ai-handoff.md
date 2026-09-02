@@ -221,9 +221,11 @@ Na implementação da prévia HTTP, `pnpm verify` validou:
 - build de todos os workspaces;
 - regeneração determinística do OpenAPI e do cliente TypeScript.
 
-A suíte existente também cobre banco, web e um E2E Playwright do diagnóstico. Antes de concluir
-qualquer nova entrega, execute `pnpm verify` e o E2E proporcionalmente ao risco. O CI da `main`
-repete migrations, formatação, lint, typecheck, testes, build, contrato e Playwright.
+A suíte existente também cobre banco, web e um E2E Playwright do diagnóstico. Valide cada entrega
+proporcionalmente ao risco conforme `AGENTS.md`; `pnpm verify` permanece obrigatório para mudanças
+críticas ou transversais, não para docs-only. O CI executa a suíte completa quando há arquivo não
+Markdown e somente uma checagem leve do diff para documentação. O agente não aguarda ativamente o
+CI remoto depois de abrir ou atualizar um PR.
 
 ## O que ainda falta
 

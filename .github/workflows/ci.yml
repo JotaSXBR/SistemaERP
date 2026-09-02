@@ -13,8 +13,52 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Validate workspace
+  scope:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Select validation scope
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | awk '$0 !~ /\.md$/ { found=1 } END { exit(found ? 0 : 1) }'; then
+            echo "full=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "full=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  documentation:
+    name: Validate documentation
+    needs: scope
+    if: needs.scope.outputs.full != 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check documentation changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: git diff --check "$BASE_SHA" "$HEAD_SHA"
+
+  full:
+    name: Run full validation
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -87,3 +131,27 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 7
+
+  verify:
+    name: Validate workspace
+    needs: [scope, documentation, full]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check selected validation
+        env:
+          DOCUMENTATION_RESULT: ${{ needs.documentation.result }}
+          FULL_REQUIRED: ${{ needs.scope.outputs.full }}
+          FULL_RESULT: ${{ needs.full.result }}
+          SCOPE_RESULT: ${{ needs.scope.result }}
+        run: |
+          if [ "$SCOPE_RESULT" != "success" ]; then
+            exit 1
+          fi
+
+          if [ "$FULL_REQUIRED" = "true" ]; then
+            [ "$FULL_RESULT" = "success" ]
+          else
+            [ "$DOCUMENTATION_RESULT" = "success" ]
+          fi

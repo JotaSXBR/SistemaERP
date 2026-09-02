@@ -90,8 +90,10 @@ ao serviço `postgres` pela rede privada do Compose e não publica novas portas.
 dependências em uma camada isolada e reaproveitável; XMLs locais, `.env`, `node_modules`, builds e
 relatórios não entram no contexto nem são escritos pelo contêiner no workspace.
 
-O workflow de CI aplica migrations em um PostgreSQL efêmero e executa formatação, lint, typecheck,
-testes, build, checagem do contrato gerado e E2E. A política de manutenção está em
+Para mudanças que contêm código ou configuração executável, o workflow de CI aplica migrations em
+um PostgreSQL efêmero e executa formatação, lint, typecheck, testes, build, checagem do contrato
+gerado e E2E. PRs compostos somente por Markdown executam apenas uma validação leve do diff, sem
+instalar dependências ou iniciar PostgreSQL. A política de manutenção está em
 [Atualização de dependências](dependency-updates.md).
 
 O seed cria de forma idempotente a organização `demo`, o usuário sintético
