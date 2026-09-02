@@ -35,6 +35,29 @@ Copie `.env.example` para `.env` antes de iniciar a infraestrutura. Os valores d
 | `VITE_API_BASE_URL`   | URL pública da API no bundle web   | vazio (mesma origem)       |
 | `SEED_ADMIN_PASSWORD` | Senha do administrador sintético   | `local_admin_only`         |
 
+## Armazenamento de objetos local
+
+O serviço `minio` fornece uma instância S3 compatível exclusivamente para desenvolvimento e testes.
+Ele persiste objetos no volume nomeado `sistema-erp_minio-data`, publica API e console somente em
+`127.0.0.1` e não representa a topologia, durabilidade ou política de backup de produção.
+
+Ao subir a infraestrutura, o serviço one-shot `minio-init` cria de forma idempotente o bucket
+privado e habilita seu versionamento. A credencial root existe somente para essa administração
+local; a aplicação não deve reutilizá-la como credencial de runtime.
+
+| Variável              | Finalidade                                | Valor local padrão       |
+| --------------------- | ----------------------------------------- | ------------------------ |
+| `MINIO_ROOT_USER`     | Usuário administrativo local              | `sistema_erp_admin`      |
+| `MINIO_ROOT_PASSWORD` | Senha administrativa exclusivamente local | `local_minio_admin_only` |
+| `MINIO_BUCKET`        | Bucket privado usado nos testes           | `sistema-erp-private`    |
+| `MINIO_API_PORT`      | Porta S3 publicada em loopback            | `9000`                   |
+| `MINIO_CONSOLE_PORT`  | Porta do console publicada em loopback    | `9001`                   |
+
+A API S3 fica em `http://localhost:9000` e o console em `http://localhost:9001`. As imagens do
+servidor e do cliente MinIO estão fixadas no Compose. O repositório oficial do servidor foi
+arquivado em 2026; por isso essas imagens servem apenas ao ambiente local isolado e sua substituição
+deve ser avaliada antes de qualquer uso compartilhado ou de produção.
+
 ## Comandos esperados
 
 Estes scripts deverão ser implementados na raiz:

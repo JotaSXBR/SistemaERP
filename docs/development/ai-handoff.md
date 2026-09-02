@@ -133,13 +133,14 @@ divergir futuramente.
 somente `application/xml` ou `text/xml`, limita o corpo a 5 MiB e não registra o conteúdo em logs.
 Ela ainda não persiste documento, arquivo ou proveniência e não produz qualquer efeito no estoque.
 
-### Armazenamento privado definido
+### Armazenamento privado e MinIO local
 
-A ADR-0007 define a API S3 como fronteira, serviço S3 compatível configurável por organização e
-MinIO no Docker Compose para desenvolvimento e testes. Configuração e onboarding devem validar
-endpoint, região, bucket, acesso privado e capacidades antes da ativação; credenciais nunca ficam em
-texto aberto ou retornam pela API. Download começa mediado pela API após autorização por tenant. A
-implementação do adapter, do MinIO local, da configuração e da reconciliação ainda não existe.
+A ADR-0007 define a API S3 como fronteira e serviço S3 compatível configurável por organização. O
+Docker Compose oferece MinIO local com imagem fixada, volume nomeado, health check e provisionamento
+idempotente de um bucket privado e versionado. Configuração e onboarding devem validar endpoint,
+região, bucket, acesso privado e capacidades antes da ativação; credenciais nunca ficam em texto
+aberto ou retornam pela API. Download começa mediado pela API após autorização por tenant. O adapter,
+a configuração multiempresa e a reconciliação ainda não existem.
 
 ### Schema da caixa de entrada fiscal
 
@@ -269,10 +270,9 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve adicionar MinIO ao Docker Compose para desenvolvimento e testes, com imagem
-fixada, volume nomeado, health check e provisionamento idempotente do bucket privado. Não adicione
-no mesmo PR o adapter AWS SDK nem a configuração multiempresa do serviço S3. Depois implemente cada
-um em uma entrega própria. Não conecte a caixa de entrada ao estoque.
+O próximo recorte deve implementar a porta mínima `put/head/get` e o adapter S3 com o cliente modular
+do AWS SDK v3, validando seu contrato contra o MinIO local. Não adicione no mesmo PR a configuração
+multiempresa do serviço, endpoints de upload/download ou ligação com o estoque.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente
