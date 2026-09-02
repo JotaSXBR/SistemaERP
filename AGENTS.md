@@ -37,7 +37,14 @@ Uma mudança só está concluída quando:
 - não contém segredos, dados pessoais reais ou logs sensíveis;
 - informa claramente o que foi validado e o que não pôde ser validado.
 
-Quando disponível, execute `pnpm verify` antes de concluir.
+Use validação proporcional ao risco:
+
+- docs-only: `pnpm exec prettier --check <arquivos>` e `git diff --check`;
+- código localizado: formatação, lint, typecheck e testes diretamente afetados;
+- execute `pnpm verify` para migrations, contrato HTTP, autenticação/tenant, parser fiscal, upload,
+  dependências ou mudanças transversais.
+
+Não repita a suíte completa sem mudança material desde a última execução aprovada.
 
 ## GitHub (agente)
 
@@ -57,6 +64,17 @@ Quando disponível, execute `pnpm verify` antes de concluir.
 5. PR contra `main`, título em Conventional Commits, body curto.
 6. Na descrição do PR: o que mudou, como validou, o que **não** validou. `Closes #N` se houver issue.
 7. Não mergear na `main` sem o humano pedir (exceto se a regra do projeto disser o contrário).
+
+### CI remoto
+
+- Depois de abrir ou atualizar um PR, informe o link e continue ou devolva o controle ao humano; não
+  espere ativamente o workflow terminar.
+- Não use `gh pr checks --watch`. Consulte o resultado uma vez somente se o humano pedir, se houver
+  indicação de falha ou imediatamente antes de uma operação que dependa do CI verde.
+- PRs apenas com Markdown recebem somente a validação leve do workflow. A suíte completa fica para
+  mudanças de código, configuração executável, dependências, migrations ou artefatos gerados.
+- Uma falha remota deve ser investigada pelo trecho relevante do log; sucesso local recente não
+  precisa ser repetido antes de entender a divergência.
 
 ### Commits
 
