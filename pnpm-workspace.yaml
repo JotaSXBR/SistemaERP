@@ -8,6 +8,16 @@ allowBuilds:
   "esbuild@0.28.2": true
   prisma: true
 
+# Correções de segurança em dependências transitivas do Prisma, que ainda não publicou
+# uma versão 7.x com essas versões. Remova cada entrada quando o Prisma resolver a versão
+# corrigida por conta própria.
+overrides:
+  # GHSA-ggr8-5vv4-36mx — exaustão de pilha ao mesclar grafos recursivos (@prisma/config).
+  deepmerge-ts: 8.0.2
+  # GHSA-3f6p-5ww8-9rcr — downgrade de plugin de autenticação vaza credencial em texto aberto.
+  # O driver MySQL não é usado por este projeto, que fala apenas com PostgreSQL.
+  mysql2: 3.24.2
+
 engineStrict: true
 saveExact: true
 sharedWorkspaceLockfile: true
