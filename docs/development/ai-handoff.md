@@ -130,6 +130,29 @@ incremento 8.1. Parâmetro inválido responde `400`; recurso de outra organizaç
 SKU, unidade e código de fornecedor continua encapsulada no catálogo porque essas semânticas podem
 divergir futuramente.
 
+### Autenticação e sessão na web
+
+A aplicação web deixou de ser somente a página de diagnóstico. O cliente gerado passou a receber o
+token opaco da sessão pela opção `auth`, então toda rota com `security` no contrato é assinada
+automaticamente; nenhuma tela monta cabeçalho `Authorization` por conta própria.
+
+- `/login` autentica com e-mail, senha e identificador da empresa e devolve o usuário à rota que ele
+  tentou abrir.
+- O token vive em memória e é espelhado em `sessionStorage`, não em `localStorage`: a credencial não
+  fica disponível a outras abas nem sobrevive ao fechamento do navegador. Bloqueio de armazenamento
+  degrada para sessão apenas em memória.
+- Um `401` em qualquer resposta descarta o token no cliente, de modo que sessão expirada ou revogada
+  no servidor deixa de valer também na interface.
+- `RequireSession` protege rotas autenticadas e distingue os estados carregando, anônimo e
+  autenticado. `/diagnostics` permanece público porque expõe apenas os health checks, que são rotas
+  `@Public`.
+- Sair revoga a sessão no servidor e remove do cache do TanStack Query tudo que não seja a própria
+  sessão, para que dados de um tenant não sobrevivam à troca de usuário no mesmo navegador.
+- `/organization` é a primeira tela autenticada e mostra a empresa da sessão e o papel do usuário.
+
+Formulários usam React Hook Form e Zod, conforme `docs/conventions/frontend.md`. A API continua
+sendo a autoridade de validação; o schema do cliente evita apenas a ida desnecessária ao servidor.
+
 ### Prévia de ingestão
 
 `FiscalIntakeService.preview(xml)` já combina o parser com a resolução em lote do catálogo:
@@ -265,8 +288,8 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
-- rotas de edição na API: a leitura já existe, mas não há `PUT`/`PATCH` de parceiros e produtos;
-- telas e manutenção dos cadastros;
+- rotas de edição de parceiros e catálogo na API: a leitura já existe, mas não há `PUT`/`PATCH`;
+- telas de listagem, criação e edição dos cadastros;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
 
@@ -287,10 +310,16 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-Com a leitura de parceiros e catálogo publicada, o próximo recorte são as telas web de listagem
-desses cadastros, consumindo `partnersControllerList` e `catalogControllerListProducts` do cliente
-gerado, com busca, paginação e estado vazio. Depois vêm a edição dos cadastros — `PUT`/`PATCH` ainda
-não existem na API — e, por último, a configuração S3 por organização.
+Com a autenticação da web e a leitura de parceiros e catálogo publicadas, o próximo recorte são as
+telas de listagem desses cadastros, consumindo `partnersControllerList` e
+`catalogControllerListProducts` do cliente gerado, com busca, paginação e estado vazio. Depois vêm a
+edição dos cadastros — `PUT`/`PATCH` ainda não existem na API — e, por último, a configuração S3 por
+organização.
+
+Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
+no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o
+Prisma passar a resolver a versão corrigida sozinho; confirme com `pnpm audit --prod` ao mexer nessas
+dependências.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente
