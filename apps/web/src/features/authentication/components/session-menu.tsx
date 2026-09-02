@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 
 import { useSession } from "../session-context.js";
 
@@ -11,7 +11,6 @@ const ROLE_LABELS: Record<string, string> = {
 
 export function SessionMenu() {
   const { identity, signOut, status } = useSession();
-  const navigate = useNavigate();
   const [isLeaving, setIsLeaving] = useState(false);
 
   if (status === "loading") {
@@ -33,8 +32,9 @@ export function SessionMenu() {
     setIsLeaving(true);
 
     try {
+      // Sem navegação imperativa: `RequireSession` já envia a sessão anônima para `/login`, e uma
+      // segunda navegação para a mesma rota remonta a tela de login no meio da transição.
       await signOut();
-      await navigate("/login", { replace: true });
     } catch {
       // A sessão local já foi descartada; manter o botão utilizável para uma nova tentativa.
       setIsLeaving(false);
