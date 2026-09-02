@@ -10,13 +10,39 @@ import type {
   CreateProductResponseDto,
   CreateSupplierProductMappingRequestDto,
   CreateSupplierProductMappingResponseDto,
+  ProductDetailDto,
   ProductDto,
+  ProductListResponseDto,
   ResolveSupplierProductResponseDto,
   SupplierProductMappingDto,
+  UnitOfMeasureDto,
 } from "./catalog.dto.js";
 
 function normalizeCode(value: string): string {
   return value.trim().toUpperCase();
+}
+
+type ListProductsInput = {
+  active?: boolean;
+  limit: number;
+  offset: number;
+  search?: string;
+};
+
+type PersistedUnit = {
+  code: string;
+  decimalScale: number;
+  id: string;
+  name: string;
+};
+
+function unitResponse(unit: PersistedUnit): UnitOfMeasureDto {
+  return {
+    code: unit.code,
+    decimalScale: unit.decimalScale,
+    id: unit.id,
+    name: unit.name,
+  };
 }
 
 type MappingWithRelations = Prisma.SupplierProductMappingGetPayload<{
@@ -68,6 +94,84 @@ export class CatalogService {
     @Inject(IdempotencyService) private readonly idempotency: IdempotencyService,
     @Inject(RequestContextService) private readonly requestContext: RequestContextService,
   ) {}
+
+  async listProducts(input: ListProductsInput): Promise<ProductListResponseDto> {
+    const { organizationId } = this.requestContext.getAuthenticated();
+    const where: Prisma.ProductWhereInput = {
+      organizationId,
+      ...(input.active === undefined ? {} : { active: input.active }),
+      ...(input.search
+        ? {
+            OR: [
+              { shortDescription: { contains: input.search, mode: "insensitive" } },
+              { sku: { contains: normalizeCode(input.search) } },
+            ],
+          }
+        : {}),
+    };
+    const [products, total] = await Promise.all([
+      this.database.value.product.findMany({
+        include: { baseUnit: true },
+        orderBy: [{ shortDescription: "asc" }, { id: "asc" }],
+        skip: input.offset,
+        take: input.limit,
+        where,
+      }),
+      this.database.value.product.count({ where }),
+    ]);
+
+    return {
+      items: products.map((product) => ({
+        active: product.active,
+        baseUnit: unitResponse(product.baseUnit),
+        id: product.id,
+        shortDescription: product.shortDescription,
+        sku: product.sku,
+      })),
+      limit: input.limit,
+      offset: input.offset,
+      total,
+    };
+  }
+
+  async findProductById(id: string): Promise<ProductDetailDto> {
+    const { organizationId } = this.requestContext.getAuthenticated();
+    const product = await this.database.value.product.findUnique({
+      include: {
+        baseUnit: true,
+        presentations: {
+          include: { unitOfMeasure: true },
+          orderBy: [{ code: "asc" }, { id: "asc" }],
+        },
+      },
+      where: { id_organizationId: { id, organizationId } },
+    });
+
+    if (!product) {
+      throw new NotFoundException();
+    }
+
+    return {
+      active: product.active,
+      baseUnit: unitResponse(product.baseUnit),
+      id: product.id,
+      presentations: product.presentations.map((presentation) => ({
+        code: presentation.code,
+        ...(presentation.conversionFactor
+          ? { conversionFactor: presentation.conversionFactor.toString() }
+          : {}),
+        conversionMode: presentation.conversionMode,
+        id: presentation.id,
+        name: presentation.name,
+        unit: unitResponse(presentation.unitOfMeasure),
+      })),
+      shortDescription: product.shortDescription,
+      sku: product.sku,
+      ...(product.technicalDescription
+        ? { technicalDescription: product.technicalDescription }
+        : {}),
+    };
+  }
 
   async createProduct(
     input: CreateProductRequestDto,

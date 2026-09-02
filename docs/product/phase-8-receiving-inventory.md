@@ -303,15 +303,17 @@ Primeira fatia implementada:
 - unidade base, produto e apresentação-base com fator decimal exato;
 - correspondência única por organização, fornecedor e código externo normalizado;
 - resolução determinística em estados `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`;
-- criação idempotente, RBAC, auditoria e isolamento de tenant testados.
+- criação idempotente, RBAC, auditoria e isolamento de tenant testados;
+- leitura paginada e filtrada de parceiros e produtos, com detalhe por identificador, restrita à
+  organização do contexto autenticado.
 
 A aplicação web ganhou autenticação: login por e-mail, senha e identificador da empresa, sessão
 assinando as requisições pelo cliente gerado, proteção de rotas, encerramento de sessão com descarte
 do cache do tenant e a primeira tela autenticada, que mostra a empresa vigente e o papel do usuário.
 Isso destrava as telas de cadastro, que até então não tinham como se autenticar.
 
-Ainda faltam para concluir o incremento 8.1: rotas de leitura e edição de parceiros e catálogo na
-API, que hoje só expõem `POST`; telas de listagem, criação e manutenção desses cadastros;
+Ainda faltam para concluir o incremento 8.1: rotas de edição de parceiros e catálogo na API, que
+hoje só expõem `POST` além da leitura; telas de listagem, criação e manutenção desses cadastros;
 apresentações adicionais com conversão variável; e atributos técnicos e fiscais enriquecidos.
 
 ### 8.2 — Caixa de entrada fiscal

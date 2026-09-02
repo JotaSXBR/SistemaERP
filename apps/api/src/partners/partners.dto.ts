@@ -54,3 +54,22 @@ export class CreatePartnerResponseDto {
   })
   replayed!: boolean;
 }
+
+export class PartnerListResponseDto {
+  @ApiProperty({ isArray: true, type: PartnerDto })
+  items!: PartnerDto[];
+
+  @ApiProperty({ description: "Tamanho de página aplicado", type: Number })
+  limit!: number;
+
+  @ApiProperty({ description: "Deslocamento aplicado", type: Number })
+  offset!: number;
+
+  @ApiProperty({ description: "Total de parceiros que atendem ao filtro", type: Number })
+  total!: number;
+}
+
+export class PartnerResponseDto {
+  @ApiProperty({ type: PartnerDto })
+  partner!: PartnerDto;
+}

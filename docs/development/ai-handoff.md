@@ -106,13 +106,25 @@ relações entre tenants.
 
 Rotas implementadas:
 
+- `GET /api/v1/partners` e `GET /api/v1/partners/{id}`;
 - `POST /api/v1/partners`;
+- `GET /api/v1/catalog/products` e `GET /api/v1/catalog/products/{id}`;
 - `POST /api/v1/catalog/products`;
 - `POST /api/v1/catalog/supplier-mappings`;
 - `POST /api/v1/catalog/supplier-mappings/resolve`.
 
 Criações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolução retorna
 `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`.
+
+As leituras estão liberadas para qualquer membro autenticado, porque listar cadastros não é operação
+privilegiada; escrita continua restrita a `OWNER` e `ADMIN`. Elas usam paginação explícita
+`limit`/`offset` (`limit` padrão 20 e máximo 100, em `apps/api/src/pagination/pagination.ts`) e
+devolvem `items`, `limit`, `offset` e `total`. Parceiros aceitam os filtros `search` (razão social,
+nome fantasia ou identificador fiscal normalizado), `role` e `active`; produtos aceitam `search`
+(SKU ou descrição curta) e `active`. A ordenação acompanha os índices existentes: parceiros por
+`legalName` e produtos por `shortDescription`, ambos com `id` como desempate estável. O detalhe de
+produto devolve a unidade base e todas as apresentações, antecipando as apresentações adicionais do
+incremento 8.1. Parâmetro inválido responde `400`; recurso de outra organização responde `404`.
 
 `normalizeTaxId` pertence ao módulo `partners` e é reutilizado pelo catálogo. A normalização de
 SKU, unidade e código de fornecedor continua encapsulada no catálogo porque essas semânticas podem
@@ -276,8 +288,7 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
-- rotas de leitura e edição de parceiros e catálogo na API: hoje esses módulos expõem apenas `POST`,
-  então nenhuma tela de manutenção é possível sem elas;
+- rotas de edição de parceiros e catálogo na API: a leitura já existe, mas não há `PUT`/`PATCH`;
 - telas de listagem, criação e edição dos cadastros;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
@@ -299,11 +310,11 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve expor leitura de parceiros e catálogo na API: `GET /api/v1/partners` e
-`GET /api/v1/catalog/products`, com paginação explícita e limite máximo, filtradas pelo
-`organizationId` do contexto autenticado e com teste negativo de isolamento. Sem elas as telas de
-manutenção do incremento 8.1 não têm como listar nada. Só depois disso vale construir as telas de
-listagem e edição, e em seguida retomar a configuração S3 por organização.
+Com a autenticação da web e a leitura de parceiros e catálogo publicadas, o próximo recorte são as
+telas de listagem desses cadastros, consumindo `partnersControllerList` e
+`catalogControllerListProducts` do cliente gerado, com busca, paginação e estado vazio. Depois vêm a
+edição dos cadastros — `PUT`/`PATCH` ainda não existem na API — e, por último, a configuração S3 por
+organização.
 
 Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
 no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o

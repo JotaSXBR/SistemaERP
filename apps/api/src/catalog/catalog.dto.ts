@@ -171,3 +171,62 @@ export class ResolveSupplierProductResponseDto {
   @ApiProperty({ enum: ["MATCHED", "SUPPLIER_NOT_FOUND", "UNMAPPED"] })
   status!: "MATCHED" | "SUPPLIER_NOT_FOUND" | "UNMAPPED";
 }
+
+export class ProductListItemDto {
+  @ApiProperty({ type: Boolean })
+  active!: boolean;
+
+  @ApiProperty({ type: UnitOfMeasureDto })
+  baseUnit!: UnitOfMeasureDto;
+
+  @ApiProperty({ format: "uuid", type: String })
+  id!: string;
+
+  @ApiProperty({ type: String })
+  shortDescription!: string;
+
+  @ApiProperty({ type: String })
+  sku!: string;
+}
+
+export class ProductListResponseDto {
+  @ApiProperty({ isArray: true, type: ProductListItemDto })
+  items!: ProductListItemDto[];
+
+  @ApiProperty({ description: "Tamanho de página aplicado", type: Number })
+  limit!: number;
+
+  @ApiProperty({ description: "Deslocamento aplicado", type: Number })
+  offset!: number;
+
+  @ApiProperty({ description: "Total de produtos que atendem ao filtro", type: Number })
+  total!: number;
+}
+
+export class ProductDetailDto {
+  @ApiProperty({ type: Boolean })
+  active!: boolean;
+
+  @ApiProperty({ type: UnitOfMeasureDto })
+  baseUnit!: UnitOfMeasureDto;
+
+  @ApiProperty({ format: "uuid", type: String })
+  id!: string;
+
+  @ApiProperty({ isArray: true, type: ProductPresentationDto })
+  presentations!: ProductPresentationDto[];
+
+  @ApiProperty({ type: String })
+  shortDescription!: string;
+
+  @ApiProperty({ type: String })
+  sku!: string;
+
+  @ApiPropertyOptional({ type: String })
+  technicalDescription?: string;
+}
+
+export class ProductDetailResponseDto {
+  @ApiProperty({ type: ProductDetailDto })
+  product!: ProductDetailDto;
+}
