@@ -191,6 +191,25 @@ Depois do cadastro do fornecedor, produto ou mapping,
 ausentes em `InboundFiscalDocumentItemMapping` e atualiza o status. O endpoint não altera o XML nem
 produz estoque.
 
+`GET /api/v1/fiscal-intake/nfe/documents` lista os 50 documentos recentes usados pela tela e
+`GET /api/v1/fiscal-intake/nfe/documents/{documentId}` recupera a prévia persistente. Ambas as
+consultas derivam o tenant da sessão.
+
+### Inbox fiscal na web
+
+A rota autenticada `/fiscal-intake` usa exclusivamente o cliente OpenAPI gerado e TanStack Query
+para o estado remoto. Ela permite:
+
+- selecionar e enviar XML de até 5 MiB;
+- reabrir documentos persistidos depois de recarregar a página;
+- resolver parceiro ausente, inativo ou sem papel `SUPPLIER`;
+- selecionar produto/apresentação ou criar o produto mínimo;
+- criar o mapping e reavaliar o documento até `READY_FOR_REVIEW`.
+
+Os formulários usam React Hook Form e Zod, e os drawers têm semântica de diálogo, fechamento por
+teclado e foco inicial. `MEMBER` permanece em modo de consulta. A tela não simula recebimento nem
+estoque: quando o documento fica pronto, informa que essa ação pertence à Fase 8.3.
+
 ### Armazenamento privado e MinIO local
 
 A ADR-0007 define a API S3 como fronteira e serviço S3 compatível configurável por organização. O
@@ -218,14 +237,13 @@ efeito no estoque.
 
 ## Próximas etapas recomendadas
 
-1. Criar a inbox web e os drawers guiados para fornecedor, produto e mapping usando exclusivamente
-   o cliente OpenAPI gerado.
-2. Modelar a identidade fiscal da organização e validar destinatário, protocolo, totais, schema e
+1. Modelar a identidade fiscal da organização e validar destinatário, protocolo, totais, schema e
    assinatura antes de permitir recebimento.
-3. Implementar configuração persistente e seleção de storage por organização, download autenticado
+2. Implementar configuração persistente e seleção de storage por organização, download autenticado
    do XML e reconciliação segura de objetos órfãos.
-4. Concluir apresentações/conversões do catálogo necessárias aos itens reais.
-5. Somente depois implementar `receive`, depósitos e movimentos imutáveis da Fase 8.3.
+3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas gerais de
+   manutenção de parceiros e catálogo.
+4. Somente depois implementar `receive`, depósitos e movimentos imutáveis da Fase 8.3.
 
 ## Mapa do código relevante
 

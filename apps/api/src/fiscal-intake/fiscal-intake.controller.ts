@@ -2,12 +2,14 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Headers,
   HttpCode,
   HttpStatus,
   Inject,
   Param,
   Post,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -21,6 +23,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -29,8 +32,10 @@ import { MembershipRole } from "@sistema-erp/database";
 
 import { Roles } from "../authorization/roles.decorator.js";
 import { ApiErrorResponseDto } from "../errors/api-error.dto.js";
+import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, parsePageRequest } from "../pagination/pagination.js";
 import {
   CreateNfeIngestionResponseDto,
+  NfeInboxListResponseDto,
   NfeIntakePreviewDto,
   NfePersistentIntakeDto,
 } from "./fiscal-intake.dto.js";
@@ -76,6 +81,29 @@ export class FiscalIntakeController {
       if (error instanceof NfeXmlParseError) throw new BadRequestException();
       throw error;
     }
+  }
+
+  @Get("documents")
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    schema: { default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1, type: "integer" },
+  })
+  @ApiQuery({ name: "offset", required: false, schema: { minimum: 0, type: "integer" } })
+  @ApiOkResponse({ type: NfeInboxListResponseDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  list(@Query() query: Record<string, unknown>): Promise<NfeInboxListResponseDto> {
+    return this.fiscalIntake.list(parsePageRequest(query));
+  }
+
+  @Get("documents/:documentId")
+  @ApiParam({ format: "uuid", name: "documentId", type: String })
+  @ApiOkResponse({ type: NfePersistentIntakeDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  findById(@Param("documentId") documentId: string): Promise<NfePersistentIntakeDto> {
+    if (!UUID_PATTERN.test(documentId)) throw new BadRequestException();
+    return this.fiscalIntake.findById(documentId);
   }
 
   @Post("ingestions")

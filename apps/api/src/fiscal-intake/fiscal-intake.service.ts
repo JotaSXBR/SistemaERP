@@ -11,7 +11,11 @@ import { CatalogService, type SupplierDocumentResolution } from "../catalog/cata
 import { DatabaseService } from "../database/database.service.js";
 import { RequestContextService } from "../request-context/request-context.service.js";
 import { ObjectStorageIntegrityError, type ObjectStorage } from "./application/object-storage.js";
-import type { CreateNfeIngestionResponseDto, NfePersistentIntakeDto } from "./fiscal-intake.dto.js";
+import type {
+  CreateNfeIngestionResponseDto,
+  NfeInboxListResponseDto,
+  NfePersistentIntakeDto,
+} from "./fiscal-intake.dto.js";
 import { OBJECT_STORAGE } from "./infrastructure/runtime-object-storage.js";
 import { parseNfeXml, type NfeXmlItem, type ParsedNfeXml } from "./nfe-xml.parser.js";
 
@@ -80,6 +84,43 @@ export class FiscalIntakeService {
       };
     });
     return { ...document, items, summary };
+  }
+
+  async list(input: { limit: number; offset: number }): Promise<NfeInboxListResponseDto> {
+    const { organizationId } = this.requestContext.getAuthenticated();
+    const where = { organizationId };
+    const [documents, total] = await Promise.all([
+      this.database.value.inboundFiscalDocument.findMany({
+        include: { _count: { select: { items: true } } },
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: input.offset,
+        take: input.limit,
+        where,
+      }),
+      this.database.value.inboundFiscalDocument.count({ where }),
+    ]);
+
+    return {
+      items: documents.map((document) => ({
+        accessKey: document.accessKey,
+        createdAt: document.createdAt.toISOString(),
+        documentId: document.id,
+        documentNumber: document.documentNumber,
+        documentTotal: document.documentTotal.toString(),
+        itemCount: document._count.items,
+        issuedAt: document.issuedAt.toISOString(),
+        status: document.status,
+        supplierName: document.supplierName,
+        supplierTaxId: document.supplierTaxId,
+      })),
+      limit: input.limit,
+      offset: input.offset,
+      total,
+    };
+  }
+
+  findById(documentId: string): Promise<NfePersistentIntakeDto> {
+    return this.loadDocument(documentId);
   }
 
   async ingest(

@@ -481,6 +481,21 @@ describe("catalog and supplier product mapping", () => {
       method: "POST",
       url: `/api/v1/fiscal-intake/nfe/documents/${first.json<PersistentIntakeResponse>().documentId}/resolve`,
     });
+    const inbox = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "GET",
+      url: "/api/v1/fiscal-intake/nfe/documents?limit=10&offset=0",
+    });
+    const detail = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "GET",
+      url: `/api/v1/fiscal-intake/nfe/documents/${first.json<PersistentIntakeResponse>().documentId}`,
+    });
+    const otherTenantDetail = await application.inject({
+      headers: authenticated(fixture.ownerBToken),
+      method: "GET",
+      url: `/api/v1/fiscal-intake/nfe/documents/${first.json<PersistentIntakeResponse>().documentId}`,
+    });
 
     expect(partnerUpdate.statusCode).toBe(200);
     expect(afterSupplier.json()).toMatchObject({
@@ -492,6 +507,20 @@ describe("catalog and supplier product mapping", () => {
       status: "READY_FOR_REVIEW",
       summary: { matched: 1, supplierNotFound: 0, unmapped: 0 },
     });
+    expect(inbox.json()).toMatchObject({
+      items: [
+        {
+          documentId: first.json<PersistentIntakeResponse>().documentId,
+          itemCount: 1,
+          status: "READY_FOR_REVIEW",
+        },
+      ],
+    });
+    expect(detail.json()).toMatchObject({
+      documentId: first.json<PersistentIntakeResponse>().documentId,
+      status: "READY_FOR_REVIEW",
+    });
+    expect(otherTenantDetail.statusCode).toBe(404);
     expect(
       await database.inboundFiscalDocument.count({
         where: { accessKey: "5".repeat(44), organizationId: fixture.organizationAId },

@@ -49,7 +49,10 @@ export function AppLayout() {
           </p>
           <NavigationLink label="Diagnóstico" to="/diagnostics" />
           {status === "authenticated" ? (
-            <NavigationLink label="Empresa" to="/organization" />
+            <>
+              <NavigationLink label="Entrada fiscal" to="/fiscal-intake" />
+              <NavigationLink label="Empresa" to="/organization" />
+            </>
           ) : null}
         </nav>
 

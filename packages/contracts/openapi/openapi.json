@@ -1150,6 +1150,139 @@
         ]
       }
     },
+    "/api/v1/fiscal-intake/nfe/documents": {
+      "get": {
+        "operationId": "FiscalIntakeController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfeInboxListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fiscal-intake"
+        ]
+      }
+    },
+    "/api/v1/fiscal-intake/nfe/documents/{documentId}": {
+      "get": {
+        "operationId": "FiscalIntakeController_findById",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfePersistentIntakeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fiscal-intake"
+        ]
+      }
+    },
     "/api/v1/fiscal-intake/nfe/ingestions": {
       "post": {
         "operationId": "FiscalIntakeController_ingest",
@@ -2397,6 +2530,88 @@
           "supplierTaxId"
         ]
       },
+      "NfeInboxListItemDto": {
+        "type": "object",
+        "properties": {
+          "accessKey": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "documentTotal": {
+            "type": "string"
+          },
+          "itemCount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_VALIDATION",
+              "VALIDATION_FAILED",
+              "PENDING_SUPPLIER",
+              "PENDING_MAPPING",
+              "READY_FOR_REVIEW"
+            ]
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "supplierTaxId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessKey",
+          "createdAt",
+          "documentId",
+          "documentNumber",
+          "documentTotal",
+          "itemCount",
+          "issuedAt",
+          "status",
+          "supplierName",
+          "supplierTaxId"
+        ]
+      },
+      "NfeInboxListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NfeInboxListItemDto"
+            }
+          },
+          "limit": {
+            "type": "number"
+          },
+          "offset": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
       "NfePersistentItemResolutionDto": {
         "type": "object",
         "properties": {
@@ -2515,6 +2730,88 @@
           "taxId"
         ]
       },
+      "NfePersistentIntakeDto": {
+        "type": "object",
+        "properties": {
+          "accessKey": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "documentTotal": {
+            "type": "string"
+          },
+          "hashSha256": {
+            "type": "string"
+          },
+          "ingestionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NfePersistentIntakeItemDto"
+            }
+          },
+          "natureOfOperation": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "recipientTaxId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_VALIDATION",
+              "VALIDATION_FAILED",
+              "PENDING_SUPPLIER",
+              "PENDING_MAPPING",
+              "READY_FOR_REVIEW"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/NfeIntakePreviewSummaryDto"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/NfeIntakeSupplierDto"
+          }
+        },
+        "required": [
+          "accessKey",
+          "documentId",
+          "documentNumber",
+          "documentTotal",
+          "hashSha256",
+          "ingestionId",
+          "issuedAt",
+          "items",
+          "natureOfOperation",
+          "recipientTaxId",
+          "schemaVersion",
+          "series",
+          "status",
+          "summary",
+          "supplier"
+        ]
+      },
       "CreateNfeIngestionResponseDto": {
         "type": "object",
         "properties": {
@@ -2600,88 +2897,6 @@
           "summary",
           "supplier",
           "replayed"
-        ]
-      },
-      "NfePersistentIntakeDto": {
-        "type": "object",
-        "properties": {
-          "accessKey": {
-            "type": "string"
-          },
-          "documentId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "documentNumber": {
-            "type": "string"
-          },
-          "documentTotal": {
-            "type": "string"
-          },
-          "hashSha256": {
-            "type": "string"
-          },
-          "ingestionId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "issuedAt": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/NfePersistentIntakeItemDto"
-            }
-          },
-          "natureOfOperation": {
-            "type": "string"
-          },
-          "protocol": {
-            "type": "string"
-          },
-          "recipientTaxId": {
-            "type": "string"
-          },
-          "schemaVersion": {
-            "type": "string"
-          },
-          "series": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING_VALIDATION",
-              "VALIDATION_FAILED",
-              "PENDING_SUPPLIER",
-              "PENDING_MAPPING",
-              "READY_FOR_REVIEW"
-            ]
-          },
-          "summary": {
-            "$ref": "#/components/schemas/NfeIntakePreviewSummaryDto"
-          },
-          "supplier": {
-            "$ref": "#/components/schemas/NfeIntakeSupplierDto"
-          }
-        },
-        "required": [
-          "accessKey",
-          "documentId",
-          "documentNumber",
-          "documentTotal",
-          "hashSha256",
-          "ingestionId",
-          "issuedAt",
-          "items",
-          "natureOfOperation",
-          "recipientTaxId",
-          "schemaVersion",
-          "series",
-          "status",
-          "summary",
-          "supplier"
         ]
       },
       "HealthResponseDto": {

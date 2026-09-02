@@ -1,6 +1,6 @@
 # Fase 8 — Catálogo, entrada fiscal e estoque rastreável
 
-- Estado: Em andamento — 8.1 parcial / 8.2 ingestão persistente backend
+- Estado: Em andamento — 8.1 parcial / 8.2 fluxo guiado web e backend
 - Data da definição: 2026-08-31
 - Predecessora: Fase 7 — Primitivas de plataforma
 
@@ -363,6 +363,20 @@ serializável. A resposta diferencia fornecedor ausente, inativo ou sem papel `S
 ações humanas de cadastro. Ele cria somente snapshots ainda ausentes e promove o status para
 `PENDING_MAPPING` ou `READY_FOR_REVIEW`. Não há confirmação de recebimento nem movimento de estoque
 neste incremento.
+
+`GET /api/v1/fiscal-intake/nfe/documents` e
+`GET /api/v1/fiscal-intake/nfe/documents/{documentId}` fornecem a inbox persistente e a prévia por
+tenant. A aplicação web expõe `/fiscal-intake` com upload, seleção de documentos recentes e drawers
+guiados para:
+
+- cadastrar, ativar ou complementar o papel do fornecedor;
+- selecionar produto e apresentação existentes;
+- criar o produto mínimo e sua apresentação-base;
+- confirmar o mapping e reavaliar o mesmo documento.
+
+A tela mostra `READY_FOR_REVIEW`, mas não oferece confirmação de recebimento enquanto a Fase 8.3
+não existir. Membros sem papel administrativo podem consultar a inbox, mas não executar as mutations
+de cadastro e ingestão.
 
 A deduplicação possui duas garantias distintas:
 

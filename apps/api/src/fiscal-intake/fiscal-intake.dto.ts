@@ -218,3 +218,49 @@ export class CreateNfeIngestionResponseDto extends NfePersistentIntakeDto {
   @ApiProperty({ description: "Indica que o documento persistente já existia", type: Boolean })
   replayed!: boolean;
 }
+
+export class NfeInboxListItemDto {
+  @ApiProperty({ type: String })
+  accessKey!: string;
+
+  @ApiProperty({ type: String })
+  createdAt!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  documentId!: string;
+
+  @ApiProperty({ type: String })
+  documentNumber!: string;
+
+  @ApiProperty({ type: String })
+  documentTotal!: string;
+
+  @ApiProperty({ minimum: 0, type: Number })
+  itemCount!: number;
+
+  @ApiProperty({ type: String })
+  issuedAt!: string;
+
+  @ApiProperty({ enum: FiscalDocumentStatus })
+  status!: FiscalDocumentStatus;
+
+  @ApiProperty({ type: String })
+  supplierName!: string;
+
+  @ApiProperty({ type: String })
+  supplierTaxId!: string;
+}
+
+export class NfeInboxListResponseDto {
+  @ApiProperty({ isArray: true, type: NfeInboxListItemDto })
+  items!: NfeInboxListItemDto[];
+
+  @ApiProperty({ type: Number })
+  limit!: number;
+
+  @ApiProperty({ type: Number })
+  offset!: number;
+
+  @ApiProperty({ type: Number })
+  total!: number;
+}
