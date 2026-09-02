@@ -82,17 +82,6 @@ export type AddMembershipResponseDto = {
     replayed: boolean;
 };
 
-export type CreatePartnerRequestDto = {
-    legalName: string;
-    roles: Array<'SUPPLIER' | 'CUSTOMER' | 'CARRIER'>;
-    /**
-     * CPF ou CNPJ; pontuação é removida antes da persistência
-     */
-    taxId: string;
-    tradeName?: string;
-    type: 'ORGANIZATION' | 'PERSON';
-};
-
 export type PartnerDto = {
     active: boolean;
     id: string;
@@ -100,6 +89,37 @@ export type PartnerDto = {
     roles: Array<'SUPPLIER' | 'CUSTOMER' | 'CARRIER'>;
     /**
      * CPF ou CNPJ normalizado
+     */
+    taxId: string;
+    tradeName?: string;
+    type: 'ORGANIZATION' | 'PERSON';
+};
+
+export type PartnerListResponseDto = {
+    items: Array<PartnerDto>;
+    /**
+     * Tamanho de página aplicado
+     */
+    limit: number;
+    /**
+     * Deslocamento aplicado
+     */
+    offset: number;
+    /**
+     * Total de parceiros que atendem ao filtro
+     */
+    total: number;
+};
+
+export type PartnerResponseDto = {
+    partner: PartnerDto;
+};
+
+export type CreatePartnerRequestDto = {
+    legalName: string;
+    roles: Array<'SUPPLIER' | 'CUSTOMER' | 'CARRIER'>;
+    /**
+     * CPF ou CNPJ; pontuação é removida antes da persistência
      */
     taxId: string;
     tradeName?: string;
@@ -114,24 +134,35 @@ export type CreatePartnerResponseDto = {
     replayed: boolean;
 };
 
-export type CreateProductUnitRequestDto = {
-    code: string;
-    decimalScale?: number;
-    name: string;
-};
-
-export type CreateProductRequestDto = {
-    baseUnit: CreateProductUnitRequestDto;
-    shortDescription: string;
-    sku: string;
-    technicalDescription?: string;
-};
-
 export type UnitOfMeasureDto = {
     code: string;
     decimalScale: number;
     id: string;
     name: string;
+};
+
+export type ProductListItemDto = {
+    active: boolean;
+    baseUnit: UnitOfMeasureDto;
+    id: string;
+    shortDescription: string;
+    sku: string;
+};
+
+export type ProductListResponseDto = {
+    items: Array<ProductListItemDto>;
+    /**
+     * Tamanho de página aplicado
+     */
+    limit: number;
+    /**
+     * Deslocamento aplicado
+     */
+    offset: number;
+    /**
+     * Total de produtos que atendem ao filtro
+     */
+    total: number;
 };
 
 export type ProductPresentationDto = {
@@ -144,6 +175,33 @@ export type ProductPresentationDto = {
     id: string;
     name: string;
     unit: UnitOfMeasureDto;
+};
+
+export type ProductDetailDto = {
+    active: boolean;
+    baseUnit: UnitOfMeasureDto;
+    id: string;
+    presentations: Array<ProductPresentationDto>;
+    shortDescription: string;
+    sku: string;
+    technicalDescription?: string;
+};
+
+export type ProductDetailResponseDto = {
+    product: ProductDetailDto;
+};
+
+export type CreateProductUnitRequestDto = {
+    code: string;
+    decimalScale?: number;
+    name: string;
+};
+
+export type CreateProductRequestDto = {
+    baseUnit: CreateProductUnitRequestDto;
+    shortDescription: string;
+    sku: string;
+    technicalDescription?: string;
 };
 
 export type ProductDto = {
@@ -427,6 +485,35 @@ export type OrganizationsControllerAddMembershipResponses = {
 
 export type OrganizationsControllerAddMembershipResponse = OrganizationsControllerAddMembershipResponses[keyof OrganizationsControllerAddMembershipResponses];
 
+export type PartnersControllerListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Trecho da razão social, nome fantasia ou identificador fiscal
+         */
+        search?: string;
+        role?: 'SUPPLIER' | 'CUSTOMER' | 'CARRIER';
+        offset?: number;
+        limit?: number;
+        active?: boolean;
+    };
+    url: '/api/v1/partners';
+};
+
+export type PartnersControllerListErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+};
+
+export type PartnersControllerListError = PartnersControllerListErrors[keyof PartnersControllerListErrors];
+
+export type PartnersControllerListResponses = {
+    200: PartnerListResponseDto;
+};
+
+export type PartnersControllerListResponse = PartnersControllerListResponses[keyof PartnersControllerListResponses];
+
 export type PartnersControllerCreateData = {
     body: CreatePartnerRequestDto;
     headers: {
@@ -452,6 +539,57 @@ export type PartnersControllerCreateResponses = {
 
 export type PartnersControllerCreateResponse = PartnersControllerCreateResponses[keyof PartnersControllerCreateResponses];
 
+export type PartnersControllerFindByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/partners/{id}';
+};
+
+export type PartnersControllerFindByIdErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type PartnersControllerFindByIdError = PartnersControllerFindByIdErrors[keyof PartnersControllerFindByIdErrors];
+
+export type PartnersControllerFindByIdResponses = {
+    200: PartnerResponseDto;
+};
+
+export type PartnersControllerFindByIdResponse = PartnersControllerFindByIdResponses[keyof PartnersControllerFindByIdResponses];
+
+export type CatalogControllerListProductsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Trecho do SKU ou da descrição curta
+         */
+        search?: string;
+        offset?: number;
+        limit?: number;
+        active?: boolean;
+    };
+    url: '/api/v1/catalog/products';
+};
+
+export type CatalogControllerListProductsErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+};
+
+export type CatalogControllerListProductsError = CatalogControllerListProductsErrors[keyof CatalogControllerListProductsErrors];
+
+export type CatalogControllerListProductsResponses = {
+    200: ProductListResponseDto;
+};
+
+export type CatalogControllerListProductsResponse = CatalogControllerListProductsResponses[keyof CatalogControllerListProductsResponses];
+
 export type CatalogControllerCreateProductData = {
     body: CreateProductRequestDto;
     headers: {
@@ -476,6 +614,29 @@ export type CatalogControllerCreateProductResponses = {
 };
 
 export type CatalogControllerCreateProductResponse = CatalogControllerCreateProductResponses[keyof CatalogControllerCreateProductResponses];
+
+export type CatalogControllerFindProductByIdData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog/products/{id}';
+};
+
+export type CatalogControllerFindProductByIdErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type CatalogControllerFindProductByIdError = CatalogControllerFindProductByIdErrors[keyof CatalogControllerFindProductByIdErrors];
+
+export type CatalogControllerFindProductByIdResponses = {
+    200: ProductDetailResponseDto;
+};
+
+export type CatalogControllerFindProductByIdResponse = CatalogControllerFindProductByIdResponses[keyof CatalogControllerFindProductByIdResponses];
 
 export type CatalogControllerCreateSupplierMappingData = {
     body: CreateSupplierProductMappingRequestDto;

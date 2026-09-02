@@ -106,13 +106,25 @@ relações entre tenants.
 
 Rotas implementadas:
 
+- `GET /api/v1/partners` e `GET /api/v1/partners/{id}`;
 - `POST /api/v1/partners`;
+- `GET /api/v1/catalog/products` e `GET /api/v1/catalog/products/{id}`;
 - `POST /api/v1/catalog/products`;
 - `POST /api/v1/catalog/supplier-mappings`;
 - `POST /api/v1/catalog/supplier-mappings/resolve`.
 
 Criações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolução retorna
 `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`.
+
+As leituras estão liberadas para qualquer membro autenticado, porque listar cadastros não é operação
+privilegiada; escrita continua restrita a `OWNER` e `ADMIN`. Elas usam paginação explícita
+`limit`/`offset` (`limit` padrão 20 e máximo 100, em `apps/api/src/pagination/pagination.ts`) e
+devolvem `items`, `limit`, `offset` e `total`. Parceiros aceitam os filtros `search` (razão social,
+nome fantasia ou identificador fiscal normalizado), `role` e `active`; produtos aceitam `search`
+(SKU ou descrição curta) e `active`. A ordenação acompanha os índices existentes: parceiros por
+`legalName` e produtos por `shortDescription`, ambos com `id` como desempate estável. O detalhe de
+produto devolve a unidade base e todas as apresentações, antecipando as apresentações adicionais do
+incremento 8.1. Parâmetro inválido responde `400`; recurso de outra organização responde `404`.
 
 `normalizeTaxId` pertence ao módulo `partners` e é reutilizado pelo catálogo. A normalização de
 SKU, unidade e código de fornecedor continua encapsulada no catálogo porque essas semânticas podem
@@ -253,6 +265,7 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
+- rotas de edição na API: a leitura já existe, mas não há `PUT`/`PATCH` de parceiros e produtos;
 - telas e manutenção dos cadastros;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
@@ -274,11 +287,10 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve resolver os dois advisories transitivos de severidade alta reportados por
-`pnpm audit --prod`: `deepmerge-ts < 8.0.0` e `mysql2 < 3.22.0`, ambos no caminho de dependências do
-Prisma. Revise a versão corrigida disponível, a compatibilidade com Prisma e Node.js, atualize o
-lockfile sem exceções à quarentena de supply chain e execute as validações pertinentes. Não misture
-essa correção com a configuração S3 por organização ou com novas funcionalidades.
+Com a leitura de parceiros e catálogo publicada, o próximo recorte são as telas web de listagem
+desses cadastros, consumindo `partnersControllerList` e `catalogControllerListProducts` do cliente
+gerado, com busca, paginação e estado vazio. Depois vêm a edição dos cadastros — `PUT`/`PATCH` ainda
+não existem na API — e, por último, a configuração S3 por organização.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente

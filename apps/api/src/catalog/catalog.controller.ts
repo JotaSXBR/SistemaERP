@@ -2,11 +2,14 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Headers,
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
   Post,
+  Query,
 } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
@@ -18,6 +21,8 @@ import {
   ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
@@ -26,10 +31,20 @@ import { MembershipRole } from "@sistema-erp/database";
 import { Roles } from "../authorization/roles.decorator.js";
 import { ApiErrorResponseDto } from "../errors/api-error.dto.js";
 import {
+  DEFAULT_PAGE_LIMIT,
+  MAX_PAGE_LIMIT,
+  MAX_SEARCH_LENGTH,
+  parseBoolean,
+  parsePageRequest,
+  parseSearch,
+} from "../pagination/pagination.js";
+import {
   CreateProductRequestDto,
   CreateProductResponseDto,
   CreateSupplierProductMappingRequestDto,
   CreateSupplierProductMappingResponseDto,
+  ProductDetailResponseDto,
+  ProductListResponseDto,
   ResolveSupplierProductRequestDto,
   ResolveSupplierProductResponseDto,
 } from "./catalog.dto.js";
@@ -127,6 +142,52 @@ function validateResolution(
 @ApiUnauthorizedResponse({ type: ApiErrorResponseDto })
 export class CatalogController {
   constructor(@Inject(CatalogService) private readonly catalog: CatalogService) {}
+
+  @Get("products")
+  @ApiQuery({ name: "active", required: false, schema: { type: "boolean" } })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    schema: {
+      default: DEFAULT_PAGE_LIMIT,
+      maximum: MAX_PAGE_LIMIT,
+      minimum: 1,
+      type: "integer",
+    },
+  })
+  @ApiQuery({ name: "offset", required: false, schema: { minimum: 0, type: "integer" } })
+  @ApiQuery({
+    description: "Trecho do SKU ou da descrição curta",
+    name: "search",
+    required: false,
+    schema: { maxLength: MAX_SEARCH_LENGTH, type: "string" },
+  })
+  @ApiOkResponse({ type: ProductListResponseDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  listProducts(@Query() query: Record<string, unknown>): Promise<ProductListResponseDto> {
+    const page = parsePageRequest(query);
+    const active = parseBoolean(query.active);
+    const search = parseSearch(query.search);
+
+    return this.catalog.listProducts({
+      ...page,
+      ...(active === undefined ? {} : { active }),
+      ...(search ? { search } : {}),
+    });
+  }
+
+  @Get("products/:id")
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiOkResponse({ type: ProductDetailResponseDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  async findProductById(@Param("id") id: string): Promise<ProductDetailResponseDto> {
+    if (!UUID_PATTERN.test(id)) {
+      throw new BadRequestException();
+    }
+
+    return { product: await this.catalog.findProductById(id) };
+  }
 
   @Post("products")
   @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)

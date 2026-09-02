@@ -303,10 +303,12 @@ Primeira fatia implementada:
 - unidade base, produto e apresentação-base com fator decimal exato;
 - correspondência única por organização, fornecedor e código externo normalizado;
 - resolução determinística em estados `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`;
-- criação idempotente, RBAC, auditoria e isolamento de tenant testados.
+- criação idempotente, RBAC, auditoria e isolamento de tenant testados;
+- leitura paginada e filtrada de parceiros e produtos, com detalhe por identificador, restrita à
+  organização do contexto autenticado.
 
-Telas, apresentações adicionais, atributos técnicos e manutenção dos cadastros permanecem pendentes
-para concluir o incremento 8.1.
+Telas, apresentações adicionais, atributos técnicos e edição dos cadastros permanecem pendentes para
+concluir o incremento 8.1.
 
 ### 8.2 — Caixa de entrada fiscal
 

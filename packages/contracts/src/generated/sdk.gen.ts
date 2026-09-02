@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, FiscalIntakeControllerPreviewData, FiscalIntakeControllerPreviewErrors, FiscalIntakeControllerPreviewResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses } from './types.gen.js';
+import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerFindProductByIdData, CatalogControllerFindProductByIdErrors, CatalogControllerFindProductByIdResponses, CatalogControllerListProductsData, CatalogControllerListProductsErrors, CatalogControllerListProductsResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, FiscalIntakeControllerPreviewData, FiscalIntakeControllerPreviewErrors, FiscalIntakeControllerPreviewResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses, PartnersControllerFindByIdData, PartnersControllerFindByIdErrors, PartnersControllerFindByIdResponses, PartnersControllerListData, PartnersControllerListErrors, PartnersControllerListResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -67,6 +67,12 @@ export const organizationsControllerAddMembership = <ThrowOnError extends boolea
     }
 });
 
+export const partnersControllerList = <ThrowOnError extends boolean = false>(options?: Options<PartnersControllerListData, ThrowOnError>): RequestResult<PartnersControllerListResponses, PartnersControllerListErrors, ThrowOnError> => (options?.client ?? client).get<PartnersControllerListResponses, PartnersControllerListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/partners',
+    ...options
+});
+
 export const partnersControllerCreate = <ThrowOnError extends boolean = false>(options: Options<PartnersControllerCreateData, ThrowOnError>): RequestResult<PartnersControllerCreateResponses, PartnersControllerCreateErrors, ThrowOnError> => (options.client ?? client).post<PartnersControllerCreateResponses, PartnersControllerCreateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/partners',
@@ -77,6 +83,18 @@ export const partnersControllerCreate = <ThrowOnError extends boolean = false>(o
     }
 });
 
+export const partnersControllerFindById = <ThrowOnError extends boolean = false>(options: Options<PartnersControllerFindByIdData, ThrowOnError>): RequestResult<PartnersControllerFindByIdResponses, PartnersControllerFindByIdErrors, ThrowOnError> => (options.client ?? client).get<PartnersControllerFindByIdResponses, PartnersControllerFindByIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/partners/{id}',
+    ...options
+});
+
+export const catalogControllerListProducts = <ThrowOnError extends boolean = false>(options?: Options<CatalogControllerListProductsData, ThrowOnError>): RequestResult<CatalogControllerListProductsResponses, CatalogControllerListProductsErrors, ThrowOnError> => (options?.client ?? client).get<CatalogControllerListProductsResponses, CatalogControllerListProductsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/products',
+    ...options
+});
+
 export const catalogControllerCreateProduct = <ThrowOnError extends boolean = false>(options: Options<CatalogControllerCreateProductData, ThrowOnError>): RequestResult<CatalogControllerCreateProductResponses, CatalogControllerCreateProductErrors, ThrowOnError> => (options.client ?? client).post<CatalogControllerCreateProductResponses, CatalogControllerCreateProductErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/catalog/products',
@@ -85,6 +103,12 @@ export const catalogControllerCreateProduct = <ThrowOnError extends boolean = fa
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+export const catalogControllerFindProductById = <ThrowOnError extends boolean = false>(options: Options<CatalogControllerFindProductByIdData, ThrowOnError>): RequestResult<CatalogControllerFindProductByIdResponses, CatalogControllerFindProductByIdErrors, ThrowOnError> => (options.client ?? client).get<CatalogControllerFindProductByIdResponses, CatalogControllerFindProductByIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/products/{id}',
+    ...options
 });
 
 export const catalogControllerCreateSupplierMapping = <ThrowOnError extends boolean = false>(options: Options<CatalogControllerCreateSupplierMappingData, ThrowOnError>): RequestResult<CatalogControllerCreateSupplierMappingResponses, CatalogControllerCreateSupplierMappingErrors, ThrowOnError> => (options.client ?? client).post<CatalogControllerCreateSupplierMappingResponses, CatalogControllerCreateSupplierMappingErrors, ThrowOnError>({

@@ -345,6 +345,102 @@
       }
     },
     "/api/v1/partners": {
+      "get": {
+        "operationId": "PartnersController_list",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Trecho da razão social, nome fantasia ou identificador fiscal",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "SUPPLIER",
+                "CUSTOMER",
+                "CARRIER"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "active",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "partners"
+        ]
+      },
       "post": {
         "operationId": "PartnersController_create",
         "parameters": [
@@ -429,7 +525,156 @@
         ]
       }
     },
+    "/api/v1/partners/{id}": {
+      "get": {
+        "operationId": "PartnersController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "partners"
+        ]
+      }
+    },
     "/api/v1/catalog/products": {
+      "get": {
+        "operationId": "CatalogController_listProducts",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Trecho do SKU ou da descrição curta",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "active",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      },
       "post": {
         "operationId": "CatalogController_createProduct",
         "parameters": [
@@ -494,6 +739,72 @@
             }
           },
           "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/products/{id}": {
+      "get": {
+        "operationId": "CatalogController_findProductById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -1088,45 +1399,6 @@
           "replayed"
         ]
       },
-      "CreatePartnerRequestDto": {
-        "type": "object",
-        "properties": {
-          "legalName": {
-            "type": "string"
-          },
-          "roles": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "SUPPLIER",
-                "CUSTOMER",
-                "CARRIER"
-              ]
-            }
-          },
-          "taxId": {
-            "type": "string",
-            "description": "CPF ou CNPJ; pontuação é removida antes da persistência"
-          },
-          "tradeName": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "ORGANIZATION",
-              "PERSON"
-            ]
-          }
-        },
-        "required": [
-          "legalName",
-          "roles",
-          "taxId",
-          "type"
-        ]
-      },
       "PartnerDto": {
         "type": "object",
         "properties": {
@@ -1175,6 +1447,85 @@
           "type"
         ]
       },
+      "PartnerListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartnerDto"
+            }
+          },
+          "limit": {
+            "type": "number",
+            "description": "Tamanho de página aplicado"
+          },
+          "offset": {
+            "type": "number",
+            "description": "Deslocamento aplicado"
+          },
+          "total": {
+            "type": "number",
+            "description": "Total de parceiros que atendem ao filtro"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "PartnerResponseDto": {
+        "type": "object",
+        "properties": {
+          "partner": {
+            "$ref": "#/components/schemas/PartnerDto"
+          }
+        },
+        "required": [
+          "partner"
+        ]
+      },
+      "CreatePartnerRequestDto": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SUPPLIER",
+                "CUSTOMER",
+                "CARRIER"
+              ]
+            }
+          },
+          "taxId": {
+            "type": "string",
+            "description": "CPF ou CNPJ; pontuação é removida antes da persistência"
+          },
+          "tradeName": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ORGANIZATION",
+              "PERSON"
+            ]
+          }
+        },
+        "required": [
+          "legalName",
+          "roles",
+          "taxId",
+          "type"
+        ]
+      },
       "CreatePartnerResponseDto": {
         "type": "object",
         "properties": {
@@ -1189,6 +1540,174 @@
         "required": [
           "partner",
           "replayed"
+        ]
+      },
+      "UnitOfMeasureDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "decimalScale": {
+            "type": "number",
+            "maximum": 10,
+            "minimum": 0
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "decimalScale",
+          "id",
+          "name"
+        ]
+      },
+      "ProductListItemDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "baseUnit": {
+            "$ref": "#/components/schemas/UnitOfMeasureDto"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "baseUnit",
+          "id",
+          "shortDescription",
+          "sku"
+        ]
+      },
+      "ProductListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductListItemDto"
+            }
+          },
+          "limit": {
+            "type": "number",
+            "description": "Tamanho de página aplicado"
+          },
+          "offset": {
+            "type": "number",
+            "description": "Deslocamento aplicado"
+          },
+          "total": {
+            "type": "number",
+            "description": "Total de produtos que atendem ao filtro"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "ProductPresentationDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "conversionMode": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "VARIABLE"
+            ]
+          },
+          "conversionFactor": {
+            "type": "string",
+            "description": "Decimal serializado como texto"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "$ref": "#/components/schemas/UnitOfMeasureDto"
+          }
+        },
+        "required": [
+          "code",
+          "conversionMode",
+          "id",
+          "name",
+          "unit"
+        ]
+      },
+      "ProductDetailDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "baseUnit": {
+            "$ref": "#/components/schemas/UnitOfMeasureDto"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "presentations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductPresentationDto"
+            }
+          },
+          "shortDescription": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "technicalDescription": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "baseUnit",
+          "id",
+          "presentations",
+          "shortDescription",
+          "sku"
+        ]
+      },
+      "ProductDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/ProductDetailDto"
+          }
+        },
+        "required": [
+          "product"
         ]
       },
       "CreateProductUnitRequestDto": {
@@ -1232,68 +1751,6 @@
           "baseUnit",
           "shortDescription",
           "sku"
-        ]
-      },
-      "UnitOfMeasureDto": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "decimalScale": {
-            "type": "number",
-            "maximum": 10,
-            "minimum": 0
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "decimalScale",
-          "id",
-          "name"
-        ]
-      },
-      "ProductPresentationDto": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "conversionMode": {
-            "type": "string",
-            "enum": [
-              "FIXED",
-              "VARIABLE"
-            ]
-          },
-          "conversionFactor": {
-            "type": "string",
-            "description": "Decimal serializado como texto"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "unit": {
-            "$ref": "#/components/schemas/UnitOfMeasureDto"
-          }
-        },
-        "required": [
-          "code",
-          "conversionMode",
-          "id",
-          "name",
-          "unit"
         ]
       },
       "ProductDto": {
