@@ -135,11 +135,11 @@ Ela ainda não persiste documento, arquivo ou proveniência e não produz qualqu
 
 ### Armazenamento privado definido
 
-A ADR-0007 define a API S3 como fronteira, Amazon S3 gerenciado como backend padrão de produção e
-MinIO para desenvolvimento e testes. Buckets são privados e provisionados fora da aplicação, com
-TLS, criptografia server-side, credencial de mínimo privilégio e versionamento. Download começa
-mediado pela API após autorização por tenant. A implementação do adapter, do MinIO local e da
-reconciliação de objetos órfãos ainda não existe.
+A ADR-0007 define a API S3 como fronteira, serviço S3 compatível configurável por organização e
+MinIO no Docker Compose para desenvolvimento e testes. Configuração e onboarding devem validar
+endpoint, região, bucket, acesso privado e capacidades antes da ativação; credenciais nunca ficam em
+texto aberto ou retornam pela API. Download começa mediado pela API após autorização por tenant. A
+implementação do adapter, do MinIO local, da configuração e da reconciliação ainda não existe.
 
 ## Mapa do código relevante
 
@@ -262,7 +262,8 @@ Para 8.3, somente depois das validações anteriores:
 O próximo recorte deve continuar pequeno: definir o modelo persistente da caixa de entrada fiscal,
 incluindo documento, item, proveniência, hash, estados e constraints de tenant/idempotência. A
 fronteira de objetos foi definida na ADR-0007; ainda não adicione o adapter ou o MinIO no mesmo PR do
-schema. Não conecte a caixa de entrada ao estoque.
+schema. Depois, implemente em PRs separados o MinIO no Compose e a configuração multiempresa do
+serviço S3. Não conecte a caixa de entrada ao estoque.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente

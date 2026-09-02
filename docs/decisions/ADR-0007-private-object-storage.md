@@ -9,13 +9,10 @@ A caixa de entrada fiscal precisa preservar XMLs de NF-e e, posteriormente, cert
 qualidade. Esses arquivos podem conter dados pessoais, fiscais e comerciais e não pertencem ao
 PostgreSQL, que continuará armazenando metadados, estados e vínculos transacionais.
 
-A aplicação será mantida por uma equipe de uma pessoa. Operar armazenamento distribuído em
-produção sem necessidade comprovada aumentaria o risco de perda, indisponibilidade e restauração
-não testada. Ao mesmo tempo, desenvolvimento e testes não devem depender de uma conta externa.
-
-Não há restrição de provedor de nuvem ou residência de dados registrada até esta decisão. Se ela
-surgir, a implantação deve parar e esta ADR deve ser substituída antes de armazenar documentos
-reais.
+A aplicação será mantida por uma equipe de uma pessoa. Cada organização pode ter requisitos
+distintos de provedor, residência, custo e retenção. Portanto, o serviço de objetos precisa ser
+configurável no sistema e, futuramente, no onboarding, sem transformar diferenças entre provedores
+em regras do domínio. Desenvolvimento e testes não devem depender de uma conta externa.
 
 ## Decisão
 
@@ -23,13 +20,12 @@ reais.
 
 - A aplicação usa uma porta interna de armazenamento de objetos baseada no subconjunto necessário
   da API S3: gravar, consultar metadados e ler um objeto.
-- Amazon S3 gerenciado é o backend padrão de produção. Região, conta, política de retenção e plano
-  de recuperação são configuração operacional e devem ser aprovados antes do primeiro documento
-  real.
-- MinIO é o backend local de desenvolvimento e dos testes de integração. Uma instância local de nó
-  único não representa durabilidade, backup ou topologia de produção.
-- Um backend alternativo compatível com S3 exige testes de contrato para as operações e garantias
-  usadas pelo ERP. Diferenças de semântica não podem vazar para os casos de uso.
+- O backend de produção é um serviço S3 compatível configurado por organização. Endpoint, região,
+  bucket e modo de endereçamento não ficam codificados na aplicação.
+- MinIO integra o Docker Compose para desenvolvimento e testes de integração. Uma instância local
+  de nó único não representa durabilidade, backup ou topologia de produção.
+- Todo serviço configurado exige teste de compatibilidade para as operações e garantias usadas pelo
+  ERP. Diferenças de semântica não podem vazar para os casos de uso.
 - Quando a implementação começar, o adapter usará o cliente modular S3 do AWS SDK for JavaScript
   v3. A dependência ficará no módulo proprietário, não em um pacote genérico antecipado.
 
@@ -37,12 +33,20 @@ reais.
 
 - Buckets, criptografia, versionamento, políticas e credenciais são provisionados fora da
   aplicação. O runtime do ERP não recebe permissão para administrar buckets ou políticas.
+- A configuração do serviço pertence à organização e recebe `organizationId` somente do contexto
+  autenticado. Alteração, teste, ativação e rotação exigem autorização administrativa e auditoria.
+- A área de configuração e o onboarding futuro recebem endpoint HTTPS, região, bucket, prefixo
+  opcional, modo de endereçamento e estratégia de credenciais. Antes de ativar, o sistema executa
+  verificações determinísticas de acesso e das capacidades obrigatórias.
 - O bucket é privado, com bloqueio de acesso público. A credencial da aplicação segue privilégio
   mínimo e não é compartilhada com tarefas administrativas, backup ou replicação.
 - Tráfego de produção usa TLS. Objetos usam criptografia server-side; SSE-S3 é o mínimo e SSE-KMS
   deve ser adotado quando houver requisito de chave gerenciada ou segregação adicional.
-- Segredos não entram no Git, em imagens, logs, metadados de objetos ou respostas HTTP. Em produção,
-  prefira credenciais temporárias fornecidas pela identidade da carga em vez de chaves estáticas.
+- Segredos não entram no Git, em imagens, logs, metadados de objetos ou respostas HTTP. Credenciais
+  configuradas por usuário nunca são persistidas em texto aberto nem retornadas pela API; a tela
+  mostra apenas estado e identificação mascarada. A chave usada para protegê-las fica fora do
+  PostgreSQL. Quando o provedor permitir, credenciais temporárias ou assunção de papel são
+  preferíveis a chaves estáticas.
 
 ### Identidade, tenant e recuperação
 
@@ -51,6 +55,9 @@ reais.
 - O PostgreSQL registra organização, chave, versão, tamanho, tipo de conteúdo, SHA-256 e vínculo com
   o documento. Consultas autenticadas resolvem esses metadados pelo tenant antes de acessar o
   objeto.
+- A referência persistida identifica também qual configuração de armazenamento recebeu o objeto.
+  Trocar a configuração ativa não move nem torna inacessíveis arquivos existentes; migração entre
+  serviços será uma operação futura, explícita e auditada.
 - O download inicial passa pela API, que autoriza o usuário e transmite o conteúdo. Não haverá URL
   pública. URLs pré-assinadas só poderão ser introduzidas com expiração curta, escopo de um objeto e
   auditoria.
@@ -89,11 +96,11 @@ oferecer as capacidades próprias de armazenamento de objetos.
 Rejeitado. Acopla o arquivo a uma instância da API e dificulta concorrência, backup, restauração e
 implantação.
 
-### MinIO autogerenciado em produção
+### Backend Amazon S3 fixo para todas as organizações
 
-Não adotado inicialmente. É tecnicamente compatível, mas transfere à equipe a responsabilidade por
-alta disponibilidade, discos, upgrades, replicação e recuperação. Pode ser reconsiderado por nova
-ADR se residência, custo ou operação existente justificarem.
+Rejeitado. Impediria escolher outro serviço compatível por requisito de residência, custo ou
+infraestrutura existente. Amazon S3 continua sendo uma configuração válida, mas não uma dependência
+do domínio.
 
 ### URLs pré-assinadas desde o início
 
@@ -103,14 +110,15 @@ troca será possível sem alterar a identidade persistente do objeto.
 ## Consequências
 
 - Desenvolvimento e CI permanecem locais e reexecutáveis com MinIO.
-- Produção evita operar um cluster de objetos sem equipe ou processo dedicado.
 - O código não depende de extensões exclusivas do MinIO e mantém portabilidade dentro do subconjunto
   S3 testado.
+- Configuração de armazenamento torna-se entidade multiempresa sensível, com autorização,
+  criptografia de segredos, validação determinística e auditoria obrigatórias.
 - A ingestão precisa representar estados intermediários e reconciliação, pois não existe commit
   atômico entre banco e objeto.
 - Antes da implementação devem ser definidos o schema persistente, os testes de contrato da porta e
-  as variáveis de configuração. Antes de produção também são obrigatórios retenção, backup e ensaio
-  de restauração.
+  a proteção das credenciais. Antes de ativar uma configuração também são obrigatórios retenção,
+  backup e ensaio de restauração compatíveis com o provedor escolhido.
 
 ## Referências
 

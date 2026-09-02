@@ -247,7 +247,8 @@ XMLs e certificados criam o primeiro uso real para armazenamento de objetos prev
 arquitetura. A implementação deve:
 
 - manter metadados, vínculo, estado, tamanho e hash no PostgreSQL;
-- guardar o conteúdo em Amazon S3 gerenciado em produção e MinIO local, conforme a ADR-0007;
+- guardar o conteúdo em serviço S3 compatível configurado por organização e usar MinIO local,
+  conforme a ADR-0007;
 - criptografar em trânsito e em repouso;
 - negar URLs públicas e usar autorização por organização;
 - verificar tipo, tamanho e conteúdo antes de aceitar upload;
@@ -320,8 +321,9 @@ preservando os campos originais de cada item e resumindo os estados `MATCHED`, `
 `SUPPLIER_NOT_FOUND`. Armazenamento privado, proveniência e persistência idempotente continuam
 pendentes; essa prévia ainda não produz efeitos no estoque.
 
-A ADR-0007 definiu a fronteira S3, Amazon S3 gerenciado como backend padrão de produção e MinIO para
-desenvolvimento e testes. A infraestrutura e o adapter ainda não foram implementados.
+A ADR-0007 definiu a fronteira S3, configuração do serviço por organização no sistema e no
+onboarding futuro, e MinIO no Docker Compose para desenvolvimento e testes. A infraestrutura, a
+configuração persistente e o adapter ainda não foram implementados.
 
 ### 8.3 — Recebimento e estoque
 
