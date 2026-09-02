@@ -22,7 +22,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs --follow postgres",
+    "infra:logs": "docker compose logs --follow postgres minio minio-init",
     "infra:status": "docker compose ps",
     "infra:up": "docker compose up --detach --wait",
     "lint": "pnpm db:generate && pnpm --filter @sistema-erp/contracts build && eslint .",
