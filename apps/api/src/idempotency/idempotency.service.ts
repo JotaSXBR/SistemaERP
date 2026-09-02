@@ -26,6 +26,7 @@ export class IdempotencyService {
     key: string;
     operation: string;
     request: Prisma.JsonObject;
+    responseStatus?: number;
     run: (transaction: Prisma.TransactionClient) => Promise<T>;
   }): Promise<IdempotentResult<T>> {
     if (!KEY_PATTERN.test(options.key)) {
@@ -69,7 +70,7 @@ export class IdempotencyService {
       const data = await options.run(transaction);
 
       await transaction.idempotencyRecord.update({
-        data: { responseBody: data, responseStatus: 201 },
+        data: { responseBody: data, responseStatus: options.responseStatus ?? 201 },
         where: { id: record.id },
       });
 

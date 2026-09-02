@@ -55,6 +55,25 @@ export class CreatePartnerResponseDto {
   replayed!: boolean;
 }
 
+export class UpdatePartnerRequestDto {
+  @ApiPropertyOptional({ type: Boolean })
+  active?: boolean;
+
+  @ApiPropertyOptional({ enum: PartnerRole, isArray: true })
+  roles?: PartnerRole[];
+}
+
+export class UpdatePartnerResponseDto {
+  @ApiProperty({ type: PartnerDto })
+  partner!: PartnerDto;
+
+  @ApiProperty({
+    description: "Indica reaproveitamento seguro da resposta anterior",
+    type: Boolean,
+  })
+  replayed!: boolean;
+}
+
 export class PartnerListResponseDto {
   @ApiProperty({ isArray: true, type: PartnerDto })
   items!: PartnerDto[];

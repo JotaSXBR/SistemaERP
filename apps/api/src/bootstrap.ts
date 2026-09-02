@@ -25,7 +25,7 @@ export async function createApplication(
     .getInstance()
     .addContentTypeParser(
       ["application/xml", "text/xml"],
-      { bodyLimit: MAX_XML_BYTES, parseAs: "string" },
+      { bodyLimit: MAX_XML_BYTES, parseAs: "buffer" },
       (_request, body, done) => {
         done(null, body);
       },

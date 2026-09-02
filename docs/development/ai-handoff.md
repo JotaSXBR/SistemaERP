@@ -168,6 +168,48 @@ sendo a autoridade de validação; o schema do cliente evita apenas a ida desnec
 somente `application/xml` ou `text/xml`, limita o corpo a 5 MiB e não registra o conteúdo em logs.
 Ela ainda não persiste documento, arquivo ou proveniência e não produz qualquer efeito no estoque.
 
+### Ingestão persistente e resolução guiada
+
+`POST /api/v1/fiscal-intake/nfe/ingestions` recebe os bytes do XML com `Idempotency-Key` e exige
+`OWNER` ou `ADMIN`. O serviço:
+
+- rejeita XML não parseável antes da inbox;
+- calcula o hash sobre os bytes originais;
+- grava e verifica o objeto privado antes do PostgreSQL;
+- persiste documento, itens, ingestão e mappings já conhecidos em transação serializável;
+- deriva `PENDING_SUPPLIER`, `PENDING_MAPPING` ou `READY_FOR_REVIEW`;
+- audita a ingestão sem colocar conteúdo fiscal sensível nos metadados.
+
+O hash da chave de idempotência é persistido por organização. A chave de acesso oferece a
+deduplicação permanente; a mesma chave com XML de hash diferente retorna conflito. Reimportar o
+mesmo XML retorna o documento existente com `replayed: true`.
+
+Fornecedor pendente pode significar parceiro inexistente, inativo ou sem papel `SUPPLIER`. O
+endpoint idempotente `PATCH /api/v1/partners/{id}` permite atualizar `active` e `roles` com auditoria.
+Depois do cadastro do fornecedor, produto ou mapping,
+`POST /api/v1/fiscal-intake/nfe/documents/{documentId}/resolve` materializa apenas os snapshots ainda
+ausentes em `InboundFiscalDocumentItemMapping` e atualiza o status. O endpoint não altera o XML nem
+produz estoque.
+
+`GET /api/v1/fiscal-intake/nfe/documents` lista os 50 documentos recentes usados pela tela e
+`GET /api/v1/fiscal-intake/nfe/documents/{documentId}` recupera a prévia persistente. Ambas as
+consultas derivam o tenant da sessão.
+
+### Inbox fiscal na web
+
+A rota autenticada `/fiscal-intake` usa exclusivamente o cliente OpenAPI gerado e TanStack Query
+para o estado remoto. Ela permite:
+
+- selecionar e enviar XML de até 5 MiB;
+- reabrir documentos persistidos depois de recarregar a página;
+- resolver parceiro ausente, inativo ou sem papel `SUPPLIER`;
+- selecionar produto/apresentação ou criar o produto mínimo;
+- criar o mapping e reavaliar o documento até `READY_FOR_REVIEW`.
+
+Os formulários usam React Hook Form e Zod, e os drawers têm semântica de diálogo, fechamento por
+teclado e foco inicial. `MEMBER` permanece em modo de consulta. A tela não simula recebimento nem
+estoque: quando o documento fica pronto, informa que essa ação pertence à Fase 8.3.
+
 ### Armazenamento privado e MinIO local
 
 A ADR-0007 define a API S3 como fronteira e serviço S3 compatível configurável por organização. O
@@ -179,7 +221,10 @@ O teste de contrato opt-in roda contra o MinIO com `pnpm test:s3:integration`. A
 evita implementar autenticação SigV4, retries, streams e checksums manualmente e fica restrita ao
 workspace da API. Configuração e onboarding ainda devem validar endpoint, região, bucket, acesso
 privado e capacidades antes da ativação; credenciais nunca ficam em texto aberto ou retornam pela
-API. A configuração multiempresa, integração com a ingestão e reconciliação ainda não existem.
+API. O Compose provisiona uma credencial local de aplicação separada da credencial root, limitada
+ao bucket privado por policy própria, e a ingestão usa o adapter em desenvolvimento. Em
+`NODE_ENV=production`, o provider retorna `503` até existir configuração persistente por
+organização. Essa configuração e a reconciliação de objetos órfãos ainda não existem.
 
 ### Schema da caixa de entrada fiscal
 
@@ -187,8 +232,18 @@ O Prisma contém `InboundFiscalDocument`, `InboundFiscalDocumentItem`,
 `FiscalDocumentIngestion` e `InboundFiscalDocumentItemMapping`. As constraints garantem tenant nas
 relações, chave de acesso única por organização, decimais exatos, metadados mínimos do objeto e
 formatos fiscais básicos. Fornecedor ainda não cadastrado e item ainda não mapeado continuam
-representáveis. Não existe serviço de persistência e nenhuma dessas tabelas produz efeito no
-estoque.
+representáveis. O serviço de ingestão e resolução já grava essas tabelas; nenhuma delas produz
+efeito no estoque.
+
+## Próximas etapas recomendadas
+
+1. Modelar a identidade fiscal da organização e validar destinatário, protocolo, totais, schema e
+   assinatura antes de permitir recebimento.
+2. Implementar configuração persistente e seleção de storage por organização, download autenticado
+   do XML e reconciliação segura de objetos órfãos.
+3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas gerais de
+   manutenção de parceiros e catálogo.
+4. Somente depois implementar `receive`, depósitos e movimentos imutáveis da Fase 8.3.
 
 ## Mapa do código relevante
 

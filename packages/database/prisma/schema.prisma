@@ -38,6 +38,7 @@ enum ProductConversionMode {
 enum FiscalDocumentStatus {
   PENDING_VALIDATION
   VALIDATION_FAILED
+  PENDING_SUPPLIER
   PENDING_MAPPING
   READY_FOR_REVIEW
 }
@@ -246,6 +247,7 @@ model FiscalDocumentIngestion {
   documentId      String                @map("document_id") @db.Uuid
   source          FiscalIngestionSource
   hashSha256      String                @map("hash_sha256") @db.VarChar(64)
+  idempotencyKeyHash String             @map("idempotency_key_hash") @db.VarChar(64)
   objectKey       String                @map("object_key") @db.VarChar(1024)
   objectVersionId String?               @map("object_version_id") @db.VarChar(1024)
   contentType     String                @map("content_type") @db.VarChar(100)
@@ -258,6 +260,7 @@ model FiscalDocumentIngestion {
 
   @@unique([id, organizationId])
   @@unique([organizationId, documentId, hashSha256])
+  @@unique([organizationId, idempotencyKeyHash])
   @@unique([organizationId, objectKey])
   @@index([organizationId, ingestedAt])
   @@map("fiscal_document_ingestions")

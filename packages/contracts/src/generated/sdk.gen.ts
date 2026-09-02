@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerFindProductByIdData, CatalogControllerFindProductByIdErrors, CatalogControllerFindProductByIdResponses, CatalogControllerListProductsData, CatalogControllerListProductsErrors, CatalogControllerListProductsResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, FiscalIntakeControllerPreviewData, FiscalIntakeControllerPreviewErrors, FiscalIntakeControllerPreviewResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses, PartnersControllerFindByIdData, PartnersControllerFindByIdErrors, PartnersControllerFindByIdResponses, PartnersControllerListData, PartnersControllerListErrors, PartnersControllerListResponses } from './types.gen.js';
+import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerFindProductByIdData, CatalogControllerFindProductByIdErrors, CatalogControllerFindProductByIdResponses, CatalogControllerListProductsData, CatalogControllerListProductsErrors, CatalogControllerListProductsResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, FiscalIntakeControllerFindByIdData, FiscalIntakeControllerFindByIdErrors, FiscalIntakeControllerFindByIdResponses, FiscalIntakeControllerIngestData, FiscalIntakeControllerIngestErrors, FiscalIntakeControllerIngestResponses, FiscalIntakeControllerListData, FiscalIntakeControllerListErrors, FiscalIntakeControllerListResponses, FiscalIntakeControllerPreviewData, FiscalIntakeControllerPreviewErrors, FiscalIntakeControllerPreviewResponses, FiscalIntakeControllerResolveData, FiscalIntakeControllerResolveErrors, FiscalIntakeControllerResolveResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses, PartnersControllerFindByIdData, PartnersControllerFindByIdErrors, PartnersControllerFindByIdResponses, PartnersControllerListData, PartnersControllerListErrors, PartnersControllerListResponses, PartnersControllerUpdateData, PartnersControllerUpdateErrors, PartnersControllerUpdateResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -89,6 +89,16 @@ export const partnersControllerFindById = <ThrowOnError extends boolean = false>
     ...options
 });
 
+export const partnersControllerUpdate = <ThrowOnError extends boolean = false>(options: Options<PartnersControllerUpdateData, ThrowOnError>): RequestResult<PartnersControllerUpdateResponses, PartnersControllerUpdateErrors, ThrowOnError> => (options.client ?? client).patch<PartnersControllerUpdateResponses, PartnersControllerUpdateErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/partners/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
 export const catalogControllerListProducts = <ThrowOnError extends boolean = false>(options?: Options<CatalogControllerListProductsData, ThrowOnError>): RequestResult<CatalogControllerListProductsResponses, CatalogControllerListProductsErrors, ThrowOnError> => (options?.client ?? client).get<CatalogControllerListProductsResponses, CatalogControllerListProductsErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/catalog/products',
@@ -139,6 +149,35 @@ export const fiscalIntakeControllerPreview = <ThrowOnError extends boolean = fal
         'Content-Type': 'application/xml',
         ...options.headers
     }
+});
+
+export const fiscalIntakeControllerList = <ThrowOnError extends boolean = false>(options?: Options<FiscalIntakeControllerListData, ThrowOnError>): RequestResult<FiscalIntakeControllerListResponses, FiscalIntakeControllerListErrors, ThrowOnError> => (options?.client ?? client).get<FiscalIntakeControllerListResponses, FiscalIntakeControllerListErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/fiscal-intake/nfe/documents',
+    ...options
+});
+
+export const fiscalIntakeControllerFindById = <ThrowOnError extends boolean = false>(options: Options<FiscalIntakeControllerFindByIdData, ThrowOnError>): RequestResult<FiscalIntakeControllerFindByIdResponses, FiscalIntakeControllerFindByIdErrors, ThrowOnError> => (options.client ?? client).get<FiscalIntakeControllerFindByIdResponses, FiscalIntakeControllerFindByIdErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/fiscal-intake/nfe/documents/{documentId}',
+    ...options
+});
+
+export const fiscalIntakeControllerIngest = <ThrowOnError extends boolean = false>(options: Options<FiscalIntakeControllerIngestData, ThrowOnError>): RequestResult<FiscalIntakeControllerIngestResponses, FiscalIntakeControllerIngestErrors, ThrowOnError> => (options.client ?? client).post<FiscalIntakeControllerIngestResponses, FiscalIntakeControllerIngestErrors, ThrowOnError>({
+    bodySerializer: null,
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/fiscal-intake/nfe/ingestions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/xml',
+        ...options.headers
+    }
+});
+
+export const fiscalIntakeControllerResolve = <ThrowOnError extends boolean = false>(options: Options<FiscalIntakeControllerResolveData, ThrowOnError>): RequestResult<FiscalIntakeControllerResolveResponses, FiscalIntakeControllerResolveErrors, ThrowOnError> => (options.client ?? client).post<FiscalIntakeControllerResolveResponses, FiscalIntakeControllerResolveErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/fiscal-intake/nfe/documents/{documentId}/resolve',
+    ...options
 });
 
 /**

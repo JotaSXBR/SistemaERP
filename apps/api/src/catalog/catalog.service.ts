@@ -62,6 +62,12 @@ export type SupplierProductResolution =
       supplierCode: string;
     };
 
+export type SupplierDocumentResolution = {
+  resolutions: SupplierProductResolution[];
+  supplierId?: string;
+  supplierStatus: "FOUND" | "INACTIVE" | "MISSING_SUPPLIER_ROLE" | "NOT_FOUND";
+};
+
 function mappingResponse(mapping: MappingWithRelations): Prisma.JsonObject {
   const { product, unitOfMeasure } = mapping.productPresentation;
 
@@ -240,8 +246,15 @@ export class CatalogService {
     supplierTaxId: string,
     supplierCodes: readonly string[],
   ): Promise<SupplierProductResolution[]> {
+    return (await this.resolveSupplierDocument(supplierTaxId, supplierCodes)).resolutions;
+  }
+
+  async resolveSupplierDocument(
+    supplierTaxId: string,
+    supplierCodes: readonly string[],
+  ): Promise<SupplierDocumentResolution> {
     if (supplierCodes.length === 0) {
-      return [];
+      return { resolutions: [], supplierStatus: "NOT_FOUND" };
     }
 
     const { organizationId } = this.requestContext.getAuthenticated();
@@ -251,11 +264,26 @@ export class CatalogService {
       },
     });
 
-    if (!supplier?.active || !supplier.roles.includes(PartnerRole.SUPPLIER)) {
-      return supplierCodes.map((supplierCode) => ({
-        status: "SUPPLIER_NOT_FOUND",
-        supplierCode,
-      }));
+    const unresolved = supplierCodes.map((supplierCode) => ({
+      status: "SUPPLIER_NOT_FOUND" as const,
+      supplierCode,
+    }));
+    if (!supplier) {
+      return { resolutions: unresolved, supplierStatus: "NOT_FOUND" };
+    }
+    if (!supplier.active) {
+      return {
+        resolutions: unresolved,
+        supplierId: supplier.id,
+        supplierStatus: "INACTIVE",
+      };
+    }
+    if (!supplier.roles.includes(PartnerRole.SUPPLIER)) {
+      return {
+        resolutions: unresolved,
+        supplierId: supplier.id,
+        supplierStatus: "MISSING_SUPPLIER_ROLE",
+      };
     }
 
     const normalizedCodes = supplierCodes.map(normalizeCode);
@@ -271,7 +299,7 @@ export class CatalogService {
       mappings.map((mapping) => [mapping.normalizedSupplierCode, mapping] as const),
     );
 
-    return supplierCodes.map((supplierCode, index) => {
+    const resolutions: SupplierProductResolution[] = supplierCodes.map((supplierCode, index) => {
       const mapping = mappingsByCode.get(normalizedCodes[index] ?? "");
 
       if (
@@ -279,15 +307,17 @@ export class CatalogService {
         !mapping.productPresentation.active ||
         !mapping.productPresentation.product.active
       ) {
-        return { status: "UNMAPPED", supplierCode };
+        return { status: "UNMAPPED" as const, supplierCode };
       }
 
       return {
         mapping: mappingResponse(mapping) as unknown as SupplierProductMappingDto,
-        status: "MATCHED",
+        status: "MATCHED" as const,
         supplierCode,
       };
     });
+
+    return { resolutions, supplierId: supplier.id, supplierStatus: "FOUND" };
   }
 
   private async createProductTransaction(
