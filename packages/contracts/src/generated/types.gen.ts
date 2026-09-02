@@ -134,6 +134,19 @@ export type CreatePartnerResponseDto = {
     replayed: boolean;
 };
 
+export type UpdatePartnerRequestDto = {
+    active?: boolean;
+    roles?: Array<'SUPPLIER' | 'CUSTOMER' | 'CARRIER'>;
+};
+
+export type UpdatePartnerResponseDto = {
+    partner: PartnerDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
 export type UnitOfMeasureDto = {
     code: string;
     decimalScale: number;
@@ -327,6 +340,79 @@ export type NfeIntakePreviewDto = {
     summary: NfeIntakePreviewSummaryDto;
     supplierName: string;
     supplierTaxId: string;
+};
+
+export type NfePersistentItemResolutionDto = {
+    product?: MappedProductDto;
+    status: 'MATCHED' | 'SUPPLIER_NOT_FOUND' | 'UNMAPPED';
+};
+
+export type NfePersistentIntakeItemDto = {
+    cest?: string;
+    cfop: string;
+    commercialQuantity: string;
+    commercialUnit: string;
+    commercialUnitValue: string;
+    description: string;
+    gtin?: string;
+    id: string;
+    itemNumber: string;
+    ncm: string;
+    resolution: NfePersistentItemResolutionDto;
+    supplierCode: string;
+    taxableQuantity: string;
+    taxableUnit: string;
+    taxableUnitValue: string;
+    totalValue: string;
+};
+
+export type NfeIntakeSupplierDto = {
+    name: string;
+    partnerId?: string;
+    resolution: 'FOUND' | 'INACTIVE' | 'MISSING_SUPPLIER_ROLE' | 'NOT_FOUND';
+    taxId: string;
+};
+
+export type CreateNfeIngestionResponseDto = {
+    accessKey: string;
+    documentId: string;
+    documentNumber: string;
+    documentTotal: string;
+    hashSha256: string;
+    ingestionId: string;
+    issuedAt: string;
+    items: Array<NfePersistentIntakeItemDto>;
+    natureOfOperation: string;
+    protocol?: string;
+    recipientTaxId: string;
+    schemaVersion: string;
+    series: string;
+    status: 'PENDING_VALIDATION' | 'VALIDATION_FAILED' | 'PENDING_SUPPLIER' | 'PENDING_MAPPING' | 'READY_FOR_REVIEW';
+    summary: NfeIntakePreviewSummaryDto;
+    supplier: NfeIntakeSupplierDto;
+    /**
+     * Indica que o documento persistente já existia
+     */
+    replayed: boolean;
+};
+
+export type NfePersistentIntakeDto = {
+    accessKey: string;
+    documentId: string;
+    documentNumber: string;
+    documentTotal: string;
+    hashSha256: string;
+    ingestionId: string;
+    issuedAt: string;
+    items: Array<NfePersistentIntakeItemDto>;
+    natureOfOperation: string;
+    protocol?: string;
+    recipientTaxId: string;
+    schemaVersion: string;
+    series: string;
+    status: 'PENDING_VALIDATION' | 'VALIDATION_FAILED' | 'PENDING_SUPPLIER' | 'PENDING_MAPPING' | 'READY_FOR_REVIEW';
+    summary: NfeIntakePreviewSummaryDto;
+    supplier: NfeIntakeSupplierDto;
 };
 
 export type HealthResponseDto = {
@@ -562,6 +648,33 @@ export type PartnersControllerFindByIdResponses = {
 
 export type PartnersControllerFindByIdResponse = PartnersControllerFindByIdResponses[keyof PartnersControllerFindByIdResponses];
 
+export type PartnersControllerUpdateData = {
+    body: UpdatePartnerRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/partners/{id}';
+};
+
+export type PartnersControllerUpdateErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type PartnersControllerUpdateError = PartnersControllerUpdateErrors[keyof PartnersControllerUpdateErrors];
+
+export type PartnersControllerUpdateResponses = {
+    200: UpdatePartnerResponseDto;
+};
+
+export type PartnersControllerUpdateResponse = PartnersControllerUpdateResponses[keyof PartnersControllerUpdateResponses];
+
 export type CatalogControllerListProductsData = {
     body?: never;
     path?: never;
@@ -708,6 +821,58 @@ export type FiscalIntakeControllerPreviewResponses = {
 };
 
 export type FiscalIntakeControllerPreviewResponse = FiscalIntakeControllerPreviewResponses[keyof FiscalIntakeControllerPreviewResponses];
+
+export type FiscalIntakeControllerIngestData = {
+    /**
+     * Bytes originais de uma NF-e 4.00, com limite de 5 MiB
+     */
+    body: Blob | File;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/fiscal-intake/nfe/ingestions';
+};
+
+export type FiscalIntakeControllerIngestErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type FiscalIntakeControllerIngestError = FiscalIntakeControllerIngestErrors[keyof FiscalIntakeControllerIngestErrors];
+
+export type FiscalIntakeControllerIngestResponses = {
+    201: CreateNfeIngestionResponseDto;
+};
+
+export type FiscalIntakeControllerIngestResponse = FiscalIntakeControllerIngestResponses[keyof FiscalIntakeControllerIngestResponses];
+
+export type FiscalIntakeControllerResolveData = {
+    body?: never;
+    path: {
+        documentId: string;
+    };
+    query?: never;
+    url: '/api/v1/fiscal-intake/nfe/documents/{documentId}/resolve';
+};
+
+export type FiscalIntakeControllerResolveErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type FiscalIntakeControllerResolveError = FiscalIntakeControllerResolveErrors[keyof FiscalIntakeControllerResolveErrors];
+
+export type FiscalIntakeControllerResolveResponses = {
+    200: NfePersistentIntakeDto;
+};
+
+export type FiscalIntakeControllerResolveResponse = FiscalIntakeControllerResolveResponses[keyof FiscalIntakeControllerResolveResponses];
 
 export type HealthControllerLivenessData = {
     body?: never;

@@ -42,6 +42,7 @@ type MappingResponse = {
   mapping: { id: string; product: { productId: string }; supplierCode: string };
   replayed: boolean;
 };
+type PersistentIntakeResponse = { documentId: string };
 
 describe("catalog and supplier product mapping", () => {
   let application: NestFastifyApplication;
@@ -72,6 +73,18 @@ describe("catalog and supplier product mapping", () => {
     });
     await database.$executeRaw`ALTER TABLE "audit_events" ENABLE TRIGGER USER`;
     await database.idempotencyRecord.deleteMany({
+      where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
+    });
+    await database.inboundFiscalDocumentItemMapping.deleteMany({
+      where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
+    });
+    await database.fiscalDocumentIngestion.deleteMany({
+      where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
+    });
+    await database.inboundFiscalDocumentItem.deleteMany({
+      where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
+    });
+    await database.inboundFiscalDocument.deleteMany({
       where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
     });
     await database.supplierProductMapping.deleteMany({
@@ -374,6 +387,116 @@ describe("catalog and supplier product mapping", () => {
       ],
       summary: { matched: 1, supplierNotFound: 0, unmapped: 0 },
     });
+  });
+
+  it("persists, replays, and resolves a guided NF-e ingestion", async () => {
+    const xml = SYNTHETIC_NFE_XML.replace(
+      "11111111111111111111111111111111111111111111",
+      "55555555555555555555555555555555555555555555",
+    ).replace("<CNPJ>11111111111111</CNPJ>", "<CNPJ>99999999999999</CNPJ>");
+    const customer = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "guided-customer"),
+      method: "POST",
+      payload: {
+        legalName: "Parceiro sintético",
+        roles: [PartnerRole.CUSTOMER],
+        taxId: "99999999999999",
+        type: PartnerType.ORGANIZATION,
+      },
+      url: "/api/v1/partners",
+    });
+    const ingestRequest = {
+      headers: {
+        ...authenticated(fixture.ownerAToken, "guided-ingestion"),
+        "content-type": "application/xml",
+      },
+      method: "POST" as const,
+      payload: xml,
+      url: "/api/v1/fiscal-intake/nfe/ingestions",
+    };
+    const first = await application.inject(ingestRequest);
+    const replay = await application.inject(ingestRequest);
+    const reusedKey = await application.inject({
+      ...ingestRequest,
+      payload: xml.replace("PERFIL METALICO SINTETICO", "CONTEUDO DIVERGENTE"),
+    });
+    const divergentDocument = await application.inject({
+      ...ingestRequest,
+      headers: {
+        ...authenticated(fixture.ownerAToken, "guided-divergent-document"),
+        "content-type": "application/xml",
+      },
+      payload: xml.replace("PERFIL METALICO SINTETICO", "CONTEUDO DIVERGENTE"),
+    });
+    const denied = await application.inject({
+      ...ingestRequest,
+      headers: {
+        ...authenticated(fixture.memberToken, "guided-member"),
+        "content-type": "application/xml",
+      },
+    });
+
+    expect(first.statusCode).toBe(201);
+    expect(first.json()).toMatchObject({
+      replayed: false,
+      status: "PENDING_SUPPLIER",
+      supplier: {
+        partnerId: customer.json<PartnerResponse>().partner.id,
+        resolution: "MISSING_SUPPLIER_ROLE",
+      },
+      summary: { matched: 0, supplierNotFound: 1, unmapped: 0 },
+    });
+    expect(replay.json()).toMatchObject({
+      documentId: first.json<PersistentIntakeResponse>().documentId,
+      replayed: true,
+    });
+    expect(reusedKey.statusCode).toBe(409);
+    expect(divergentDocument.statusCode).toBe(409);
+    expect(denied.statusCode).toBe(403);
+
+    const partnerUpdate = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "guided-supplier-role"),
+      method: "PATCH",
+      payload: { active: true, roles: [PartnerRole.CUSTOMER, PartnerRole.SUPPLIER] },
+      url: `/api/v1/partners/${customer.json<PartnerResponse>().partner.id}`,
+    });
+    const afterSupplier = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "POST",
+      url: `/api/v1/fiscal-intake/nfe/documents/${first.json<PersistentIntakeResponse>().documentId}/resolve`,
+    });
+    const product = await createProduct(fixture.ownerAToken, "guided-product", "SKU-GUIDED-INTAKE");
+    await application.inject({
+      headers: authenticated(fixture.ownerAToken, "guided-mapping"),
+      method: "POST",
+      payload: {
+        productPresentationId: product.json<ProductResponse>().product.basePresentation.id,
+        supplierCode: "000123",
+        supplierId: customer.json<PartnerResponse>().partner.id,
+      },
+      url: "/api/v1/catalog/supplier-mappings",
+    });
+    const ready = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "POST",
+      url: `/api/v1/fiscal-intake/nfe/documents/${first.json<PersistentIntakeResponse>().documentId}/resolve`,
+    });
+
+    expect(partnerUpdate.statusCode).toBe(200);
+    expect(afterSupplier.json()).toMatchObject({
+      status: "PENDING_MAPPING",
+      supplier: { resolution: "FOUND" },
+      summary: { matched: 0, supplierNotFound: 0, unmapped: 1 },
+    });
+    expect(ready.json()).toMatchObject({
+      status: "READY_FOR_REVIEW",
+      summary: { matched: 1, supplierNotFound: 0, unmapped: 0 },
+    });
+    expect(
+      await database.inboundFiscalDocument.count({
+        where: { accessKey: "5".repeat(44), organizationId: fixture.organizationAId },
+      }),
+    ).toBe(1);
   });
 
   it("rejects invalid, unsupported, and oversized XML requests without leaking content", async () => {

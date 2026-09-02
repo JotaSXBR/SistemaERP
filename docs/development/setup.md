@@ -43,15 +43,24 @@ Ele persiste objetos no volume nomeado `sistema-erp_minio-data`, publica API e c
 
 Ao subir a infraestrutura, o serviço one-shot `minio-init` cria de forma idempotente o bucket
 privado e habilita seu versionamento. A credencial root existe somente para essa administração
-local; a aplicação não deve reutilizá-la como credencial de runtime.
+local; a aplicação não deve reutilizá-la como credencial de runtime. O usuário da aplicação recebe
+uma policy própria limitada ao bucket privado do ERP.
 
-| Variável              | Finalidade                                | Valor local padrão       |
-| --------------------- | ----------------------------------------- | ------------------------ |
-| `MINIO_ROOT_USER`     | Usuário administrativo local              | `sistema_erp_admin`      |
-| `MINIO_ROOT_PASSWORD` | Senha administrativa exclusivamente local | `local_minio_admin_only` |
-| `MINIO_BUCKET`        | Bucket privado usado nos testes           | `sistema-erp-private`    |
-| `MINIO_API_PORT`      | Porta S3 publicada em loopback            | `9000`                   |
-| `MINIO_CONSOLE_PORT`  | Porta do console publicada em loopback    | `9001`                   |
+| Variável              | Finalidade                                 | Valor local padrão       |
+| --------------------- | ------------------------------------------ | ------------------------ |
+| `MINIO_ROOT_USER`     | Usuário administrativo local               | `sistema_erp_admin`      |
+| `MINIO_ROOT_PASSWORD` | Senha administrativa exclusivamente local  | `local_minio_admin_only` |
+| `MINIO_BUCKET`        | Bucket privado usado nos testes            | `sistema-erp-private`    |
+| `MINIO_API_PORT`      | Porta S3 publicada em loopback             | `9000`                   |
+| `MINIO_CONSOLE_PORT`  | Porta do console publicada em loopback     | `9001`                   |
+| `MINIO_APP_USER`      | Credencial local usada pelo runtime da API | `sistema_erp_app`        |
+| `MINIO_APP_PASSWORD`  | Segredo exclusivamente local do runtime    | `local_minio_app_only`   |
+
+O runtime local da API usa `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT`, `S3_REGION`,
+`S3_BUCKET` e `S3_FORCE_PATH_STYLE`. O `.env.example` aponta essas variáveis para a credencial de
+aplicação provisionada pelo Compose; as credenciais administrativas `MINIO_ROOT_*` permanecem
+restritas ao provisionamento local. Esse provider é deliberadamente bloqueado em produção até a
+configuração por organização prevista na ADR-0007 ser implementada.
 
 A API S3 fica em `http://localhost:9000` e o console em `http://localhost:9001`. As imagens do
 servidor e do cliente MinIO estão fixadas no Compose. O repositório oficial do servidor foi
@@ -59,9 +68,10 @@ arquivado em 2026; por isso essas imagens servem apenas ao ambiente local isolad
 deve ser avaliada antes de qualquer uso compartilhado ou de produção.
 
 Com o MinIO e seu inicializador ativos, `pnpm test:s3:integration` valida o contrato `put/head/get`
-do adapter. Esse teste usa a credencial root local somente como fixture administrativa; ela não é
-configuração de runtime da API. A variável opcional `S3_TEST_ENDPOINT` permite apontar o teste para
-outra porta local.
+do adapter. Por padrão, o teste lê as variáveis históricas `MINIO_ROOT_*`; para validar exatamente a
+credencial de runtime, execute-o atribuindo `MINIO_ROOT_USER=$MINIO_APP_USER` e
+`MINIO_ROOT_PASSWORD=$MINIO_APP_PASSWORD`. A variável opcional `S3_TEST_ENDPOINT` permite apontar o
+teste para outra porta local.
 
 ## Comandos esperados
 

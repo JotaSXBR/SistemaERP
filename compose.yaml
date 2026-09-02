@@ -49,6 +49,8 @@ services:
         condition: service_healthy
     environment:
       MINIO_BUCKET: ${MINIO_BUCKET:?Defina MINIO_BUCKET no arquivo .env}
+      MINIO_APP_PASSWORD: ${MINIO_APP_PASSWORD:-local_minio_app_only}
+      MINIO_APP_USER: ${MINIO_APP_USER:-sistema_erp_app}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Defina MINIO_ROOT_PASSWORD no arquivo .env}
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Defina MINIO_ROOT_USER no arquivo .env}
     entrypoint: ["/bin/sh", "-c"]
@@ -58,6 +60,11 @@ services:
         mc mb --ignore-existing local/"$${MINIO_BUCKET}"
         mc version enable local/"$${MINIO_BUCKET}"
         mc anonymous set none local/"$${MINIO_BUCKET}"
+        mc admin user add local "$${MINIO_APP_USER}" "$${MINIO_APP_PASSWORD}" || true
+        printf '%s' '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:GetBucketLocation","s3:ListBucket"],"Resource":["arn:aws:s3:::'"$${MINIO_BUCKET}"'"]},{"Effect":"Allow","Action":["s3:GetObject","s3:GetObjectVersion","s3:PutObject"],"Resource":["arn:aws:s3:::'"$${MINIO_BUCKET}"'/*"]}]}' > /tmp/sistema-erp-app-policy.json
+        mc admin policy create local sistema-erp-app /tmp/sistema-erp-app-policy.json || true
+        mc admin policy detach local readwrite --user "$${MINIO_APP_USER}" || true
+        mc admin policy attach local sistema-erp-app --user "$${MINIO_APP_USER}"
 
   e2e:
     profiles: [test]

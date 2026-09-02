@@ -8,6 +8,7 @@ import type {
   CreatePartnerResponseDto,
   PartnerDto,
   PartnerListResponseDto,
+  UpdatePartnerResponseDto,
 } from "./partners.dto.js";
 import { normalizeTaxId } from "./tax-id.js";
 
@@ -61,6 +62,11 @@ type CreatePartnerInput = {
   taxId: string;
   tradeName?: string;
   type: PartnerType;
+};
+
+type UpdatePartnerInput = {
+  active?: boolean;
+  roles?: PartnerRole[];
 };
 
 @Injectable()
@@ -128,6 +134,27 @@ export class PartnersService {
     return { partner: result.data as unknown as PartnerDto, replayed: result.replayed };
   }
 
+  async update(
+    id: string,
+    input: UpdatePartnerInput,
+    key: string,
+  ): Promise<UpdatePartnerResponseDto> {
+    const normalizedInput = {
+      id,
+      ...(input.active === undefined ? {} : { active: input.active }),
+      ...(input.roles === undefined ? {} : { roles: [...new Set(input.roles)].sort() }),
+    };
+    const result = await this.idempotency.execute({
+      key,
+      operation: "partners.update",
+      request: normalizedInput,
+      responseStatus: 200,
+      run: async (transaction) => this.updatePartner(transaction, normalizedInput),
+    });
+
+    return { partner: result.data as unknown as PartnerDto, replayed: result.replayed };
+  }
+
   private async createPartner(
     transaction: Prisma.TransactionClient,
     input: CreatePartnerInput,
@@ -164,6 +191,48 @@ export class PartnersService {
         entityId: partner.id,
         entityType: "partner",
         metadata: { roles: partner.roles, type: partner.type },
+        organizationId: context.organizationId,
+        requestId: context.requestId,
+      },
+    });
+
+    return response;
+  }
+
+  private async updatePartner(
+    transaction: Prisma.TransactionClient,
+    input: UpdatePartnerInput & { id: string },
+  ): Promise<Prisma.JsonObject> {
+    const context = this.requestContext.getAuthenticated();
+    const existing = await transaction.partner.findUnique({
+      where: { id_organizationId: { id: input.id, organizationId: context.organizationId } },
+    });
+    if (!existing) {
+      throw new NotFoundException();
+    }
+
+    const partner = await transaction.partner.update({
+      data: {
+        ...(input.active === undefined ? {} : { active: input.active }),
+        ...(input.roles === undefined ? {} : { roles: input.roles }),
+      },
+      where: { id_organizationId: { id: input.id, organizationId: context.organizationId } },
+    });
+    const response = toPartnerDto(partner) as unknown as Prisma.JsonObject;
+
+    await transaction.auditEvent.create({
+      data: {
+        action: "partners.updated",
+        actorUserId: context.userId,
+        correlationId: context.correlationId,
+        entityId: partner.id,
+        entityType: "partner",
+        metadata: {
+          activeChanged: input.active !== undefined && input.active !== existing.active,
+          rolesChanged:
+            input.roles !== undefined &&
+            input.roles.join(",") !== [...existing.roles].sort().join(","),
+        },
         organizationId: context.organizationId,
         requestId: context.requestId,
       },

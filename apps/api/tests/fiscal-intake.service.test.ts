@@ -17,7 +17,15 @@ describe("FiscalIntakeService", () => {
   it("preserves XML item data and reports unresolved supplier codes", async () => {
     const resolveSupplierProducts = vi.fn<SupplierProductResolver["resolveSupplierProducts"]>();
     resolveSupplierProducts.mockResolvedValue([{ status: "UNMAPPED", supplierCode: "000123" }]);
-    const service = new FiscalIntakeService({ resolveSupplierProducts });
+    const service = new FiscalIntakeService(
+      {
+        resolveSupplierDocument: vi.fn(),
+        resolveSupplierProducts,
+      },
+      undefined as never,
+      undefined as never,
+      undefined as never,
+    );
 
     const preview = await service.preview(SYNTHETIC_NFE_XML);
 
@@ -35,7 +43,15 @@ describe("FiscalIntakeService", () => {
 
   it("does not query the catalog when XML parsing fails", async () => {
     const resolveSupplierProducts = vi.fn<SupplierProductResolver["resolveSupplierProducts"]>();
-    const service = new FiscalIntakeService({ resolveSupplierProducts });
+    const service = new FiscalIntakeService(
+      {
+        resolveSupplierDocument: vi.fn(),
+        resolveSupplierProducts,
+      },
+      undefined as never,
+      undefined as never,
+      undefined as never,
+    );
 
     await expect(service.preview("<invalid>")).rejects.toBeInstanceOf(NfeXmlParseError);
     expect(resolveSupplierProducts).not.toHaveBeenCalled();

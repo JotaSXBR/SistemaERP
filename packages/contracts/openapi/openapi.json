@@ -589,6 +589,98 @@
         "tags": [
           "partners"
         ]
+      },
+      "patch": {
+        "operationId": "PartnersController_update",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePartnerRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdatePartnerResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/catalog/products": {
@@ -1038,6 +1130,175 @@
             }
           },
           "415": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fiscal-intake"
+        ]
+      }
+    },
+    "/api/v1/fiscal-intake/nfe/ingestions": {
+      "post": {
+        "operationId": "FiscalIntakeController_ingest",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Bytes originais de uma NF-e 4.00, com limite de 5 MiB",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateNfeIngestionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fiscal-intake"
+        ]
+      }
+    },
+    "/api/v1/fiscal-intake/nfe/documents/{documentId}/resolve": {
+      "post": {
+        "operationId": "FiscalIntakeController_resolve",
+        "parameters": [
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfePersistentIntakeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -1527,6 +1788,41 @@
         ]
       },
       "CreatePartnerResponseDto": {
+        "type": "object",
+        "properties": {
+          "partner": {
+            "$ref": "#/components/schemas/PartnerDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "partner",
+          "replayed"
+        ]
+      },
+      "UpdatePartnerRequestDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "SUPPLIER",
+                "CUSTOMER",
+                "CARRIER"
+              ]
+            }
+          }
+        }
+      },
+      "UpdatePartnerResponseDto": {
         "type": "object",
         "properties": {
           "partner": {
@@ -2099,6 +2395,293 @@
           "summary",
           "supplierName",
           "supplierTaxId"
+        ]
+      },
+      "NfePersistentItemResolutionDto": {
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/MappedProductDto"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MATCHED",
+              "SUPPLIER_NOT_FOUND",
+              "UNMAPPED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "NfePersistentIntakeItemDto": {
+        "type": "object",
+        "properties": {
+          "cest": {
+            "type": "string"
+          },
+          "cfop": {
+            "type": "string"
+          },
+          "commercialQuantity": {
+            "type": "string"
+          },
+          "commercialUnit": {
+            "type": "string"
+          },
+          "commercialUnitValue": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "gtin": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "itemNumber": {
+            "type": "string"
+          },
+          "ncm": {
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/NfePersistentItemResolutionDto"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "taxableQuantity": {
+            "type": "string"
+          },
+          "taxableUnit": {
+            "type": "string"
+          },
+          "taxableUnitValue": {
+            "type": "string"
+          },
+          "totalValue": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cfop",
+          "commercialQuantity",
+          "commercialUnit",
+          "commercialUnitValue",
+          "description",
+          "id",
+          "itemNumber",
+          "ncm",
+          "resolution",
+          "supplierCode",
+          "taxableQuantity",
+          "taxableUnit",
+          "taxableUnitValue",
+          "totalValue"
+        ]
+      },
+      "NfeIntakeSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "partnerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "resolution": {
+            "type": "string",
+            "enum": [
+              "FOUND",
+              "INACTIVE",
+              "MISSING_SUPPLIER_ROLE",
+              "NOT_FOUND"
+            ]
+          },
+          "taxId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "resolution",
+          "taxId"
+        ]
+      },
+      "CreateNfeIngestionResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessKey": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "documentTotal": {
+            "type": "string"
+          },
+          "hashSha256": {
+            "type": "string"
+          },
+          "ingestionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NfePersistentIntakeItemDto"
+            }
+          },
+          "natureOfOperation": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "recipientTaxId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_VALIDATION",
+              "VALIDATION_FAILED",
+              "PENDING_SUPPLIER",
+              "PENDING_MAPPING",
+              "READY_FOR_REVIEW"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/NfeIntakePreviewSummaryDto"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/NfeIntakeSupplierDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica que o documento persistente já existia"
+          }
+        },
+        "required": [
+          "accessKey",
+          "documentId",
+          "documentNumber",
+          "documentTotal",
+          "hashSha256",
+          "ingestionId",
+          "issuedAt",
+          "items",
+          "natureOfOperation",
+          "recipientTaxId",
+          "schemaVersion",
+          "series",
+          "status",
+          "summary",
+          "supplier",
+          "replayed"
+        ]
+      },
+      "NfePersistentIntakeDto": {
+        "type": "object",
+        "properties": {
+          "accessKey": {
+            "type": "string"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "documentTotal": {
+            "type": "string"
+          },
+          "hashSha256": {
+            "type": "string"
+          },
+          "ingestionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NfePersistentIntakeItemDto"
+            }
+          },
+          "natureOfOperation": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "recipientTaxId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_VALIDATION",
+              "VALIDATION_FAILED",
+              "PENDING_SUPPLIER",
+              "PENDING_MAPPING",
+              "READY_FOR_REVIEW"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/NfeIntakePreviewSummaryDto"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/NfeIntakeSupplierDto"
+          }
+        },
+        "required": [
+          "accessKey",
+          "documentId",
+          "documentNumber",
+          "documentTotal",
+          "hashSha256",
+          "ingestionId",
+          "issuedAt",
+          "items",
+          "natureOfOperation",
+          "recipientTaxId",
+          "schemaVersion",
+          "series",
+          "status",
+          "summary",
+          "supplier"
         ]
       },
       "HealthResponseDto": {

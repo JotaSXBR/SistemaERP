@@ -6,6 +6,7 @@ import {
   Headers,
   Inject,
   Param,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -42,6 +43,8 @@ import {
   CreatePartnerResponseDto,
   PartnerListResponseDto,
   PartnerResponseDto,
+  UpdatePartnerRequestDto,
+  UpdatePartnerResponseDto,
 } from "./partners.dto.js";
 import { PartnersService } from "./partners.service.js";
 
@@ -66,6 +69,24 @@ function validateInput(body: CreatePartnerRequestDto): CreatePartnerRequestDto {
     body.roles.some((role) => !PARTNER_ROLES.has(role)) ||
     (body.tradeName !== undefined &&
       (typeof body.tradeName !== "string" || body.tradeName.trim().length > 160))
+  ) {
+    throw new BadRequestException();
+  }
+
+  return body;
+}
+
+function validateUpdate(body: UpdatePartnerRequestDto): UpdatePartnerRequestDto {
+  const candidate = body as UpdatePartnerRequestDto & { organizationId?: unknown };
+
+  if (
+    candidate.organizationId !== undefined ||
+    (body.active === undefined && body.roles === undefined) ||
+    (body.active !== undefined && typeof body.active !== "boolean") ||
+    (body.roles !== undefined &&
+      (!Array.isArray(body.roles) ||
+        body.roles.length === 0 ||
+        body.roles.some((role) => !PARTNER_ROLES.has(role))))
   ) {
     throw new BadRequestException();
   }
@@ -146,5 +167,26 @@ export class PartnersController {
     }
 
     return this.partners.create(validateInput(body), idempotencyKey);
+  }
+
+  @Patch(":id")
+  @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: UpdatePartnerRequestDto })
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiOkResponse({ type: UpdatePartnerResponseDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  update(
+    @Param("id") id: string,
+    @Body() body: UpdatePartnerRequestDto,
+    @Headers("idempotency-key") idempotencyKey: string | undefined,
+  ): Promise<UpdatePartnerResponseDto> {
+    if (!UUID_PATTERN.test(id) || !idempotencyKey) {
+      throw new BadRequestException();
+    }
+
+    return this.partners.update(id, validateUpdate(body), idempotencyKey);
   }
 }

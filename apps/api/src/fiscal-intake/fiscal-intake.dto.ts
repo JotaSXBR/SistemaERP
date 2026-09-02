@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { FiscalDocumentStatus } from "@sistema-erp/database";
 
-import { ResolveSupplierProductResponseDto } from "../catalog/catalog.dto.js";
+import { MappedProductDto, ResolveSupplierProductResponseDto } from "../catalog/catalog.dto.js";
 
 export class NfeIntakePreviewItemDto {
   @ApiPropertyOptional({ type: String })
@@ -102,4 +103,118 @@ export class NfeIntakePreviewDto {
 
   @ApiProperty({ type: String })
   supplierTaxId!: string;
+}
+
+export class NfeIntakeSupplierDto {
+  @ApiProperty({ type: String })
+  name!: string;
+
+  @ApiPropertyOptional({ format: "uuid", type: String })
+  partnerId?: string;
+
+  @ApiProperty({
+    enum: ["FOUND", "INACTIVE", "MISSING_SUPPLIER_ROLE", "NOT_FOUND"],
+  })
+  resolution!: "FOUND" | "INACTIVE" | "MISSING_SUPPLIER_ROLE" | "NOT_FOUND";
+
+  @ApiProperty({ type: String })
+  taxId!: string;
+}
+
+export class NfePersistentItemResolutionDto {
+  @ApiPropertyOptional({ type: MappedProductDto })
+  product?: MappedProductDto;
+
+  @ApiProperty({ enum: ["MATCHED", "SUPPLIER_NOT_FOUND", "UNMAPPED"] })
+  status!: "MATCHED" | "SUPPLIER_NOT_FOUND" | "UNMAPPED";
+}
+
+export class NfePersistentIntakeItemDto {
+  @ApiPropertyOptional({ type: String })
+  cest?: string;
+  @ApiProperty({ type: String })
+  cfop!: string;
+  @ApiProperty({ type: String })
+  commercialQuantity!: string;
+  @ApiProperty({ type: String })
+  commercialUnit!: string;
+  @ApiProperty({ type: String })
+  commercialUnitValue!: string;
+  @ApiProperty({ type: String })
+  description!: string;
+  @ApiPropertyOptional({ type: String })
+  gtin?: string;
+  @ApiProperty({ format: "uuid", type: String })
+  id!: string;
+  @ApiProperty({ type: String })
+  itemNumber!: string;
+  @ApiProperty({ type: String })
+  ncm!: string;
+  @ApiProperty({ type: NfePersistentItemResolutionDto })
+  resolution!: NfePersistentItemResolutionDto;
+  @ApiProperty({ type: String })
+  supplierCode!: string;
+  @ApiProperty({ type: String })
+  taxableQuantity!: string;
+  @ApiProperty({ type: String })
+  taxableUnit!: string;
+  @ApiProperty({ type: String })
+  taxableUnitValue!: string;
+  @ApiProperty({ type: String })
+  totalValue!: string;
+}
+
+export class NfePersistentIntakeDto {
+  @ApiProperty({ type: String })
+  accessKey!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  documentId!: string;
+
+  @ApiProperty({ type: String })
+  documentNumber!: string;
+
+  @ApiProperty({ type: String })
+  documentTotal!: string;
+
+  @ApiProperty({ type: String })
+  hashSha256!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  ingestionId!: string;
+
+  @ApiProperty({ type: String })
+  issuedAt!: string;
+
+  @ApiProperty({ isArray: true, type: NfePersistentIntakeItemDto })
+  items!: NfePersistentIntakeItemDto[];
+
+  @ApiProperty({ type: String })
+  natureOfOperation!: string;
+
+  @ApiPropertyOptional({ type: String })
+  protocol?: string;
+
+  @ApiProperty({ type: String })
+  recipientTaxId!: string;
+
+  @ApiProperty({ type: String })
+  schemaVersion!: string;
+
+  @ApiProperty({ type: String })
+  series!: string;
+
+  @ApiProperty({ enum: FiscalDocumentStatus })
+  status!: FiscalDocumentStatus;
+
+  @ApiProperty({ type: NfeIntakePreviewSummaryDto })
+  summary!: NfeIntakePreviewSummaryDto;
+
+  @ApiProperty({ type: NfeIntakeSupplierDto })
+  supplier!: NfeIntakeSupplierDto;
+}
+
+export class CreateNfeIngestionResponseDto extends NfePersistentIntakeDto {
+  @ApiProperty({ description: "Indica que o documento persistente já existia", type: Boolean })
+  replayed!: boolean;
 }

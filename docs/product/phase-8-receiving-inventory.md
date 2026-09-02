@@ -1,6 +1,6 @@
 # Fase 8 — Catálogo, entrada fiscal e estoque rastreável
 
-- Estado: Em andamento — 8.1 parcial / 8.2 schema persistente
+- Estado: Em andamento — 8.1 parcial / 8.2 ingestão persistente backend
 - Data da definição: 2026-08-31
 - Predecessora: Fase 7 — Primitivas de plataforma
 
@@ -207,6 +207,28 @@ saldo, histórico e documentos recuperáveis
 Falha em armazenamento, validação ou movimento impede a confirmação parcial. Reprocessamento usa a
 mesma chave de idempotência e deve poder reconciliar o resultado.
 
+### Cadastro sob demanda durante a entrada
+
+A importação interrompe o fluxo de maneira guiada quando o catálogo não permite resolver o
+documento:
+
+```text
+upload XML
+  -> fornecedor ausente, inativo ou sem papel SUPPLIER: PENDING_SUPPLIER
+  -> fornecedor válido e item sem correspondência: PENDING_MAPPING
+  -> fornecedor válido e todos os itens vinculados: READY_FOR_REVIEW
+```
+
+Não há cadastro silencioso. Um usuário autorizado cadastra o parceiro ou complementa seus papéis,
+seleciona ou cria o produto e confirma o mapping `fornecedor + código externo -> apresentação`.
+Depois dessas ações, uma resolução explícita reavalia somente as pendências e materializa o vínculo
+do item fiscal com a apresentação. Vínculos já materializados formam o snapshot histórico do
+documento e não são substituídos por mudanças posteriores no mapping global.
+
+XML malformado ou que não representa uma NF-e parseável é rejeitado antes de entrar na caixa. O
+estado `VALIDATION_FAILED` fica reservado a documentos parseáveis que falharem nas validações
+determinísticas fiscais ou operacionais adicionadas ao pipeline.
+
 ## Amostras de produção e testes de ingestão
 
 XMLs reais de NF-e de entrada podem ser usados somente em execução local ou ambiente controlado,
@@ -312,9 +334,13 @@ assinando as requisições pelo cliente gerado, proteção de rotas, encerrament
 do cache do tenant e a primeira tela autenticada, que mostra a empresa vigente e o papel do usuário.
 Isso destrava as telas de cadastro, que até então não tinham como se autenticar.
 
-Ainda faltam para concluir o incremento 8.1: rotas de edição de parceiros e catálogo na API, que
-hoje só expõem `POST` além da leitura; telas de listagem, criação e manutenção desses cadastros;
-apresentações adicionais com conversão variável; e atributos técnicos e fiscais enriquecidos.
+Parceiros também podem ter `active` e `roles` atualizados de forma idempotente e auditada. Isso
+permite que o fluxo fiscal reative um parceiro ou acrescente o papel `SUPPLIER` sem tentar duplicar
+o mesmo identificador fiscal.
+
+Ainda faltam para concluir o incremento 8.1: rotas de edição do catálogo; telas de listagem,
+criação e manutenção desses cadastros; apresentações adicionais com conversão variável; e atributos
+técnicos e fiscais enriquecidos.
 
 ### 8.2 — Caixa de entrada fiscal
 
@@ -326,20 +352,40 @@ apresentações adicionais com conversão variável; e atributos técnicos e fis
 Prévia HTTP implementada: `POST /api/v1/fiscal-intake/nfe/previews` recebe XML bruto autenticado com
 limite de 5 MiB e combina o documento parseado com a resolução em lote dos códigos do fornecedor,
 preservando os campos originais de cada item e resumindo os estados `MATCHED`, `UNMAPPED` e
-`SUPPLIER_NOT_FOUND`. Armazenamento privado, proveniência e persistência idempotente continuam
-pendentes; essa prévia ainda não produz efeitos no estoque.
+`SUPPLIER_NOT_FOUND`. A prévia continua sendo um dry-run e não produz efeitos no estoque.
+
+`POST /api/v1/fiscal-intake/nfe/ingestions` implementa a entrada persistente para `OWNER` e
+`ADMIN`. A operação preserva os bytes recebidos, calcula SHA-256, grava e verifica o objeto privado
+antes do banco e persiste documento, itens, proveniência e mappings já conhecidos em uma transação
+serializável. A resposta diferencia fornecedor ausente, inativo ou sem papel `SUPPLIER`.
+
+`POST /api/v1/fiscal-intake/nfe/documents/{documentId}/resolve` reavalia o documento depois das
+ações humanas de cadastro. Ele cria somente snapshots ainda ausentes e promove o status para
+`PENDING_MAPPING` ou `READY_FOR_REVIEW`. Não há confirmação de recebimento nem movimento de estoque
+neste incremento.
+
+A deduplicação possui duas garantias distintas:
+
+- o hash da `Idempotency-Key`, isolado por organização, rejeita reutilização com conteúdo diferente;
+- a chave de acesso, única por organização, impede duplicidade permanente mesmo depois da janela do
+  mecanismo genérico de idempotência.
+
+Mesma chave de acesso com outro hash é conflito explícito e não substitui o XML já preservado.
 
 A ADR-0007 definiu a fronteira S3, configuração do serviço por organização no sistema e no
-onboarding futuro. O Docker Compose já fornece MinIO local com bucket privado, versionado e
-provisionado de forma idempotente. A porta interna e o adapter S3 já implementam e testam as
-operações `put/head/get`, inclusive retry idempotente e validação do SHA-256. A configuração
-persistente por organização ainda não foi implementada.
+onboarding futuro. O Docker Compose fornece MinIO local com bucket privado, versionado e uma
+credencial de aplicação distinta da credencial administrativa. A porta interna e o adapter S3
+implementam `put/head/get`, inclusive retry idempotente, validação do SHA-256 e preservação do
+`VersionId`. A ingestão já usa essa fronteira em desenvolvimento e testes. A seleção e configuração
+persistente de um backend por organização ainda não foi implementada; por isso o provider bloqueia
+a ingestão em `NODE_ENV=production` com `503`, em vez de tratar uma configuração global como solução
+final de onboarding ou produção.
 
 O schema persistente da caixa de entrada contém documento, itens, ingestões e vínculos opcionais
 com apresentações internas. Chave de acesso, objetos e relações são isolados por organização;
-quantidades e valores usam `numeric`; a ingestão preserva origem, SHA-256, tamanho, tipo de conteúdo,
-chave/versão do objeto e correlação. Os estados atuais cobrem validação pendente ou falha, mapeamento
-pendente e documento pronto para revisão. Ainda não há serviço que grave esses modelos.
+quantidades e valores usam `numeric`; a ingestão preserva origem, SHA-256, hash da chave de
+idempotência, tamanho, tipo de conteúdo, chave/versão do objeto e correlação. Os estados cobrem
+validação pendente ou falha, fornecedor pendente, mapping pendente e documento pronto para revisão.
 
 ### 8.3 — Recebimento e estoque
 
