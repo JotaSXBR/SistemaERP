@@ -209,6 +209,68 @@ export type ResolveSupplierProductResponseDto = {
     status: 'MATCHED' | 'SUPPLIER_NOT_FOUND' | 'UNMAPPED';
 };
 
+export type NfeIntakePreviewItemDto = {
+    cest?: string;
+    cfop: string;
+    /**
+     * Decimal original serializado como texto
+     */
+    commercialQuantity: string;
+    commercialUnit: string;
+    /**
+     * Decimal original serializado como texto
+     */
+    commercialUnitValue: string;
+    description: string;
+    gtin?: string;
+    itemNumber: string;
+    ncm: string;
+    resolution: ResolveSupplierProductResponseDto;
+    supplierCode: string;
+    /**
+     * Decimal original serializado como texto
+     */
+    taxableQuantity: string;
+    taxableUnit: string;
+    /**
+     * Decimal original serializado como texto
+     */
+    taxableUnitValue: string;
+    /**
+     * Decimal original serializado como texto
+     */
+    totalValue: string;
+};
+
+export type NfeIntakePreviewSummaryDto = {
+    matched: number;
+    supplierNotFound: number;
+    unmapped: number;
+};
+
+export type NfeIntakePreviewDto = {
+    accessKey: string;
+    documentNumber: string;
+    /**
+     * Decimal original serializado como texto
+     */
+    documentTotal: string;
+    /**
+     * SHA-256 do conteúdo recebido
+     */
+    hashSha256: string;
+    issuedAt: string;
+    items: Array<NfeIntakePreviewItemDto>;
+    natureOfOperation: string;
+    protocol?: string;
+    recipientTaxId: string;
+    schemaVersion: string;
+    series: string;
+    summary: NfeIntakePreviewSummaryDto;
+    supplierName: string;
+    supplierTaxId: string;
+};
+
 export type HealthResponseDto = {
     status: 'ok';
 };
@@ -460,6 +522,31 @@ export type CatalogControllerResolveSupplierProductResponses = {
 };
 
 export type CatalogControllerResolveSupplierProductResponse = CatalogControllerResolveSupplierProductResponses[keyof CatalogControllerResolveSupplierProductResponses];
+
+export type FiscalIntakeControllerPreviewData = {
+    /**
+     * Conteúdo original de uma NF-e 4.00, com limite de 5 MiB
+     */
+    body: string;
+    path?: never;
+    query?: never;
+    url: '/api/v1/fiscal-intake/nfe/previews';
+};
+
+export type FiscalIntakeControllerPreviewErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    413: ApiErrorResponseDto;
+    415: ApiErrorResponseDto;
+};
+
+export type FiscalIntakeControllerPreviewError = FiscalIntakeControllerPreviewErrors[keyof FiscalIntakeControllerPreviewErrors];
+
+export type FiscalIntakeControllerPreviewResponses = {
+    200: NfeIntakePreviewDto;
+};
+
+export type FiscalIntakeControllerPreviewResponse = FiscalIntakeControllerPreviewResponses[keyof FiscalIntakeControllerPreviewResponses];
 
 export type HealthControllerLivenessData = {
     body?: never;

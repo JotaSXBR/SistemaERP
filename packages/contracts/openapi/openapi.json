@@ -665,6 +665,88 @@
         ]
       }
     },
+    "/api/v1/fiscal-intake/nfe/previews": {
+      "post": {
+        "operationId": "FiscalIntakeController_preview",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Conteúdo original de uma NF-e 4.00, com limite de 5 MiB",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NfeIntakePreviewDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "fiscal-intake"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "HealthController_liveness",
@@ -1401,6 +1483,165 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "NfeIntakePreviewItemDto": {
+        "type": "object",
+        "properties": {
+          "cest": {
+            "type": "string"
+          },
+          "cfop": {
+            "type": "string"
+          },
+          "commercialQuantity": {
+            "type": "string",
+            "description": "Decimal original serializado como texto"
+          },
+          "commercialUnit": {
+            "type": "string"
+          },
+          "commercialUnitValue": {
+            "type": "string",
+            "description": "Decimal original serializado como texto"
+          },
+          "description": {
+            "type": "string"
+          },
+          "gtin": {
+            "type": "string"
+          },
+          "itemNumber": {
+            "type": "string"
+          },
+          "ncm": {
+            "type": "string"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/ResolveSupplierProductResponseDto"
+          },
+          "supplierCode": {
+            "type": "string"
+          },
+          "taxableQuantity": {
+            "type": "string",
+            "description": "Decimal original serializado como texto"
+          },
+          "taxableUnit": {
+            "type": "string"
+          },
+          "taxableUnitValue": {
+            "type": "string",
+            "description": "Decimal original serializado como texto"
+          },
+          "totalValue": {
+            "type": "string",
+            "description": "Decimal original serializado como texto"
+          }
+        },
+        "required": [
+          "cfop",
+          "commercialQuantity",
+          "commercialUnit",
+          "commercialUnitValue",
+          "description",
+          "itemNumber",
+          "ncm",
+          "resolution",
+          "supplierCode",
+          "taxableQuantity",
+          "taxableUnit",
+          "taxableUnitValue",
+          "totalValue"
+        ]
+      },
+      "NfeIntakePreviewSummaryDto": {
+        "type": "object",
+        "properties": {
+          "matched": {
+            "type": "number",
+            "minimum": 0
+          },
+          "supplierNotFound": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unmapped": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "matched",
+          "supplierNotFound",
+          "unmapped"
+        ]
+      },
+      "NfeIntakePreviewDto": {
+        "type": "object",
+        "properties": {
+          "accessKey": {
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "documentTotal": {
+            "type": "string",
+            "description": "Decimal original serializado como texto"
+          },
+          "hashSha256": {
+            "type": "string",
+            "description": "SHA-256 do conteúdo recebido"
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NfeIntakePreviewItemDto"
+            }
+          },
+          "natureOfOperation": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "recipientTaxId": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/NfeIntakePreviewSummaryDto"
+          },
+          "supplierName": {
+            "type": "string"
+          },
+          "supplierTaxId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessKey",
+          "documentNumber",
+          "documentTotal",
+          "hashSha256",
+          "issuedAt",
+          "items",
+          "natureOfOperation",
+          "recipientTaxId",
+          "schemaVersion",
+          "series",
+          "summary",
+          "supplierName",
+          "supplierTaxId"
         ]
       },
       "HealthResponseDto": {

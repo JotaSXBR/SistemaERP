@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { loadEnvFile } from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -13,6 +14,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createApplication } from "../src/bootstrap.js";
 import { hashPassword } from "../src/identity/password.js";
+
+const SYNTHETIC_NFE_XML = readFileSync(
+  new URL("./fixtures/nfe-synthetic.xml", import.meta.url),
+  "utf8",
+);
 
 type Fixture = {
   memberToken: string;
@@ -310,5 +316,97 @@ describe("catalog and supplier product mapping", () => {
         },
       }),
     ).toBe(0);
+  });
+
+  it("previews an XML using only mappings from the authenticated tenant", async () => {
+    const supplierA = await createSupplier(
+      fixture.ownerAToken,
+      "preview-supplier-a",
+      "11111111111111",
+    );
+    const supplierB = await createSupplier(
+      fixture.ownerBToken,
+      "preview-supplier-b",
+      "11111111111111",
+    );
+    const productA = await createProduct(fixture.ownerAToken, "preview-product-a", "SKU-PREVIEW-A");
+    const productB = await createProduct(fixture.ownerBToken, "preview-product-b", "SKU-PREVIEW-B");
+    const mappingA = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "preview-mapping-a"),
+      method: "POST",
+      payload: {
+        productPresentationId: productA.json<ProductResponse>().product.basePresentation.id,
+        supplierCode: "000123",
+        supplierId: supplierA.json<PartnerResponse>().partner.id,
+      },
+      url: "/api/v1/catalog/supplier-mappings",
+    });
+    const mappingB = await application.inject({
+      headers: authenticated(fixture.ownerBToken, "preview-mapping-b"),
+      method: "POST",
+      payload: {
+        productPresentationId: productB.json<ProductResponse>().product.basePresentation.id,
+        supplierCode: "000123",
+        supplierId: supplierB.json<PartnerResponse>().partner.id,
+      },
+      url: "/api/v1/catalog/supplier-mappings",
+    });
+    const response = await application.inject({
+      headers: { ...authenticated(fixture.memberToken), "content-type": "application/xml" },
+      method: "POST",
+      payload: SYNTHETIC_NFE_XML,
+      url: "/api/v1/fiscal-intake/nfe/previews",
+    });
+
+    expect(mappingA.statusCode).toBe(201);
+    expect(mappingB.statusCode).toBe(201);
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      items: [
+        {
+          commercialQuantity: "0.1000",
+          resolution: {
+            mapping: { product: { productId: productA.json<ProductResponse>().product.id } },
+            status: "MATCHED",
+          },
+          supplierCode: "000123",
+        },
+      ],
+      summary: { matched: 1, supplierNotFound: 0, unmapped: 0 },
+    });
+  });
+
+  it("rejects invalid, unsupported, and oversized XML requests without leaking content", async () => {
+    const invalid = await application.inject({
+      headers: { ...authenticated(fixture.memberToken), "content-type": "application/xml" },
+      method: "POST",
+      payload: "<invalid>",
+      url: "/api/v1/fiscal-intake/nfe/previews",
+    });
+    const unsupported = await application.inject({
+      headers: {
+        ...authenticated(fixture.memberToken),
+        "content-type": "application/octet-stream",
+      },
+      method: "POST",
+      payload: "sensitive-content",
+      url: "/api/v1/fiscal-intake/nfe/previews",
+    });
+    const oversized = await application.inject({
+      headers: { ...authenticated(fixture.memberToken), "content-type": "application/xml" },
+      method: "POST",
+      payload: "x".repeat(5 * 1024 * 1024 + 1),
+      url: "/api/v1/fiscal-intake/nfe/previews",
+    });
+
+    expect(invalid.statusCode).toBe(400);
+    expect(invalid.body).not.toContain("invalid");
+    expect(unsupported.statusCode).toBe(415);
+    expect(unsupported.json()).toMatchObject({
+      error: { code: "UNSUPPORTED_MEDIA_TYPE", message: "Tipo de conteúdo não suportado" },
+    });
+    expect(unsupported.body).not.toContain("sensitive-content");
+    expect(oversized.statusCode).toBe(413);
+    expect(oversized.json()).toMatchObject({ error: { code: "PAYLOAD_TOO_LARGE" } });
   });
 });

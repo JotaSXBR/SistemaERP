@@ -1,6 +1,6 @@
 # Handoff do projeto para agentes de IA
 
-- Atualizado em: 2026-09-01
+- Atualizado em: 2026-09-02
 - Branch principal: `main`
 - Objetivo: permitir que outro agente retome o desenvolvimento sem reconstruir o contexto por
   tentativa e erro.
@@ -118,7 +118,7 @@ Criações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolu�
 SKU, unidade e código de fornecedor continua encapsulada no catálogo porque essas semânticas podem
 divergir futuramente.
 
-### Prévia interna de ingestão
+### Prévia de ingestão
 
 `FiscalIntakeService.preview(xml)` já combina o parser com a resolução em lote do catálogo:
 
@@ -129,7 +129,9 @@ divergir futuramente.
 - soma `matched`, `unmapped` e `supplierNotFound`;
 - não persiste documento, não grava arquivo e não altera estoque.
 
-O módulo existe como fundação interna. Ainda não há endpoint público de upload ou prévia.
+`POST /api/v1/fiscal-intake/nfe/previews` expõe essa prévia a usuários autenticados. A rota recebe
+somente `application/xml` ou `text/xml`, limita o corpo a 5 MiB e não registra o conteúdo em logs.
+Ela ainda não persiste documento, arquivo ou proveniência e não produz qualquer efeito no estoque.
 
 ## Mapa do código relevante
 
@@ -211,13 +213,13 @@ exigem regeneração enquanto não houver controller/DTO público.
 
 ## Estado recente dos testes
 
-Na implementação da prévia interna foram validados no Docker:
+Na implementação da prévia HTTP, `pnpm verify` validou:
 
-- 37 testes da API em 8 arquivos;
-- formatação;
-- lint;
+- 39 testes da API em 8 arquivos, 2 testes do banco e 2 testes da web;
+- formatação e lint;
 - TypeScript strict;
-- build de todos os workspaces.
+- build de todos os workspaces;
+- regeneração determinística do OpenAPI e do cliente TypeScript.
 
 A suíte existente também cobre banco, web e um E2E Playwright do diagnóstico. Antes de concluir
 qualquer nova entrega, execute `pnpm verify` e o E2E proporcionalmente ao risco. O CI da `main`
@@ -234,7 +236,7 @@ Para concluir 8.1:
 Para 8.2:
 
 - decidir e registrar o armazenamento privado S3 compatível/MinIO;
-- upload manual seguro, com limite e verificação de conteúdo;
+- upload manual durável, com armazenamento privado e proveniência;
 - persistir documento, itens, hash, proveniência e estados por organização;
 - deduplicar por `organizationId + chave de acesso` e tratar reimportação idempotente;
 - validar schema XSD oficial, assinatura, protocolo, destinatário e totais;

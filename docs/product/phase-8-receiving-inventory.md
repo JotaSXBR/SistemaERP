@@ -1,6 +1,6 @@
 # Fase 8 — Catálogo, entrada fiscal e estoque rastreável
 
-- Estado: Planejada
+- Estado: Em andamento — 8.1 parcial / 8.2 prévia HTTP
 - Data da definição: 2026-08-31
 - Predecessora: Fase 7 — Primitivas de plataforma
 
@@ -314,10 +314,11 @@ para concluir o incremento 8.1.
 - parser, validação, hash, proveniência e deduplicação;
 - prévia sem efeitos no estoque.
 
-Fundação interna implementada: o XML parseado já pode ser combinado com a resolução em lote dos
-códigos do fornecedor, preservando os campos originais de cada item e resumindo os estados
-`MATCHED`, `UNMAPPED` e `SUPPLIER_NOT_FOUND`. Endpoint de upload, armazenamento, proveniência e
-persistência idempotente continuam pendentes; essa prévia ainda não produz efeitos no estoque.
+Prévia HTTP implementada: `POST /api/v1/fiscal-intake/nfe/previews` recebe XML bruto autenticado com
+limite de 5 MiB e combina o documento parseado com a resolução em lote dos códigos do fornecedor,
+preservando os campos originais de cada item e resumindo os estados `MATCHED`, `UNMAPPED` e
+`SUPPLIER_NOT_FOUND`. Armazenamento privado, proveniência e persistência idempotente continuam
+pendentes; essa prévia ainda não produz efeitos no estoque.
 
 ### 8.3 — Recebimento e estoque
 
