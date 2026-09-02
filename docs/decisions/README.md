@@ -10,3 +10,4 @@ ADRs registram decisões difíceis de reverter. Uma decisão aceita não deve se
 - [ADR-0004 — OpenAPI como contrato](ADR-0004-api-contract.md)
 - [ADR-0005 — Infraestrutura progressiva de IA](ADR-0005-progressive-ai.md)
 - [ADR-0006 — Primitivas de segurança e tenant](ADR-0006-platform-security-primitives.md)
+- [ADR-0007 — Armazenamento privado de documentos](ADR-0007-private-object-storage.md)

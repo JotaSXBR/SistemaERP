@@ -133,6 +133,14 @@ divergir futuramente.
 somente `application/xml` ou `text/xml`, limita o corpo a 5 MiB e não registra o conteúdo em logs.
 Ela ainda não persiste documento, arquivo ou proveniência e não produz qualquer efeito no estoque.
 
+### Armazenamento privado definido
+
+A ADR-0007 define a API S3 como fronteira, Amazon S3 gerenciado como backend padrão de produção e
+MinIO para desenvolvimento e testes. Buckets são privados e provisionados fora da aplicação, com
+TLS, criptografia server-side, credencial de mínimo privilégio e versionamento. Download começa
+mediado pela API após autorização por tenant. A implementação do adapter, do MinIO local e da
+reconciliação de objetos órfãos ainda não existe.
+
 ## Mapa do código relevante
 
 ```text
@@ -235,7 +243,6 @@ Para concluir 8.1:
 
 Para 8.2:
 
-- decidir e registrar o armazenamento privado S3 compatível/MinIO;
 - upload manual durável, com armazenamento privado e proveniência;
 - persistir documento, itens, hash, proveniência e estados por organização;
 - deduplicar por `organizationId + chave de acesso` e tratar reimportação idempotente;
@@ -252,10 +259,10 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve continuar pequeno: definir o modelo persistente da caixa de entrada fiscal e
-a fronteira de armazenamento, antes de criar o endpoint de upload. Primeiro registre a decisão do
-backend de objetos; depois modele documento, item, proveniência, hash, estados e constraints de
-tenant/idempotência. Não conecte ainda ao estoque.
+O próximo recorte deve continuar pequeno: definir o modelo persistente da caixa de entrada fiscal,
+incluindo documento, item, proveniência, hash, estados e constraints de tenant/idempotência. A
+fronteira de objetos foi definida na ADR-0007; ainda não adicione o adapter ou o MinIO no mesmo PR do
+schema. Não conecte a caixa de entrada ao estoque.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente

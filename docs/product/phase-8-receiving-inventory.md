@@ -1,6 +1,6 @@
 # Fase 8 — Catálogo, entrada fiscal e estoque rastreável
 
-- Estado: Em andamento — 8.1 parcial / 8.2 prévia HTTP
+- Estado: Em andamento — 8.1 parcial / 8.2 prévia HTTP e armazenamento definido
 - Data da definição: 2026-08-31
 - Predecessora: Fase 7 — Primitivas de plataforma
 
@@ -247,7 +247,7 @@ XMLs e certificados criam o primeiro uso real para armazenamento de objetos prev
 arquitetura. A implementação deve:
 
 - manter metadados, vínculo, estado, tamanho e hash no PostgreSQL;
-- guardar o conteúdo em backend S3 compatível, com MinIO local como candidato;
+- guardar o conteúdo em Amazon S3 gerenciado em produção e MinIO local, conforme a ADR-0007;
 - criptografar em trânsito e em repouso;
 - negar URLs públicas e usar autorização por organização;
 - verificar tipo, tamanho e conteúdo antes de aceitar upload;
@@ -319,6 +319,9 @@ limite de 5 MiB e combina o documento parseado com a resolução em lote dos có
 preservando os campos originais de cada item e resumindo os estados `MATCHED`, `UNMAPPED` e
 `SUPPLIER_NOT_FOUND`. Armazenamento privado, proveniência e persistência idempotente continuam
 pendentes; essa prévia ainda não produz efeitos no estoque.
+
+A ADR-0007 definiu a fronteira S3, Amazon S3 gerenciado como backend padrão de produção e MinIO para
+desenvolvimento e testes. A infraestrutura e o adapter ainda não foram implementados.
 
 ### 8.3 — Recebimento e estoque
 
