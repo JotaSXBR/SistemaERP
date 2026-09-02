@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 
-const MAX_XML_BYTES = 5 * 1024 * 1024;
+export const MAX_XML_BYTES = 5 * 1024 * 1024;
 const ACCESS_KEY_PATTERN = /^\d{44}$/;
 const DECIMAL_PATTERN = /^-?\d+(?:\.\d+)?$/;
 

@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module.js";
 import { ApiExceptionFilter } from "./errors/api-exception.filter.js";
 import { RequestContextService } from "./request-context/request-context.service.js";
+import { MAX_XML_BYTES } from "./fiscal-intake/nfe-xml.parser.js";
 
 export type CreateApplicationOptions = { logger?: false | ConsoleLogger };
 
@@ -18,6 +19,17 @@ export async function createApplication(
     new FastifyAdapter(),
     { logger },
   );
+
+  application
+    .getHttpAdapter()
+    .getInstance()
+    .addContentTypeParser(
+      ["application/xml", "text/xml"],
+      { bodyLimit: MAX_XML_BYTES, parseAs: "string" },
+      (_request, body, done) => {
+        done(null, body);
+      },
+    );
 
   application.setGlobalPrefix("api/v1");
   application.useGlobalFilters(new ApiExceptionFilter(application.get(RequestContextService)));
