@@ -38,3 +38,54 @@ Uma mudança só está concluída quando:
 - informa claramente o que foi validado e o que não pôde ser validado.
 
 Quando disponível, execute `pnpm verify` antes de concluir.
+
+## GitHub (agente)
+
+### Quando usar Issues / PRs
+
+- **Issue pequena** = 1 entrega testável → idealmente **1 branch / 1 PR**.
+- **Epic** = incremento de fase (ex.: 8.2), só com links para issues filhas e para o doc de produto. Não implementar “o epic inteiro” num PR.
+- Não criar issue para typo, refactor local ou chore trivial — commit direto (ou PR único sem issue) se o humano pedir.
+- Não abrir issue/PR só para documentar o que o handoff já diz.
+
+### Fluxo padrão de feature
+
+1. Ler issue (se houver) + `docs/development/ai-handoff.md` + doc da fase.
+2. Branch curta: `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, `chore/<slug>`.
+3. Implementar **só o escopo da issue/pedido**.
+4. `pnpm verify` (ou o subconjunto pertinente) antes de abrir PR.
+5. PR contra `main`, título em Conventional Commits, body curto.
+6. Na descrição do PR: o que mudou, como validou, o que **não** validou. `Closes #N` se houver issue.
+7. Não mergear na `main` sem o humano pedir (exceto se a regra do projeto disser o contrário).
+
+### Commits
+
+- Conventional Commits: `feat|fix|refactor|docs|test|chore|ci(scope): descrição`.
+- 1 ideia por commit quando possível; sem “Generated with …” / co-author de bot a menos que o humano peça.
+- Nunca commit de segredo, `.env`, XML real, `files/`, `.local-data/`.
+
+### Uso de `gh` (economizar tokens)
+
+- Preferir **`gh`** a listar dumps grandes da API/MCP.
+- **Um** snapshot de estado por tarefa, não reconsultar a cada passo:
+  - `gh issue view N --json title,body,labels,state`
+  - `gh pr view --json number,title,state,url`
+  - `git diff --stat` e só depois diff dos arquivos relevantes
+- Listagens com limite: `gh issue list -L 10`, `gh pr list -L 10`.
+- Corpo de issue/PR multi-linha: escrever em arquivo temporário e usar `--body-file` (não `--body` com markdown enorme no shell).
+- Comentários no GitHub: só se o humano pedir; curtos e técnicos.
+- Não paginar o histórico inteiro do repo; não baixar todos os PRs/issues “por precaução”.
+
+### O que o agente NÃO faz no GitHub
+
+- Não força push (`--force`) na `main` nem em branch compartilhada.
+- Não fecha issues de outras pessoas; deixa o merge com `Closes #N` fechar.
+- Não cria labels/milestones/projects novos sem pedido.
+- Não roda workflows agentic em loop (triage, review automático em massa) neste repo solo.
+- Não cola diff inteiro nem log de CI inteiro no contexto; resume falhas (`tail`, `grep FAIL`, `--stat`).
+
+### Tamanho do PR
+
+- Preferir PR revisável em poucos minutos.
+- Schema/migration, auth/tenant, parser fiscal e upload: PR separado e descrito com risco.
+- Docs-only e test-only podem ser PRs menores e mais rápidos.
