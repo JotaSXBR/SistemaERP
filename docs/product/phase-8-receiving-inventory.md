@@ -323,8 +323,9 @@ pendentes; essa prévia ainda não produz efeitos no estoque.
 
 A ADR-0007 definiu a fronteira S3, configuração do serviço por organização no sistema e no
 onboarding futuro. O Docker Compose já fornece MinIO local com bucket privado, versionado e
-provisionado de forma idempotente. A configuração persistente e o adapter ainda não foram
-implementados.
+provisionado de forma idempotente. A porta interna e o adapter S3 já implementam e testam as
+operações `put/head/get`, inclusive retry idempotente e validação do SHA-256. A configuração
+persistente por organização ainda não foi implementada.
 
 O schema persistente da caixa de entrada contém documento, itens, ingestões e vínculos opcionais
 com apresentações internas. Chave de acesso, objetos e relações são isolados por organização;

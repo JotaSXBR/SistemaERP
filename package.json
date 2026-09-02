@@ -33,6 +33,7 @@
     "test:e2e": "pnpm --recursive --if-present run test:e2e",
     "test:e2e:docker": "docker compose --profile test run --build --rm e2e",
     "test:e2e:install": "pnpm --filter @sistema-erp/web exec playwright install --with-deps chromium",
+    "test:s3:integration": "S3_INTEGRATION_TESTS=true pnpm --filter @sistema-erp/api exec vitest run tests/s3-object-storage.integration.test.ts",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm contracts:check"
   },
   "devDependencies": {
