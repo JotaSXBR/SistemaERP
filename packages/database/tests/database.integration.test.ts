@@ -9,6 +9,7 @@ type DatabaseProbe = {
   baselineApplied: boolean;
   databaseName: string;
   databaseUser: string;
+  fiscalInboxApplied: boolean;
   platformPrimitivesApplied: boolean;
   timezone: string;
 };
@@ -54,13 +55,20 @@ describe("PostgreSQL integration", () => {
           FROM "_prisma_migrations"
           WHERE migration_name = '20260831181000_enforce_audit_immutability'
             AND finished_at IS NOT NULL
-        ) AS "platformPrimitivesApplied"
+        ) AS "platformPrimitivesApplied",
+        EXISTS (
+          SELECT 1
+          FROM "_prisma_migrations"
+          WHERE migration_name = '20260902125000_fiscal_inbox_constraints'
+            AND finished_at IS NOT NULL
+        ) AS "fiscalInboxApplied"
     `;
 
     expect(probe).toEqual({
       baselineApplied: true,
       databaseName: databaseUrl.pathname.slice(1),
       databaseUser: decodeURIComponent(databaseUrl.username),
+      fiscalInboxApplied: true,
       platformPrimitivesApplied: true,
       timezone: "UTC",
     });
