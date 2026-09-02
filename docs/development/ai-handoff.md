@@ -274,9 +274,11 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve modelar e proteger a configuração S3 por organização, com credenciais
-criptografadas, autorização administrativa, auditoria e teste determinístico antes da ativação. Não
-conecte a caixa de entrada ao estoque nem exponha segredos em respostas ou logs.
+O próximo recorte deve resolver os dois advisories transitivos de severidade alta reportados por
+`pnpm audit --prod`: `deepmerge-ts < 8.0.0` e `mysql2 < 3.22.0`, ambos no caminho de dependências do
+Prisma. Revise a versão corrigida disponível, a compatibilidade com Prisma e Node.js, atualize o
+lockfile sem exceções à quarentena de supply chain e execute as validações pertinentes. Não misture
+essa correção com a configuração S3 por organização ou com novas funcionalidades.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente
