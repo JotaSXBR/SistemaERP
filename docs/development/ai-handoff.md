@@ -118,6 +118,29 @@ Criações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolu�
 SKU, unidade e código de fornecedor continua encapsulada no catálogo porque essas semânticas podem
 divergir futuramente.
 
+### Autenticação e sessão na web
+
+A aplicação web deixou de ser somente a página de diagnóstico. O cliente gerado passou a receber o
+token opaco da sessão pela opção `auth`, então toda rota com `security` no contrato é assinada
+automaticamente; nenhuma tela monta cabeçalho `Authorization` por conta própria.
+
+- `/login` autentica com e-mail, senha e identificador da empresa e devolve o usuário à rota que ele
+  tentou abrir.
+- O token vive em memória e é espelhado em `sessionStorage`, não em `localStorage`: a credencial não
+  fica disponível a outras abas nem sobrevive ao fechamento do navegador. Bloqueio de armazenamento
+  degrada para sessão apenas em memória.
+- Um `401` em qualquer resposta descarta o token no cliente, de modo que sessão expirada ou revogada
+  no servidor deixa de valer também na interface.
+- `RequireSession` protege rotas autenticadas e distingue os estados carregando, anônimo e
+  autenticado. `/diagnostics` permanece público porque expõe apenas os health checks, que são rotas
+  `@Public`.
+- Sair revoga a sessão no servidor e remove do cache do TanStack Query tudo que não seja a própria
+  sessão, para que dados de um tenant não sobrevivam à troca de usuário no mesmo navegador.
+- `/organization` é a primeira tela autenticada e mostra a empresa da sessão e o papel do usuário.
+
+Formulários usam React Hook Form e Zod, conforme `docs/conventions/frontend.md`. A API continua
+sendo a autoridade de validação; o schema do cliente evita apenas a ida desnecessária ao servidor.
+
 ### Prévia de ingestão
 
 `FiscalIntakeService.preview(xml)` já combina o parser com a resolução em lote do catálogo:
@@ -253,7 +276,9 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
-- telas e manutenção dos cadastros;
+- rotas de leitura e edição de parceiros e catálogo na API: hoje esses módulos expõem apenas `POST`,
+  então nenhuma tela de manutenção é possível sem elas;
+- telas de listagem, criação e edição dos cadastros;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
 
@@ -274,11 +299,16 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve resolver os dois advisories transitivos de severidade alta reportados por
-`pnpm audit --prod`: `deepmerge-ts < 8.0.0` e `mysql2 < 3.22.0`, ambos no caminho de dependências do
-Prisma. Revise a versão corrigida disponível, a compatibilidade com Prisma e Node.js, atualize o
-lockfile sem exceções à quarentena de supply chain e execute as validações pertinentes. Não misture
-essa correção com a configuração S3 por organização ou com novas funcionalidades.
+O próximo recorte deve expor leitura de parceiros e catálogo na API: `GET /api/v1/partners` e
+`GET /api/v1/catalog/products`, com paginação explícita e limite máximo, filtradas pelo
+`organizationId` do contexto autenticado e com teste negativo de isolamento. Sem elas as telas de
+manutenção do incremento 8.1 não têm como listar nada. Só depois disso vale construir as telas de
+listagem e edição, e em seguida retomar a configuração S3 por organização.
+
+Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
+no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o
+Prisma passar a resolver a versão corrigida sozinho; confirme com `pnpm audit --prod` ao mexer nessas
+dependências.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente
