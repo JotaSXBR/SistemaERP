@@ -137,10 +137,14 @@ Ela ainda não persiste documento, arquivo ou proveniência e não produz qualqu
 
 A ADR-0007 define a API S3 como fronteira e serviço S3 compatível configurável por organização. O
 Docker Compose oferece MinIO local com imagem fixada, volume nomeado, health check e provisionamento
-idempotente de um bucket privado e versionado. Configuração e onboarding devem validar endpoint,
-região, bucket, acesso privado e capacidades antes da ativação; credenciais nunca ficam em texto
-aberto ou retornam pela API. Download começa mediado pela API após autorização por tenant. O adapter,
-a configuração multiempresa e a reconciliação ainda não existem.
+idempotente de um bucket privado e versionado. O módulo `fiscal-intake` contém uma porta
+`put/head/get` e um adapter S3 baseado no cliente modular AWS SDK v3. O `put` é condicional e trata
+retry do mesmo conteúdo de forma idempotente; tamanho, tipo e SHA-256 são verificados no `head/get`.
+O teste de contrato opt-in roda contra o MinIO com `pnpm test:s3:integration`. A dependência do SDK
+evita implementar autenticação SigV4, retries, streams e checksums manualmente e fica restrita ao
+workspace da API. Configuração e onboarding ainda devem validar endpoint, região, bucket, acesso
+privado e capacidades antes da ativação; credenciais nunca ficam em texto aberto ou retornam pela
+API. A configuração multiempresa, integração com a ingestão e reconciliação ainda não existem.
 
 ### Schema da caixa de entrada fiscal
 
@@ -270,9 +274,11 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-O próximo recorte deve implementar a porta mínima `put/head/get` e o adapter S3 com o cliente modular
-do AWS SDK v3, validando seu contrato contra o MinIO local. Não adicione no mesmo PR a configuração
-multiempresa do serviço, endpoints de upload/download ou ligação com o estoque.
+O próximo recorte deve resolver os dois advisories transitivos de severidade alta reportados por
+`pnpm audit --prod`: `deepmerge-ts < 8.0.0` e `mysql2 < 3.22.0`, ambos no caminho de dependências do
+Prisma. Revise a versão corrigida disponível, a compatibilidade com Prisma e Node.js, atualize o
+lockfile sem exceções à quarentena de supply chain e execute as validações pertinentes. Não misture
+essa correção com a configuração S3 por organização ou com novas funcionalidades.
 
 Ao retomar, confirme que a árvore está limpa e que o CI do último commit está verde. Se houver
 alterações não versionadas, inspecione-as antes de editar; elas pertencem ao usuário ou ao agente

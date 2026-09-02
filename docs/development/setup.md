@@ -58,6 +58,11 @@ servidor e do cliente MinIO estão fixadas no Compose. O repositório oficial do
 arquivado em 2026; por isso essas imagens servem apenas ao ambiente local isolado e sua substituição
 deve ser avaliada antes de qualquer uso compartilhado ou de produção.
 
+Com o MinIO e seu inicializador ativos, `pnpm test:s3:integration` valida o contrato `put/head/get`
+do adapter. Esse teste usa a credencial root local somente como fixture administrativa; ela não é
+configuração de runtime da API. A variável opcional `S3_TEST_ENDPOINT` permite apontar o teste para
+outra porta local.
+
 ## Comandos esperados
 
 Estes scripts deverão ser implementados na raiz:
