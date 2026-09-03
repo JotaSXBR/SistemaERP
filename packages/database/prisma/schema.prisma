@@ -77,6 +77,8 @@ model Organization {
   auditEvents             AuditEvent[]
   idempotencyRecords      IdempotencyRecord[]
   partners                Partner[]
+  productBrands           ProductBrand[]
+  productCategories       ProductCategory[]
   products                Product[]
   productPresentations    ProductPresentation[]
   supplierProductMappings SupplierProductMapping[]
@@ -127,6 +129,47 @@ model UnitOfMeasure {
   @@map("units_of_measure")
 }
 
+/// Taxonomia por organizacao. O auto-relacionamento cobre familia, grupo e subgrupo sem exigir
+/// uma migration por nivel; a profundidade e os ciclos sao validados no servico.
+model ProductCategory {
+  id             String            @id @default(uuid()) @db.Uuid
+  organizationId String            @map("organization_id") @db.Uuid
+  parentId       String?           @map("parent_id") @db.Uuid
+  code           String            @db.VarChar(40)
+  name           String            @db.VarChar(120)
+  depth          Int               @default(0)
+  active         Boolean           @default(true)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         ProductCategory?  @relation("CategoryParent", fields: [parentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  children       ProductCategory[] @relation("CategoryParent")
+  products       Product[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, code])
+  @@index([organizationId, parentId])
+  @@map("product_categories")
+}
+
+/// Marca ou fabricante. Fica fora da taxonomia porque nao e um nivel dela: o mesmo grupo pode ter
+/// varias marcas e a mesma marca aparece em grupos diferentes.
+model ProductBrand {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  code           String       @db.VarChar(40)
+  name           String       @db.VarChar(120)
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  products       Product[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, code])
+  @@map("product_brands")
+}
+
 model Product {
   id                   String                @id @default(uuid()) @db.Uuid
   organizationId       String                @map("organization_id") @db.Uuid
@@ -134,16 +177,22 @@ model Product {
   shortDescription     String                @map("short_description") @db.VarChar(240)
   technicalDescription String?               @map("technical_description") @db.Text
   baseUnitId           String                @map("base_unit_id") @db.Uuid
+  categoryId           String?               @map("category_id") @db.Uuid
+  brandId              String?               @map("brand_id") @db.Uuid
   active               Boolean               @default(true)
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)
   organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   baseUnit             UnitOfMeasure         @relation("ProductBaseUnit", fields: [baseUnitId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  category             ProductCategory?      @relation(fields: [categoryId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  brand                ProductBrand?         @relation(fields: [brandId, organizationId], references: [id, organizationId], onDelete: Restrict)
   presentations        ProductPresentation[]
 
   @@unique([id, organizationId])
   @@unique([organizationId, sku])
   @@index([organizationId, shortDescription])
+  @@index([organizationId, categoryId])
+  @@index([organizationId, brandId])
   @@map("products")
 }
 

@@ -10,6 +10,8 @@ import type {
   CreateProductResponseDto,
   CreateSupplierProductMappingRequestDto,
   CreateSupplierProductMappingResponseDto,
+  ProductBrandRefDto,
+  ProductCategoryRefDto,
   ProductDetailDto,
   ProductDto,
   ProductListResponseDto,
@@ -25,6 +27,7 @@ function normalizeCode(value: string): string {
 
 type ListProductsInput = {
   active?: boolean;
+  categoryId?: string;
   limit: number;
   offset: number;
   search?: string;
@@ -32,6 +35,8 @@ type ListProductsInput = {
 
 type UpdateProductInput = {
   active?: boolean;
+  brandId?: string | null;
+  categoryId?: string | null;
   shortDescription?: string;
   technicalDescription?: string;
 };
@@ -53,21 +58,55 @@ function unitResponse(unit: PersistedUnit): UnitOfMeasureDto {
 }
 
 type ProductWithDetail = Prisma.ProductGetPayload<{
-  include: { baseUnit: true; presentations: { include: { unitOfMeasure: true } } };
+  include: typeof PRODUCT_DETAIL_INCLUDE;
 }>;
 
 const PRODUCT_DETAIL_INCLUDE = {
   baseUnit: true,
+  brand: true,
+  category: { include: { parent: { include: { parent: true } } } },
   presentations: {
     include: { unitOfMeasure: true },
     orderBy: [{ code: "asc" }, { id: "asc" }],
   },
 } satisfies Prisma.ProductInclude;
 
+type PersistedCategoryNode = {
+  code: string;
+  id: string;
+  name: string;
+  parent?: PersistedCategoryNode | null;
+};
+
+function brandRef(
+  brand: { code: string; id: string; name: string } | null,
+): ProductBrandRefDto | undefined {
+  return brand ? { code: brand.code, id: brand.id, name: brand.name } : undefined;
+}
+
+/**
+ * O caminho e montado a partir dos ancestrais ja carregados pelo include. A taxonomia tem no maximo
+ * MAX_CATEGORY_DEPTH niveis, entao um include aninhado basta e evita uma consulta por produto.
+ */
+function categoryRef(category: PersistedCategoryNode | null): ProductCategoryRefDto | undefined {
+  if (!category) return undefined;
+
+  const path: string[] = [];
+  let current: PersistedCategoryNode | null | undefined = category;
+  while (current) {
+    path.unshift(current.name);
+    current = current.parent;
+  }
+
+  return { code: category.code, id: category.id, name: category.name, path };
+}
+
 function productDetailResponse(product: ProductWithDetail): ProductDetailDto {
   return {
     active: product.active,
     baseUnit: unitResponse(product.baseUnit),
+    ...(brandRef(product.brand) ? { brand: brandRef(product.brand)! } : {}),
+    ...(categoryRef(product.category) ? { category: categoryRef(product.category)! } : {}),
     id: product.id,
     presentations: product.presentations.map((presentation) => ({
       code: presentation.code,
@@ -143,9 +182,13 @@ export class CatalogService {
 
   async listProducts(input: ListProductsInput): Promise<ProductListResponseDto> {
     const { organizationId } = this.requestContext.getAuthenticated();
+    const categoryIds = input.categoryId
+      ? await this.categorySubtreeIds(organizationId, input.categoryId)
+      : undefined;
     const where: Prisma.ProductWhereInput = {
       organizationId,
       ...(input.active === undefined ? {} : { active: input.active }),
+      ...(categoryIds ? { categoryId: { in: categoryIds } } : {}),
       ...(input.search
         ? {
             OR: [
@@ -157,7 +200,11 @@ export class CatalogService {
     };
     const [products, total] = await Promise.all([
       this.database.value.product.findMany({
-        include: { baseUnit: true },
+        include: {
+          baseUnit: true,
+          brand: true,
+          category: { include: { parent: { include: { parent: true } } } },
+        },
         orderBy: [{ shortDescription: "asc" }, { id: "asc" }],
         skip: input.offset,
         take: input.limit,
@@ -170,6 +217,8 @@ export class CatalogService {
       items: products.map((product) => ({
         active: product.active,
         baseUnit: unitResponse(product.baseUnit),
+        ...(brandRef(product.brand) ? { brand: brandRef(product.brand)! } : {}),
+        ...(categoryRef(product.category) ? { category: categoryRef(product.category)! } : {}),
         id: product.id,
         shortDescription: product.shortDescription,
         sku: product.sku,
@@ -178,6 +227,35 @@ export class CatalogService {
       offset: input.offset,
       total,
     };
+  }
+
+  /**
+   * Filtrar por um no da taxonomia deve trazer tambem os produtos dos descendentes: escolher
+   * "Metais" precisa incluir "Chapas" e "Galvanizada". A taxonomia e pequena, entao ela e carregada
+   * inteira e percorrida em memoria em vez de gerar uma consulta recursiva.
+   */
+  private async categorySubtreeIds(organizationId: string, rootId: string): Promise<string[]> {
+    const categories = await this.database.value.productCategory.findMany({
+      select: { id: true, parentId: true },
+      where: { organizationId },
+    });
+    const childrenByParent = new Map<string, string[]>();
+    for (const category of categories) {
+      if (!category.parentId) continue;
+      const siblings = childrenByParent.get(category.parentId) ?? [];
+      siblings.push(category.id);
+      childrenByParent.set(category.parentId, siblings);
+    }
+
+    const subtree: string[] = [];
+    const pending = [rootId];
+    while (pending.length > 0) {
+      const current = pending.pop()!;
+      subtree.push(current);
+      pending.push(...(childrenByParent.get(current) ?? []));
+    }
+
+    return subtree;
   }
 
   async findProductById(id: string): Promise<ProductDetailDto> {
@@ -204,6 +282,8 @@ export class CatalogService {
         decimalScale: input.baseUnit.decimalScale ?? 4,
         name: input.baseUnit.name.trim(),
       },
+      ...(input.brandId ? { brandId: input.brandId } : {}),
+      ...(input.categoryId ? { categoryId: input.categoryId } : {}),
       shortDescription: input.shortDescription.trim(),
       sku: normalizeCode(input.sku),
       ...(input.technicalDescription?.trim()
@@ -228,6 +308,8 @@ export class CatalogService {
     const normalizedInput = {
       id,
       ...(input.active === undefined ? {} : { active: input.active }),
+      ...(input.brandId === undefined ? {} : { brandId: input.brandId }),
+      ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
       ...(input.shortDescription === undefined
         ? {}
         : { shortDescription: input.shortDescription.trim() }),
@@ -376,9 +458,16 @@ export class CatalogService {
 
     // SKU e unidade base permanecem imutáveis: ambos são referenciados por apresentações e
     // mapeamentos de fornecedor, e trocá-los reescreveria o significado de dados já persistidos.
+    await this.assertClassificationExists(transaction, context.organizationId, {
+      ...(input.brandId ? { brandId: input.brandId } : {}),
+      ...(input.categoryId ? { categoryId: input.categoryId } : {}),
+    });
+
     const product = await transaction.product.update({
       data: {
         ...(input.active === undefined ? {} : { active: input.active }),
+        ...(input.brandId === undefined ? {} : { brandId: input.brandId }),
+        ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
         ...(input.shortDescription === undefined
           ? {}
           : { shortDescription: input.shortDescription }),
@@ -416,10 +505,40 @@ export class CatalogService {
     return response;
   }
 
+  /**
+   * Categoria e marca precisam pertencer ao mesmo tenant. A FK composta ja impede o vinculo entre
+   * organizacoes, mas checar aqui devolve 404 em vez de deixar o banco lancar erro de constraint.
+   */
+  private async assertClassificationExists(
+    transaction: Prisma.TransactionClient,
+    organizationId: string,
+    input: { brandId?: string | null; categoryId?: string | null },
+  ): Promise<void> {
+    if (input.categoryId) {
+      const category = await transaction.productCategory.findUnique({
+        where: { id_organizationId: { id: input.categoryId, organizationId } },
+      });
+      if (!category) {
+        throw new NotFoundException();
+      }
+    }
+
+    if (input.brandId) {
+      const brand = await transaction.productBrand.findUnique({
+        where: { id_organizationId: { id: input.brandId, organizationId } },
+      });
+      if (!brand) {
+        throw new NotFoundException();
+      }
+    }
+  }
+
   private async createProductTransaction(
     transaction: Prisma.TransactionClient,
     input: {
       baseUnit: { code: string; decimalScale: number; name: string };
+      brandId?: string;
+      categoryId?: string;
       shortDescription: string;
       sku: string;
       technicalDescription?: string;
@@ -454,12 +573,19 @@ export class CatalogService {
       (await transaction.unitOfMeasure.create({
         data: { ...input.baseUnit, organizationId: context.organizationId },
       }));
+    await this.assertClassificationExists(transaction, context.organizationId, {
+      ...(input.brandId ? { brandId: input.brandId } : {}),
+      ...(input.categoryId ? { categoryId: input.categoryId } : {}),
+    });
+
     const product = await transaction.product.create({
       data: {
         baseUnitId: unit.id,
         organizationId: context.organizationId,
         shortDescription: input.shortDescription,
         sku: input.sku,
+        ...(input.brandId ? { brandId: input.brandId } : {}),
+        ...(input.categoryId ? { categoryId: input.categoryId } : {}),
         ...(input.technicalDescription ? { technicalDescription: input.technicalDescription } : {}),
       },
     });

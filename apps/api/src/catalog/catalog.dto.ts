@@ -35,6 +35,35 @@ export class ProductPresentationDto {
   unit!: UnitOfMeasureDto;
 }
 
+export class ProductCategoryRefDto {
+  @ApiProperty({ type: String })
+  code!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  id!: string;
+
+  @ApiProperty({ type: String })
+  name!: string;
+
+  @ApiProperty({
+    description: "Nomes dos ancestrais e do próprio nó, da raiz para a folha",
+    isArray: true,
+    type: String,
+  })
+  path!: string[];
+}
+
+export class ProductBrandRefDto {
+  @ApiProperty({ type: String })
+  code!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  id!: string;
+
+  @ApiProperty({ type: String })
+  name!: string;
+}
+
 export class ProductDto {
   @ApiProperty({ type: Boolean })
   active!: boolean;
@@ -72,6 +101,12 @@ export class CreateProductUnitRequestDto {
 export class CreateProductRequestDto {
   @ApiProperty({ type: CreateProductUnitRequestDto })
   baseUnit!: CreateProductUnitRequestDto;
+
+  @ApiPropertyOptional({ format: "uuid", type: String })
+  brandId?: string;
+
+  @ApiPropertyOptional({ format: "uuid", type: String })
+  categoryId?: string;
 
   @ApiProperty({ type: String })
   shortDescription!: string;
@@ -179,6 +214,12 @@ export class ProductListItemDto {
   @ApiProperty({ type: UnitOfMeasureDto })
   baseUnit!: UnitOfMeasureDto;
 
+  @ApiPropertyOptional({ type: ProductBrandRefDto })
+  brand?: ProductBrandRefDto;
+
+  @ApiPropertyOptional({ type: ProductCategoryRefDto })
+  category?: ProductCategoryRefDto;
+
   @ApiProperty({ format: "uuid", type: String })
   id!: string;
 
@@ -210,6 +251,12 @@ export class ProductDetailDto {
   @ApiProperty({ type: UnitOfMeasureDto })
   baseUnit!: UnitOfMeasureDto;
 
+  @ApiPropertyOptional({ type: ProductBrandRefDto })
+  brand?: ProductBrandRefDto;
+
+  @ApiPropertyOptional({ type: ProductCategoryRefDto })
+  category?: ProductCategoryRefDto;
+
   @ApiProperty({ format: "uuid", type: String })
   id!: string;
 
@@ -234,6 +281,22 @@ export class ProductDetailResponseDto {
 export class UpdateProductRequestDto {
   @ApiPropertyOptional({ type: Boolean })
   active?: boolean;
+
+  @ApiPropertyOptional({
+    description: "Nulo remove a marca do produto",
+    format: "uuid",
+    nullable: true,
+    type: String,
+  })
+  brandId?: string | null;
+
+  @ApiPropertyOptional({
+    description: "Nulo remove a categoria do produto",
+    format: "uuid",
+    nullable: true,
+    type: String,
+  })
+  categoryId?: string | null;
 
   @ApiPropertyOptional({ maxLength: 240, type: String })
   shortDescription?: string;

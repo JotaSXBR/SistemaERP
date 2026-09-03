@@ -100,8 +100,8 @@ correspondência escolhida foi `fornecedor + código do fornecedor`.
 
 ### Parceiros e catálogo
 
-O schema contém `Partner`, `UnitOfMeasure`, `Product`, `ProductPresentation` e
-`SupplierProductMapping`, todos vinculados à organização. Há constraints compostas para evitar
+O schema contém `Partner`, `UnitOfMeasure`, `ProductCategory`, `ProductBrand`, `Product`,
+`ProductPresentation` e `SupplierProductMapping`, todos vinculados à organização. Há constraints compostas para evitar
 relações entre tenants.
 
 Rotas implementadas:
@@ -110,15 +110,23 @@ Rotas implementadas:
 - `POST /api/v1/partners` e `PATCH /api/v1/partners/{id}`;
 - `GET /api/v1/catalog/products` e `GET /api/v1/catalog/products/{id}`;
 - `POST /api/v1/catalog/products` e `PATCH /api/v1/catalog/products/{id}`;
+- `GET /api/v1/catalog/categories`, `POST` e `PATCH /api/v1/catalog/categories/{id}`;
+- `GET /api/v1/catalog/brands`, `POST` e `PATCH /api/v1/catalog/brands/{id}`;
 - `POST /api/v1/catalog/supplier-mappings`;
 - `POST /api/v1/catalog/supplier-mappings/resolve`.
 
 Criações e atualizações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolução
 retorna `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`.
 
-`PATCH /api/v1/catalog/products/{id}` altera apenas `active`, `shortDescription` e
-`technicalDescription`, devolvendo o mesmo detalhe do `GET`; string vazia em `technicalDescription`
-remove o texto. SKU e unidade base são deliberadamente imutáveis: apresentações e mapeamentos de
+`PATCH /api/v1/catalog/products/{id}` altera `active`, `shortDescription`, `technicalDescription`,
+`categoryId` e `brandId`, devolvendo o mesmo detalhe do `GET`; string vazia em
+`technicalDescription` remove o texto e `null` em `categoryId`/`brandId` remove o vínculo.
+
+A classificação segue a ADR-0008: `ProductCategory` é uma taxonomia auto-relacionada por tenant
+(família, grupo e subgrupo na mesma árvore, no máximo cinco níveis) e `ProductBrand` fica fora dela.
+O `code` de ambos é imutável; `PATCH` aceita só `name` e `active` e rejeita `parentId` com `400`,
+porque reparentar exigiria recalcular a subárvore. `GET /api/v1/catalog/products?categoryId=...`
+inclui os produtos das categorias descendentes. SKU e unidade base são deliberadamente imutáveis: apresentações e mapeamentos de
 fornecedor os referenciam, e trocá-los reescreveria o significado de dados já persistidos. Uma
 troca real de SKU ou de unidade é decisão de negócio e precisa de um recorte próprio.
 
@@ -365,6 +373,10 @@ CI remoto depois de abrir ou atualizar um PR.
 Para concluir 8.1:
 
 - telas de criação dos cadastros; listagem e edição de parceiros e produtos já existem;
+- telas de taxonomia e marcas na web: a API existe, a interface ainda não;
+- reparentar categoria e renomear código, deliberadamente fora da ADR-0008;
+- atributos fiscais (NCM, CEST, origem, GTIN, perfil com vigência) e geometria, cada um com ADR
+  próprio;
 - edição de apresentações do produto, ainda sem rota própria;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.

@@ -344,12 +344,20 @@ explícitos de carregamento, erro e vazio. Cada linha abre um drawer de edição
 produto altera descrição curta, descrição técnica e situação. Membros sem papel administrativo veem
 a listagem sem a ação de editar. Tudo consome o cliente gerado; nenhuma URL é escrita à mão.
 
-Produtos também podem ter `active`, `shortDescription` e `technicalDescription` atualizados de forma
-idempotente e auditada. SKU e unidade base seguem imutáveis, porque apresentações e mapeamentos de
+A classificação do catálogo está implementada conforme a ADR-0008: uma taxonomia hierárquica por
+organização (`ProductCategory`, até cinco níveis, cobrindo família, grupo e subgrupo) e marcas em
+tabela própria (`ProductBrand`), ambas com código estável e criação idempotente e auditada. O
+produto referencia categoria e marca de forma opcional, e a listagem filtra por um nó incluindo
+seus descendentes. Atributos fiscais e de geometria continuam pendentes e não devem ser resolvidos
+com coluna genérica de texto.
+
+Produtos também podem ter `active`, `shortDescription`, `technicalDescription`, `categoryId` e
+`brandId` atualizados de forma idempotente e auditada. SKU e unidade base seguem imutáveis, porque apresentações e mapeamentos de
 fornecedor os referenciam.
 
-Ainda faltam para concluir o incremento 8.1: telas de criação desses cadastros; apresentações
-adicionais com conversão variável; e atributos técnicos e fiscais enriquecidos.
+Ainda faltam para concluir o incremento 8.1: telas de criação desses cadastros; telas de taxonomia e
+marcas; apresentações adicionais com conversão variável; e atributos técnicos e fiscais
+enriquecidos.
 
 ### 8.2 — Caixa de entrada fiscal
 
