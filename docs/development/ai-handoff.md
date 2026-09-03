@@ -205,6 +205,12 @@ Depois do cadastro do fornecedor, produto ou mapping,
 ausentes em `InboundFiscalDocumentItemMapping` e atualiza o status. O endpoint não altera o XML nem
 produz estoque.
 
+Cada item preserva o grupo `imposto` declarado pelo emitente em `InboundFiscalDocumentItemTax`,
+conforme a ADR-0009: ICMS (CST ou CSOSN, origem, base, alíquota, redução, ST e cBenef), IPI, PIS,
+COFINS e o grupo `IBSCBS` da NT 2025.002 quando presente. É transcrição, não cálculo, e campos
+ausentes permanecem ausentes em vez de virar zero. O que não está projetado em coluna continua
+recuperável no XML original preservado no object storage.
+
 `GET /api/v1/fiscal-intake/nfe/documents` lista os 50 documentos recentes usados pela tela e
 `GET /api/v1/fiscal-intake/nfe/documents/{documentId}` recupera a prévia persistente. Ambas as
 consultas derivam o tenant da sessão.
@@ -267,7 +273,8 @@ efeito no estoque.
 ## Próximas etapas recomendadas
 
 1. Validar protocolo, totais, schema oficial e assinatura antes de permitir recebimento; a
-   identidade fiscal e o destinatário já estão cobertos.
+   identidade fiscal e o destinatário já estão cobertos, e o snapshot fiscal por item já fornece os
+   valores declarados necessários à reconciliação de totais.
 2. Implementar configuração persistente e seleção de storage por organização, download autenticado
    do XML e reconciliação segura de objetos órfãos.
 3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas de criação

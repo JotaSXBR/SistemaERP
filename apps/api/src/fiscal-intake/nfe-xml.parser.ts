@@ -8,6 +8,37 @@ const DECIMAL_PATTERN = /^-?\d+(?:\.\d+)?$/;
 
 type XmlRecord = Record<string, unknown>;
 
+/**
+ * Transcricao do grupo `imposto`. Tudo e opcional porque os grupos variam conforme CST, CSOSN e
+ * regime; durante a transicao da reforma, notas com e sem IBS/CBS convivem. Nada aqui e calculado:
+ * sao os valores que o emitente declarou.
+ */
+export type NfeXmlItemTax = {
+  approximateTaxValue?: string;
+  cbsValue?: string;
+  cofinsCst?: string;
+  cofinsValue?: string;
+  ibsCbsBase?: string;
+  ibsCbsClassification?: string;
+  ibsCbsCst?: string;
+  ibsValue?: string;
+  icmsBase?: string;
+  icmsBaseReductionRate?: string;
+  icmsBenefitCode?: string;
+  icmsCsosn?: string;
+  icmsCst?: string;
+  icmsRate?: string;
+  icmsStBase?: string;
+  icmsStValue?: string;
+  icmsValue?: string;
+  ipiCst?: string;
+  ipiRate?: string;
+  ipiValue?: string;
+  origin?: string;
+  pisCst?: string;
+  pisValue?: string;
+};
+
 export type NfeXmlItem = {
   cest?: string;
   cfop: string;
@@ -21,6 +52,7 @@ export type NfeXmlItem = {
   supplierCode: string;
   taxableQuantity: string;
   taxableUnit: string;
+  tax: NfeXmlItemTax;
   taxableUnitValue: string;
   totalValue: string;
 };
@@ -125,6 +157,88 @@ function decimal(record: XmlRecord, field: string, path: string): string {
   return value;
 }
 
+/**
+ * Decimal opcional. Diferente de `decimal`, um campo ausente vira `undefined` em vez de erro: o
+ * grupo `imposto` e esparso por natureza, e ausencia nunca deve virar zero.
+ */
+function optionalDecimal(record: XmlRecord, field: string): string | undefined {
+  const value = record[field];
+
+  if (typeof value !== "string" || value.length === 0) {
+    return undefined;
+  }
+
+  if (!DECIMAL_PATTERN.test(value)) {
+    throw new NfeXmlParseError("NFE_INVALID_DECIMAL", `Decimal inválido: ${field}`);
+  }
+
+  return value;
+}
+
+/**
+ * O nome do filho de `ICMS` e `IPI` varia com a tributacao — ICMS00, ICMS20, ICMSSN500, IPITrib,
+ * IPINT e assim por diante. Em vez de enumerar todas as variantes, le-se o primeiro filho que for
+ * um registro, o que mantem o parser estavel quando surge uma variante nova.
+ */
+function firstChildRecord(record: XmlRecord | undefined): XmlRecord | undefined {
+  if (!record) return undefined;
+
+  for (const value of Object.values(record)) {
+    const child = optionalRecord(value);
+    if (child) return child;
+  }
+
+  return undefined;
+}
+
+function parseItemTax(detail: XmlRecord): NfeXmlItemTax {
+  const tax = optionalRecord(detail.imposto);
+  if (!tax) return {};
+
+  const icms = firstChildRecord(optionalRecord(tax.ICMS)) ?? {};
+  const ipi = optionalRecord(tax.IPI);
+  const ipiGroup = firstChildRecord(ipi) ?? {};
+  const pis = firstChildRecord(optionalRecord(tax.PIS)) ?? {};
+  const cofins = firstChildRecord(optionalRecord(tax.COFINS)) ?? {};
+  const ibsCbs = optionalRecord(tax.IBSCBS);
+  const ibsCbsValues = optionalRecord(ibsCbs?.gIBSCBS);
+  const cbs = optionalRecord(ibsCbsValues?.gCBS);
+
+  const fields: Array<[keyof NfeXmlItemTax, string | undefined]> = [
+    ["approximateTaxValue", optionalDecimal(tax, "vTotTrib")],
+    ["cbsValue", cbs && optionalDecimal(cbs, "vCBS")],
+    ["cofinsCst", optionalString(cofins, "CST")],
+    ["cofinsValue", optionalDecimal(cofins, "vCOFINS")],
+    ["ibsCbsBase", ibsCbsValues && optionalDecimal(ibsCbsValues, "vBC")],
+    ["ibsCbsClassification", ibsCbs && optionalString(ibsCbs, "cClassTrib")],
+    ["ibsCbsCst", ibsCbs && optionalString(ibsCbs, "CST")],
+    ["ibsValue", ibsCbsValues && optionalDecimal(ibsCbsValues, "vIBS")],
+    ["icmsBase", optionalDecimal(icms, "vBC")],
+    ["icmsBaseReductionRate", optionalDecimal(icms, "pRedBC")],
+    ["icmsBenefitCode", optionalString(icms, "cBenef")],
+    ["icmsCsosn", optionalString(icms, "CSOSN")],
+    ["icmsCst", optionalString(icms, "CST")],
+    ["icmsRate", optionalDecimal(icms, "pICMS")],
+    ["icmsStBase", optionalDecimal(icms, "vBCST")],
+    ["icmsStValue", optionalDecimal(icms, "vICMSST")],
+    ["icmsValue", optionalDecimal(icms, "vICMS")],
+    ["ipiCst", optionalString(ipiGroup, "CST")],
+    ["ipiRate", optionalDecimal(ipiGroup, "pIPI")],
+    ["ipiValue", optionalDecimal(ipiGroup, "vIPI")],
+    ["origin", optionalString(icms, "orig")],
+    ["pisCst", optionalString(pis, "CST")],
+    ["pisValue", optionalDecimal(pis, "vPIS")],
+  ];
+
+  const snapshot: NfeXmlItemTax = {};
+  for (const [key, value] of fields) {
+    // Ausencia permanece ausente: um imposto nao declarado nunca vira zero.
+    if (value) snapshot[key] = value;
+  }
+
+  return snapshot;
+}
+
 function parseItem(value: unknown, index: number): NfeXmlItem {
   const detail = asRecord(value, `NFe.infNFe.det[${index}]`);
   const product = asRecord(detail.prod, `NFe.infNFe.det[${index}].prod`);
@@ -144,6 +258,7 @@ function parseItem(value: unknown, index: number): NfeXmlItem {
     itemNumber: requiredString(detail, "@_nItem", `NFe.infNFe.det[${index}]`),
     ncm: requiredString(product, "NCM", path),
     supplierCode: requiredString(product, "cProd", path),
+    tax: parseItemTax(detail),
     taxableQuantity: decimal(product, "qTrib", path),
     taxableUnit: requiredString(product, "uTrib", path),
     taxableUnitValue: decimal(product, "vUnTrib", path),

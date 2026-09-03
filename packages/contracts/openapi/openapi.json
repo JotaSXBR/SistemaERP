@@ -3730,6 +3730,86 @@
           "status"
         ]
       },
+      "NfeItemTaxDto": {
+        "type": "object",
+        "properties": {
+          "approximateTaxValue": {
+            "type": "string",
+            "description": "vTotTrib"
+          },
+          "cbsValue": {
+            "type": "string"
+          },
+          "cofinsCst": {
+            "type": "string"
+          },
+          "cofinsValue": {
+            "type": "string"
+          },
+          "ibsCbsBase": {
+            "type": "string"
+          },
+          "ibsCbsClassification": {
+            "type": "string",
+            "description": "cClassTrib da NT 2025.002"
+          },
+          "ibsCbsCst": {
+            "type": "string",
+            "description": "CST de IBS/CBS"
+          },
+          "ibsValue": {
+            "type": "string"
+          },
+          "icmsBase": {
+            "type": "string"
+          },
+          "icmsBaseReductionRate": {
+            "type": "string",
+            "description": "pRedBC"
+          },
+          "icmsBenefitCode": {
+            "type": "string",
+            "description": "Codigo de Beneficio Fiscal (cBenef)"
+          },
+          "icmsCsosn": {
+            "type": "string"
+          },
+          "icmsCst": {
+            "type": "string"
+          },
+          "icmsRate": {
+            "type": "string"
+          },
+          "icmsStBase": {
+            "type": "string"
+          },
+          "icmsStValue": {
+            "type": "string"
+          },
+          "icmsValue": {
+            "type": "string"
+          },
+          "ipiCst": {
+            "type": "string"
+          },
+          "ipiRate": {
+            "type": "string"
+          },
+          "ipiValue": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string",
+            "description": "Origem da mercadoria"
+          },
+          "pisCst": {
+            "type": "string"
+          },
+          "pisValue": {
+            "type": "string"
+          }
+        }
+      },
       "NfePersistentIntakeItemDto": {
         "type": "object",
         "properties": {
@@ -3769,6 +3849,9 @@
           },
           "supplierCode": {
             "type": "string"
+          },
+          "tax": {
+            "$ref": "#/components/schemas/NfeItemTaxDto"
           },
           "taxableQuantity": {
             "type": "string"

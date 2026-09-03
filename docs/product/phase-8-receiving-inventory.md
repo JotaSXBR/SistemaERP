@@ -412,6 +412,12 @@ persistente de um backend por organização ainda não foi implementada; por iss
 a ingestão em `NODE_ENV=production` com `503`, em vez de tratar uma configuração global como solução
 final de onboarding ou produção.
 
+Cada item da caixa de entrada também preserva o grupo `imposto` declarado pelo emitente — ICMS com
+CST ou CSOSN, origem, base, alíquota, redução, substituição e cBenef; IPI; PIS; COFINS; e o grupo
+`IBSCBS` da NT 2025.002 quando presente. A ADR-0009 fixa a fronteira: atributo do produto, atributo
+da operação e declaração de terceiro são coisas distintas, e o cBenef depende da operação, nunca do
+produto. Nada disso é calculado por este sistema.
+
 O schema persistente da caixa de entrada contém documento, itens, ingestões e vínculos opcionais
 com apresentações internas. Chave de acesso, objetos e relações são isolados por organização;
 quantidades e valores usam `numeric`; a ingestão preserva origem, SHA-256, hash da chave de

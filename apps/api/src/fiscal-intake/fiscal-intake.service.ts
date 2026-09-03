@@ -262,14 +262,30 @@ export class FiscalIntakeService {
               validationIssues,
             },
           });
-          await transaction.inboundFiscalDocumentItem.createMany({
-            data: parsed.items.map((item, index) => ({
-              ...item,
+          const itemRows = [];
+          const taxRows = [];
+          for (const [index, { tax, ...columns }] of parsed.items.entries()) {
+            const itemId = itemIds[index]!;
+            itemRows.push({
+              ...columns,
               documentId,
-              id: itemIds[index]!,
+              id: itemId,
               organizationId: context.organizationId,
-            })),
-          });
+            });
+            // O grupo `imposto` e esparso: item sem nenhum campo declarado nao gera linha, para
+            // que ausencia continue distinguivel de zero.
+            if (Object.keys(tax).length > 0) {
+              taxRows.push({
+                ...tax,
+                documentItemId: itemId,
+                organizationId: context.organizationId,
+              });
+            }
+          }
+          await transaction.inboundFiscalDocumentItem.createMany({ data: itemRows });
+          if (taxRows.length > 0) {
+            await transaction.inboundFiscalDocumentItemTax.createMany({ data: taxRows });
+          }
           const mappings =
             validationIssues.length > 0
               ? []
@@ -441,6 +457,7 @@ export class FiscalIntakeService {
                 productPresentation: { include: { product: true, unitOfMeasure: true } },
               },
             },
+            tax: true,
           },
           orderBy: { itemNumber: "asc" },
         },
@@ -479,6 +496,7 @@ export class FiscalIntakeService {
         ncm: item.ncm,
         resolution,
         supplierCode: item.supplierCode,
+        ...(item.tax ? { tax: taxResponse(item.tax) } : {}),
         taxableQuantity: item.taxableQuantity.toString(),
         taxableUnit: item.taxableUnit,
         taxableUnitValue: item.taxableUnitValue.toString(),
@@ -523,6 +541,49 @@ export class FiscalIntakeService {
     });
     return organization.fiscalTaxId;
   }
+}
+
+/** Colunas do snapshot fiscal expostas no contrato, na ordem do DTO. */
+const TAX_RESPONSE_FIELDS = [
+  "approximateTaxValue",
+  "cbsValue",
+  "cofinsCst",
+  "cofinsValue",
+  "ibsCbsBase",
+  "ibsCbsClassification",
+  "ibsCbsCst",
+  "ibsValue",
+  "icmsBase",
+  "icmsBaseReductionRate",
+  "icmsBenefitCode",
+  "icmsCsosn",
+  "icmsCst",
+  "icmsRate",
+  "icmsStBase",
+  "icmsStValue",
+  "icmsValue",
+  "ipiCst",
+  "ipiRate",
+  "ipiValue",
+  "origin",
+  "pisCst",
+  "pisValue",
+] as const;
+
+/**
+ * Converte o snapshot fiscal persistido para o contrato. Decimais viram texto para preservar a
+ * escala; campos nulos somem da resposta em vez de virar zero ou string vazia.
+ */
+function taxResponse(tax: Record<string, unknown>): Record<string, string> {
+  const response: Record<string, string> = {};
+
+  for (const field of TAX_RESPONSE_FIELDS) {
+    const value = tax[field] as Prisma.Decimal | string | null | undefined;
+    if (value === null || value === undefined) continue;
+    response[field] = typeof value === "string" ? value : value.toString();
+  }
+
+  return response;
 }
 
 function productResponse(presentation: {
