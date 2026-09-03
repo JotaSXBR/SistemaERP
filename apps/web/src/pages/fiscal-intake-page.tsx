@@ -25,6 +25,12 @@ const STATUS_LABELS: Record<string, string> = {
   VALIDATION_FAILED: "Validação falhou",
 };
 
+const VALIDATION_ISSUE_LABELS: Record<string, string> = {
+  ORGANIZATION_TAX_ID_NOT_CONFIGURED:
+    "A empresa atual ainda não possui CPF/CNPJ fiscal configurado.",
+  RECIPIENT_TAX_ID_MISMATCH: "O destinatário do XML não corresponde à empresa atual.",
+};
+
 function documentQueryKey(documentId: string) {
   return ["fiscal-intake", "documents", documentId] as const;
 }
@@ -157,6 +163,7 @@ export function FiscalIntakePage() {
               canWrite={canWrite}
               document={document.data}
               onMapItem={setMappingItem}
+              onRevalidate={() => void refreshDocument()}
               onResolveSupplier={() => setSupplierDrawerOpen(true)}
             />
           ) : (
@@ -268,17 +275,40 @@ function DocumentPreview({
   canWrite,
   document,
   onMapItem,
+  onRevalidate,
   onResolveSupplier,
 }: {
   canWrite: boolean;
   document: NfePersistentIntakeDto;
   onMapItem: (item: NfePersistentIntakeItemDto) => void;
+  onRevalidate: () => void;
   onResolveSupplier: () => void;
 }) {
   const supplierPending = document.status === "PENDING_SUPPLIER";
+  const validationFailed = document.validation.status === "FAILED";
 
   return (
     <div className="space-y-6">
+      {validationFailed ? (
+        <div className="rounded-2xl border border-orange-200 bg-alert-50 p-5" role="alert">
+          <p className="font-semibold">O documento falhou na validação</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-700">
+            {document.validation.issues.map((issue) => (
+              <li key={issue}>{VALIDATION_ISSUE_LABELS[issue] ?? issue}</li>
+            ))}
+          </ul>
+          {canWrite ? (
+            <button
+              className="mt-4 min-h-11 rounded-xl bg-alert-600 px-5 text-sm font-semibold text-white"
+              onClick={onRevalidate}
+              type="button"
+            >
+              Revalidar documento
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {supplierPending ? (
         <div className="rounded-2xl border border-orange-200 bg-alert-50 p-5" role="status">
           <p className="font-semibold">Fornecedor precisa de atenção</p>
@@ -346,7 +376,7 @@ function DocumentPreview({
               </div>
               <div className="flex items-center gap-3">
                 <StatusBadge status={item.resolution.status} />
-                {item.resolution.status === "UNMAPPED" && canWrite ? (
+                {item.resolution.status === "UNMAPPED" && canWrite && !validationFailed ? (
                   <button
                     className="min-h-11 rounded-xl border border-brand-500 px-4 text-sm font-semibold text-brand-700"
                     onClick={() => onMapItem(item)}

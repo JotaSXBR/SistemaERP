@@ -401,6 +401,13 @@ quantidades e valores usam `numeric`; a ingestão preserva origem, SHA-256, hash
 idempotência, tamanho, tipo de conteúdo, chave/versão do objeto e correlação. Os estados cobrem
 validação pendente ou falha, fornecedor pendente, mapping pendente e documento pronto para revisão.
 
+A organização agora possui um CPF/CNPJ fiscal opcional, configurado pelo proprietário em endpoint
+idempotente e auditado. A prévia e a ingestão comparam o destinatário do XML com esse identificador.
+Ausência de configuração ou divergência mantém o documento em `VALIDATION_FAILED`, persiste o
+motivo estruturado e impede materializar snapshots de mapping. A resolução explícita repete essa
+validação, permitindo avançar somente depois da correção. Schema XSD oficial, assinatura, protocolo
+e reconciliação de totais continuam pendentes.
+
 ### 8.3 — Recebimento e estoque
 
 - confirmação transacional do recebimento;

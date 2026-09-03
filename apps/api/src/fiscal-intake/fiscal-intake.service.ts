@@ -1,7 +1,12 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { FiscalDocumentStatus, FiscalIngestionSource, Prisma } from "@sistema-erp/database";
+import {
+  FiscalDocumentStatus,
+  FiscalDocumentValidationIssue,
+  FiscalIngestionSource,
+  Prisma,
+} from "@sistema-erp/database";
 
 import type {
   MappedProductDto,
@@ -28,6 +33,10 @@ export type NfeIntakePreviewItem = NfeXmlItem & {
 export type NfeIntakePreview = Omit<ParsedNfeXml, "items"> & {
   items: NfeIntakePreviewItem[];
   summary: { matched: number; supplierNotFound: number; unmapped: number };
+  validation: {
+    issues: FiscalDocumentValidationIssue[];
+    status: "FAILED" | "PASSED";
+  };
 };
 
 export type SupplierProductResolver = Pick<
@@ -43,7 +52,25 @@ function originalBytes(xml: string | Uint8Array): Uint8Array {
   return typeof xml === "string" ? Buffer.from(xml, "utf8") : xml;
 }
 
-function statusFor(resolution: SupplierDocumentResolution): FiscalDocumentStatus {
+function recipientValidationIssues(
+  recipientTaxId: string,
+  organizationTaxId: string | null,
+): FiscalDocumentValidationIssue[] {
+  if (!organizationTaxId) {
+    return [FiscalDocumentValidationIssue.ORGANIZATION_TAX_ID_NOT_CONFIGURED];
+  }
+  return recipientTaxId === organizationTaxId
+    ? []
+    : [FiscalDocumentValidationIssue.RECIPIENT_TAX_ID_MISMATCH];
+}
+
+function statusFor(
+  resolution: SupplierDocumentResolution,
+  validationIssues: FiscalDocumentValidationIssue[],
+): FiscalDocumentStatus {
+  if (validationIssues.length > 0) {
+    return FiscalDocumentStatus.VALIDATION_FAILED;
+  }
   if (resolution.supplierStatus !== "FOUND") {
     return FiscalDocumentStatus.PENDING_SUPPLIER;
   }
@@ -63,6 +90,8 @@ export class FiscalIntakeService {
 
   async preview(xml: string | Uint8Array): Promise<NfeIntakePreview> {
     const document = parseNfeXml(xmlText(xml));
+    const organizationTaxId = await this.currentOrganizationTaxId();
+    const validationIssues = recipientValidationIssues(document.recipientTaxId, organizationTaxId);
     const resolutions = await this.catalog.resolveSupplierProducts(
       document.supplierTaxId,
       document.items.map(({ supplierCode }) => supplierCode),
@@ -83,7 +112,15 @@ export class FiscalIntakeService {
             : { status: resolution.status },
       };
     });
-    return { ...document, items, summary };
+    return {
+      ...document,
+      items,
+      summary,
+      validation: {
+        issues: validationIssues,
+        status: validationIssues.length === 0 ? "PASSED" : "FAILED",
+      },
+    };
   }
 
   async list(input: { limit: number; offset: number }): Promise<NfeInboxListResponseDto> {
@@ -137,6 +174,10 @@ export class FiscalIntakeService {
     const hashSha256 = createHash("sha256").update(bytes).digest("hex");
     const idempotencyKeyHash = createHash("sha256").update(idempotencyKey).digest("hex");
     const parsed = { ...parseNfeXml(xmlText(xml)), hashSha256 };
+    const validationIssues = recipientValidationIssues(
+      parsed.recipientTaxId,
+      await this.currentOrganizationTaxId(),
+    );
     const keyReplay = await this.database.value.fiscalDocumentIngestion.findUnique({
       where: {
         organizationId_idempotencyKeyHash: {
@@ -215,9 +256,10 @@ export class FiscalIntakeService {
               recipientTaxId: parsed.recipientTaxId,
               schemaVersion: parsed.schemaVersion,
               series: parsed.series,
-              status: statusFor(resolution),
+              status: statusFor(resolution, validationIssues),
               supplierName: parsed.supplierName,
               supplierTaxId: parsed.supplierTaxId,
+              validationIssues,
             },
           });
           await transaction.inboundFiscalDocumentItem.createMany({
@@ -228,17 +270,20 @@ export class FiscalIntakeService {
               organizationId: context.organizationId,
             })),
           });
-          const mappings = resolution.resolutions.flatMap((itemResolution, index) =>
-            itemResolution.status === "MATCHED"
-              ? [
-                  {
-                    documentItemId: itemIds[index]!,
-                    organizationId: context.organizationId,
-                    productPresentationId: itemResolution.mapping.product.presentationId,
-                  },
-                ]
-              : [],
-          );
+          const mappings =
+            validationIssues.length > 0
+              ? []
+              : resolution.resolutions.flatMap((itemResolution, index) =>
+                  itemResolution.status === "MATCHED"
+                    ? [
+                        {
+                          documentItemId: itemIds[index]!,
+                          organizationId: context.organizationId,
+                          productPresentationId: itemResolution.mapping.product.presentationId,
+                        },
+                      ]
+                    : [],
+                );
           if (mappings.length > 0) {
             await transaction.inboundFiscalDocumentItemMapping.createMany({ data: mappings });
           }
@@ -267,7 +312,8 @@ export class FiscalIntakeService {
               metadata: {
                 itemCount: parsed.items.length,
                 source: FiscalIngestionSource.MANUAL_UPLOAD,
-                status: statusFor(resolution),
+                status: statusFor(resolution, validationIssues),
+                validationIssues,
               },
               organizationId: context.organizationId,
               requestId: context.requestId,
@@ -295,38 +341,53 @@ export class FiscalIntakeService {
     const document = await this.database.value.inboundFiscalDocument.findUnique({
       include: {
         items: { include: { internalProductMapping: true }, orderBy: { itemNumber: "asc" } },
+        organization: { select: { fiscalTaxId: true } },
       },
       where: { id_organizationId: { id: documentId, organizationId: context.organizationId } },
     });
     if (!document) throw new NotFoundException();
 
+    const validationIssues = recipientValidationIssues(
+      document.recipientTaxId,
+      document.organization.fiscalTaxId,
+    );
+
     const resolution = await this.catalog.resolveSupplierDocument(
       document.supplierTaxId,
       document.items.map(({ supplierCode }) => supplierCode),
     );
-    const newMappings = document.items.flatMap((item, index) => {
-      const itemResolution = resolution.resolutions[index];
-      return !item.internalProductMapping && itemResolution?.status === "MATCHED"
-        ? [
-            {
-              documentItemId: item.id,
-              organizationId: context.organizationId,
-              productPresentationId: itemResolution.mapping.product.presentationId,
-            },
-          ]
-        : [];
-    });
+    const newMappings =
+      validationIssues.length > 0
+        ? []
+        : document.items.flatMap((item, index) => {
+            const itemResolution = resolution.resolutions[index];
+            return !item.internalProductMapping && itemResolution?.status === "MATCHED"
+              ? [
+                  {
+                    documentItemId: item.id,
+                    organizationId: context.organizationId,
+                    productPresentationId: itemResolution.mapping.product.presentationId,
+                  },
+                ]
+              : [];
+          });
     const mappedCount =
       document.items.filter(({ internalProductMapping }) => internalProductMapping).length +
       newMappings.length;
     const nextStatus =
-      resolution.supplierStatus !== "FOUND"
-        ? FiscalDocumentStatus.PENDING_SUPPLIER
-        : mappedCount === document.items.length
-          ? FiscalDocumentStatus.READY_FOR_REVIEW
-          : FiscalDocumentStatus.PENDING_MAPPING;
+      validationIssues.length > 0
+        ? FiscalDocumentStatus.VALIDATION_FAILED
+        : resolution.supplierStatus !== "FOUND"
+          ? FiscalDocumentStatus.PENDING_SUPPLIER
+          : mappedCount === document.items.length
+            ? FiscalDocumentStatus.READY_FOR_REVIEW
+            : FiscalDocumentStatus.PENDING_MAPPING;
 
-    if (newMappings.length > 0 || nextStatus !== document.status) {
+    if (
+      newMappings.length > 0 ||
+      nextStatus !== document.status ||
+      validationIssues.join(",") !== document.validationIssues.join(",")
+    ) {
       await this.database.value.$transaction(async (transaction) => {
         if (newMappings.length > 0) {
           await transaction.inboundFiscalDocumentItemMapping.createMany({
@@ -335,7 +396,7 @@ export class FiscalIntakeService {
           });
         }
         await transaction.inboundFiscalDocument.update({
-          data: { status: nextStatus },
+          data: { status: nextStatus, validationIssues },
           where: { id_organizationId: { id: documentId, organizationId: context.organizationId } },
         });
         await transaction.auditEvent.create({
@@ -345,7 +406,7 @@ export class FiscalIntakeService {
             correlationId: context.correlationId,
             entityId: documentId,
             entityType: "inbound_fiscal_document",
-            metadata: { mappedItems: newMappings.length, status: nextStatus },
+            metadata: { mappedItems: newMappings.length, status: nextStatus, validationIssues },
             organizationId: context.organizationId,
             requestId: context.requestId,
           },
@@ -447,7 +508,20 @@ export class FiscalIntakeService {
         resolution: supplierResolution.supplierStatus,
         taxId: document.supplierTaxId,
       },
+      validation: {
+        issues: document.validationIssues,
+        status: document.validationIssues.length === 0 ? "PASSED" : "FAILED",
+      },
     };
+  }
+
+  private async currentOrganizationTaxId(): Promise<string | null> {
+    const { organizationId } = this.requestContext.getAuthenticated();
+    const organization = await this.database.value.organization.findUniqueOrThrow({
+      select: { fiscalTaxId: true },
+      where: { id: organizationId },
+    });
+    return organization.fiscalTaxId;
   }
 }
 

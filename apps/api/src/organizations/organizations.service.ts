@@ -9,11 +9,13 @@ import { MembershipRole, type Prisma } from "@sistema-erp/database";
 
 import { DatabaseService } from "../database/database.service.js";
 import { IdempotencyService } from "../idempotency/idempotency.service.js";
+import { normalizeTaxId } from "../partners/tax-id.js";
 import { RequestContextService } from "../request-context/request-context.service.js";
 import type {
   AddMembershipResponseDto,
   MembershipDto,
   OrganizationDto,
+  SetOrganizationFiscalIdentityResponseDto,
 } from "./organizations.dto.js";
 
 type AddMembershipInput = { email: string; role: MembershipRole };
@@ -29,10 +31,31 @@ export class OrganizationsService {
   async getCurrent(): Promise<OrganizationDto> {
     const { organizationId } = this.requestContext.getAuthenticated();
 
-    return this.database.value.organization.findUniqueOrThrow({
-      select: { id: true, name: true, slug: true },
-      where: { id: organizationId },
+    return this.database.value.organization
+      .findUniqueOrThrow({
+        select: { fiscalTaxId: true, id: true, name: true, slug: true },
+        where: { id: organizationId },
+      })
+      .then(({ fiscalTaxId, ...organization }) => ({
+        ...organization,
+        ...(fiscalTaxId ? { fiscalTaxId } : {}),
+      }));
+  }
+
+  async setFiscalIdentity(
+    input: { taxId: string },
+    key: string,
+  ): Promise<SetOrganizationFiscalIdentityResponseDto> {
+    const normalizedInput = { taxId: normalizeTaxId(input.taxId) };
+    const result = await this.idempotency.execute({
+      key,
+      operation: "organizations.fiscal-identity.update",
+      request: normalizedInput,
+      responseStatus: 200,
+      run: async (transaction) => this.updateFiscalIdentity(transaction, normalizedInput.taxId),
     });
+
+    return { ...(result.data as { taxId: string }), replayed: result.replayed };
   }
 
   async listMemberships(): Promise<MembershipDto[]> {
@@ -122,5 +145,35 @@ export class OrganizationsService {
     });
 
     return response;
+  }
+
+  private async updateFiscalIdentity(
+    transaction: Prisma.TransactionClient,
+    taxId: string,
+  ): Promise<Prisma.JsonObject> {
+    const context = this.requestContext.getAuthenticated();
+    const organization = await transaction.organization.findUniqueOrThrow({
+      select: { fiscalTaxId: true, id: true },
+      where: { id: context.organizationId },
+    });
+
+    await transaction.organization.update({
+      data: { fiscalTaxId: taxId },
+      where: { id: context.organizationId },
+    });
+    await transaction.auditEvent.create({
+      data: {
+        action: "organizations.fiscal-identity.updated",
+        actorUserId: context.userId,
+        correlationId: context.correlationId,
+        entityId: organization.id,
+        entityType: "organization",
+        metadata: { changed: organization.fiscalTaxId !== taxId },
+        organizationId: context.organizationId,
+        requestId: context.requestId,
+      },
+    });
+
+    return { taxId };
   }
 }

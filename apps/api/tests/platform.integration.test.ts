@@ -143,6 +143,49 @@ describe("platform security primitives", () => {
     expect(current.json()).toMatchObject({ id: fixture.organizationAId, name: "Tenant A" });
   });
 
+  it("sets the current organization fiscal identity idempotently with owner authorization", async () => {
+    const request = {
+      headers: {
+        authorization: `Bearer ${fixture.ownerAToken}`,
+        "idempotency-key": "organization-fiscal-identity",
+      },
+      method: "PATCH" as const,
+      payload: { taxId: "22.222.222/2222-22" },
+      url: "/api/v1/organizations/current/fiscal-identity",
+    };
+    const first = await application.inject(request);
+    const replay = await application.inject(request);
+    const tenantAttempt = await application.inject({
+      ...request,
+      headers: {
+        authorization: `Bearer ${fixture.ownerBToken}`,
+        "idempotency-key": "organization-fiscal-identity-tenant-attempt",
+      },
+      payload: { organizationId: fixture.organizationAId, taxId: "33333333333333" },
+    });
+    const denied = await application.inject({
+      ...request,
+      headers: {
+        authorization: `Bearer ${fixture.memberToken}`,
+        "idempotency-key": "organization-fiscal-identity-member",
+      },
+    });
+
+    expect(first.statusCode).toBe(200);
+    expect(first.json()).toEqual({ replayed: false, taxId: "22222222222222" });
+    expect(replay.json()).toEqual({ replayed: true, taxId: "22222222222222" });
+    expect(tenantAttempt.statusCode).toBe(400);
+    expect(denied.statusCode).toBe(403);
+    expect(
+      await database.auditEvent.count({
+        where: {
+          action: "organizations.fiscal-identity.updated",
+          organizationId: fixture.organizationAId,
+        },
+      }),
+    ).toBe(1);
+  });
+
   it("rejects invalid credentials without issuing a session", async () => {
     const response = await login("unknown@example.test", "unknown", "wrong_password");
 

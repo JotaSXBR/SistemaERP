@@ -212,6 +212,91 @@
         ]
       }
     },
+    "/api/v1/organizations/current/fiscal-identity": {
+      "patch": {
+        "operationId": "OrganizationsController_setFiscalIdentity",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetOrganizationFiscalIdentityRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetOrganizationFiscalIdentityResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "organizations"
+        ]
+      }
+    },
     "/api/v1/organizations/current/memberships": {
       "get": {
         "operationId": "OrganizationsController_listMemberships",
@@ -1698,6 +1783,9 @@
       "OrganizationDto": {
         "type": "object",
         "properties": {
+          "fiscalTaxId": {
+            "type": "string"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -1713,6 +1801,32 @@
           "id",
           "name",
           "slug"
+        ]
+      },
+      "SetOrganizationFiscalIdentityRequestDto": {
+        "type": "object",
+        "properties": {
+          "taxId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "taxId"
+        ]
+      },
+      "SetOrganizationFiscalIdentityResponseDto": {
+        "type": "object",
+        "properties": {
+          "replayed": {
+            "type": "boolean"
+          },
+          "taxId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "replayed",
+          "taxId"
         ]
       },
       "MembershipDto": {
@@ -2463,6 +2577,32 @@
           "unmapped"
         ]
       },
+      "NfeValidationDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ORGANIZATION_TAX_ID_NOT_CONFIGURED",
+                "RECIPIENT_TAX_ID_MISMATCH"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASSED",
+              "FAILED"
+            ]
+          }
+        },
+        "required": [
+          "issues",
+          "status"
+        ]
+      },
       "NfeIntakePreviewDto": {
         "type": "object",
         "properties": {
@@ -2512,6 +2652,9 @@
           },
           "supplierTaxId": {
             "type": "string"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/NfeValidationDto"
           }
         },
         "required": [
@@ -2527,7 +2670,8 @@
           "series",
           "summary",
           "supplierName",
-          "supplierTaxId"
+          "supplierTaxId",
+          "validation"
         ]
       },
       "NfeInboxListItemDto": {
@@ -2792,6 +2936,9 @@
           },
           "supplier": {
             "$ref": "#/components/schemas/NfeIntakeSupplierDto"
+          },
+          "validation": {
+            "$ref": "#/components/schemas/NfeValidationDto"
           }
         },
         "required": [
@@ -2809,7 +2956,8 @@
           "series",
           "status",
           "summary",
-          "supplier"
+          "supplier",
+          "validation"
         ]
       },
       "CreateNfeIngestionResponseDto": {
@@ -2875,6 +3023,9 @@
           "supplier": {
             "$ref": "#/components/schemas/NfeIntakeSupplierDto"
           },
+          "validation": {
+            "$ref": "#/components/schemas/NfeValidationDto"
+          },
           "replayed": {
             "type": "boolean",
             "description": "Indica que o documento persistente já existia"
@@ -2896,6 +3047,7 @@
           "status",
           "summary",
           "supplier",
+          "validation",
           "replayed"
         ]
       },

@@ -13,11 +13,12 @@ const PRESENTATION_ID = "44444444-4444-4444-8444-444444444444";
 const ITEM_ID = "55555555-5555-4555-8555-555555555555";
 const INGESTION_ID = "66666666-6666-4666-8666-666666666666";
 
-type Stage = "supplier" | "mapping" | "ready";
+type Stage = "mapping" | "ready" | "supplier" | "validation";
 
 function persistentDocument(stage: Stage) {
   const supplierFound = stage !== "supplier";
   const matched = stage === "ready";
+  const validationFailed = stage === "validation";
   return {
     accessKey: "1".repeat(44),
     documentId: DOCUMENT_ID,
@@ -61,8 +62,9 @@ function persistentDocument(stage: Stage) {
     recipientTaxId: "22222222222222",
     schemaVersion: "4.00",
     series: "1",
-    status:
-      stage === "supplier"
+    status: validationFailed
+      ? "VALIDATION_FAILED"
+      : stage === "supplier"
         ? "PENDING_SUPPLIER"
         : stage === "mapping"
           ? "PENDING_MAPPING"
@@ -78,11 +80,14 @@ function persistentDocument(stage: Stage) {
       resolution: supplierFound ? "FOUND" : "NOT_FOUND",
       taxId: "11111111111111",
     },
+    validation: validationFailed
+      ? { issues: ["RECIPIENT_TAX_ID_MISMATCH"], status: "FAILED" }
+      : { issues: [], status: "PASSED" },
   };
 }
 
-function stubFiscalApi() {
-  let stage: Stage = "supplier";
+function stubFiscalApi(initialStage: Stage = "supplier") {
+  let stage = initialStage;
   const requests: Array<{ method: string; pathname: string }> = [];
 
   vi.stubGlobal(
@@ -253,5 +258,17 @@ describe("inbox fiscal guiada", () => {
         ),
       ).toBe(true);
     });
+  });
+
+  it("explica a falha de destinatário e bloqueia o mapping até a revalidação", async () => {
+    stubFiscalApi("validation");
+    renderPage();
+
+    expect(await screen.findByText("O documento falhou na validação")).toBeInTheDocument();
+    expect(
+      screen.getByText("O destinatário do XML não corresponde à empresa atual."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Revalidar documento" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mapear produto" })).not.toBeInTheDocument();
   });
 });

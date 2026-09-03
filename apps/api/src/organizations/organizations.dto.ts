@@ -1,7 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { MembershipRole, MembershipStatus } from "@sistema-erp/database";
 
 export class OrganizationDto {
+  @ApiPropertyOptional({ type: String })
+  fiscalTaxId?: string;
+
   @ApiProperty({ format: "uuid", type: String })
   id!: string;
 
@@ -10,6 +13,19 @@ export class OrganizationDto {
 
   @ApiProperty({ type: String })
   slug!: string;
+}
+
+export class SetOrganizationFiscalIdentityRequestDto {
+  @ApiProperty({ type: String })
+  taxId!: string;
+}
+
+export class SetOrganizationFiscalIdentityResponseDto {
+  @ApiProperty({ type: Boolean })
+  replayed!: boolean;
+
+  @ApiProperty({ type: String })
+  taxId!: string;
 }
 
 export class MembershipDto {

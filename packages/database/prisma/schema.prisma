@@ -47,6 +47,11 @@ enum FiscalIngestionSource {
   MANUAL_UPLOAD
 }
 
+enum FiscalDocumentValidationIssue {
+  ORGANIZATION_TAX_ID_NOT_CONFIGURED
+  RECIPIENT_TAX_ID_MISMATCH
+}
+
 model User {
   id           String       @id @default(uuid()) @db.Uuid
   email        String       @unique @db.VarChar(320)
@@ -65,6 +70,7 @@ model Organization {
   id                      String                             @id @default(uuid()) @db.Uuid
   name                    String                             @db.VarChar(160)
   slug                    String                             @unique @db.VarChar(80)
+  fiscalTaxId             String?                            @map("fiscal_tax_id") @db.VarChar(32)
   createdAt               DateTime                           @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt               DateTime                           @updatedAt @map("updated_at") @db.Timestamptz(3)
   memberships             Membership[]
@@ -185,23 +191,24 @@ model SupplierProductMapping {
 }
 
 model InboundFiscalDocument {
-  id                String                      @id @default(uuid()) @db.Uuid
-  organizationId    String                      @map("organization_id") @db.Uuid
-  accessKey         String                      @map("access_key") @db.VarChar(44)
-  status            FiscalDocumentStatus        @default(PENDING_VALIDATION)
-  schemaVersion     String                      @map("schema_version") @db.VarChar(10)
-  documentNumber    String                      @map("document_number") @db.VarChar(20)
-  series            String                      @db.VarChar(10)
-  protocol          String?                     @db.VarChar(32)
-  issuedAt          DateTime                    @map("issued_at") @db.Timestamptz(3)
-  supplierTaxId     String                      @map("supplier_tax_id") @db.VarChar(32)
-  supplierName      String                      @map("supplier_name") @db.VarChar(160)
-  recipientTaxId    String                      @map("recipient_tax_id") @db.VarChar(32)
-  natureOfOperation String                      @map("nature_of_operation") @db.VarChar(255)
-  documentTotal     Decimal                     @map("document_total") @db.Decimal(24, 4)
-  createdAt         DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(3)
-  organization      Organization                @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  id                String                          @id @default(uuid()) @db.Uuid
+  organizationId    String                          @map("organization_id") @db.Uuid
+  accessKey         String                          @map("access_key") @db.VarChar(44)
+  status            FiscalDocumentStatus            @default(PENDING_VALIDATION)
+  validationIssues  FiscalDocumentValidationIssue[] @default([]) @map("validation_issues")
+  schemaVersion     String                          @map("schema_version") @db.VarChar(10)
+  documentNumber    String                          @map("document_number") @db.VarChar(20)
+  series            String                          @db.VarChar(10)
+  protocol          String?                         @db.VarChar(32)
+  issuedAt          DateTime                        @map("issued_at") @db.Timestamptz(3)
+  supplierTaxId     String                          @map("supplier_tax_id") @db.VarChar(32)
+  supplierName      String                          @map("supplier_name") @db.VarChar(160)
+  recipientTaxId    String                          @map("recipient_tax_id") @db.VarChar(32)
+  natureOfOperation String                          @map("nature_of_operation") @db.VarChar(255)
+  documentTotal     Decimal                         @map("document_total") @db.Decimal(24, 4)
+  createdAt         DateTime                        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime                        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization      Organization                    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   items             InboundFiscalDocumentItem[]
   ingestions        FiscalDocumentIngestion[]
 
@@ -242,21 +249,21 @@ model InboundFiscalDocumentItem {
 }
 
 model FiscalDocumentIngestion {
-  id              String                @id @default(uuid()) @db.Uuid
-  organizationId  String                @map("organization_id") @db.Uuid
-  documentId      String                @map("document_id") @db.Uuid
-  source          FiscalIngestionSource
-  hashSha256      String                @map("hash_sha256") @db.VarChar(64)
-  idempotencyKeyHash String             @map("idempotency_key_hash") @db.VarChar(64)
-  objectKey       String                @map("object_key") @db.VarChar(1024)
-  objectVersionId String?               @map("object_version_id") @db.VarChar(1024)
-  contentType     String                @map("content_type") @db.VarChar(100)
-  byteSize        BigInt                @map("byte_size")
-  requestId       String                @map("request_id") @db.VarChar(80)
-  correlationId   String                @map("correlation_id") @db.VarChar(128)
-  ingestedAt      DateTime              @default(now()) @map("ingested_at") @db.Timestamptz(3)
-  organization    Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
-  document        InboundFiscalDocument @relation(fields: [documentId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  id                 String                @id @default(uuid()) @db.Uuid
+  organizationId     String                @map("organization_id") @db.Uuid
+  documentId         String                @map("document_id") @db.Uuid
+  source             FiscalIngestionSource
+  hashSha256         String                @map("hash_sha256") @db.VarChar(64)
+  idempotencyKeyHash String                @map("idempotency_key_hash") @db.VarChar(64)
+  objectKey          String                @map("object_key") @db.VarChar(1024)
+  objectVersionId    String?               @map("object_version_id") @db.VarChar(1024)
+  contentType        String                @map("content_type") @db.VarChar(100)
+  byteSize           BigInt                @map("byte_size")
+  requestId          String                @map("request_id") @db.VarChar(80)
+  correlationId      String                @map("correlation_id") @db.VarChar(128)
+  ingestedAt         DateTime              @default(now()) @map("ingested_at") @db.Timestamptz(3)
+  organization       Organization          @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  document           InboundFiscalDocument @relation(fields: [documentId, organizationId], references: [id, organizationId], onDelete: Restrict)
 
   @@unique([id, organizationId])
   @@unique([organizationId, documentId, hashSha256])

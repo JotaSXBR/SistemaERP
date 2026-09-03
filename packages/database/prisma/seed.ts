@@ -17,8 +17,8 @@ function hashPassword(password: string): string {
 
 try {
   const organization = await database.organization.upsert({
-    create: { name: "Empresa de demonstração", slug: "demo" },
-    update: {},
+    create: { fiscalTaxId: "22222222222222", name: "Empresa de demonstração", slug: "demo" },
+    update: { fiscalTaxId: "22222222222222" },
     where: { slug: "demo" },
   });
   const user = await database.user.upsert({

@@ -1,6 +1,6 @@
 # Handoff do projeto para agentes de IA
 
-- Atualizado em: 2026-09-02
+- Atualizado em: 2026-09-03
 - Branch principal: `main`
 - Objetivo: permitir que outro agente retome o desenvolvimento sem reconstruir o contexto por
   tentativa e erro.
@@ -195,6 +195,21 @@ produz estoque.
 `GET /api/v1/fiscal-intake/nfe/documents/{documentId}` recupera a prévia persistente. Ambas as
 consultas derivam o tenant da sessão.
 
+### Identidade fiscal e validação do destinatário
+
+`PATCH /api/v1/organizations/current/fiscal-identity` permite ao `OWNER` configurar o CPF/CNPJ
+fiscal normalizado da organização com idempotência e auditoria. O identificador pertence ao tenant
+autenticado; `organizationId` no payload é rejeitado.
+
+Prévia, ingestão e resolução comparam deterministicamente o destinatário do XML com essa identidade.
+Ausência de configuração produz `ORGANIZATION_TAX_ID_NOT_CONFIGURED`; divergência produz
+`RECIPIENT_TAX_ID_MISMATCH`. A ingestão preserva o XML e os motivos na inbox com
+`VALIDATION_FAILED`, mas não materializa mappings de itens. Depois de corrigir a identidade, a ação
+explícita de resolução revalida o documento e só então permite avançar para fornecedor/mapping ou
+`READY_FOR_REVIEW`. A web exibe os motivos e bloqueia o mapping enquanto a falha persistir.
+
+Esta fatia não valida schema XSD oficial, assinatura XML, protocolo nem reconciliação de totais.
+
 ### Inbox fiscal na web
 
 A rota autenticada `/fiscal-intake` usa exclusivamente o cliente OpenAPI gerado e TanStack Query
@@ -237,8 +252,8 @@ efeito no estoque.
 
 ## Próximas etapas recomendadas
 
-1. Modelar a identidade fiscal da organização e validar destinatário, protocolo, totais, schema e
-   assinatura antes de permitir recebimento.
+1. Validar protocolo, totais, schema oficial e assinatura antes de permitir recebimento; a
+   identidade fiscal e o destinatário já estão cobertos.
 2. Implementar configuração persistente e seleção de storage por organização, download autenticado
    do XML e reconciliação segura de objetos órfãos.
 3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas gerais de
