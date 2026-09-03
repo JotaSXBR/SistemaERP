@@ -16,6 +16,17 @@
 - Prefira armazenar o repositório no filesystem do WSL se file watching ou I/O em volume montado ficar lento.
 - Serviços locais usam nomes e portas documentados no Compose.
 
+## Hooks locais
+
+`pnpm install` instala o Lefthook no repositório local. Antes de cada commit, ele executa
+`prettier --write` nos arquivos staged reconhecidos e `eslint --fix` nos arquivos JavaScript e
+TypeScript staged, adicionando de volta apenas os arquivos corrigidos.
+
+O hook é uma conveniência de feedback rápido e não substitui os checks do CI nem a validação
+proporcional descrita em `AGENTS.md`. Em CI, a variável `CI=true` impede a instalação dos hooks. Se
+os hooks ainda não existirem após uma atualização de dependências, execute
+`pnpm exec lefthook install`.
+
 ## PostgreSQL local
 
 O serviço `postgres` usa PostgreSQL 18.6, persiste dados no volume nomeado `sistema-erp_postgres-data` e publica a porta somente em `127.0.0.1`. O health check usa `pg_isready` e o servidor opera em UTC.
@@ -81,6 +92,7 @@ Estes scripts deverão ser implementados na raiz:
 pnpm install
 pnpm dev
 pnpm build
+pnpm commitlint --last
 pnpm format
 pnpm lint
 pnpm typecheck

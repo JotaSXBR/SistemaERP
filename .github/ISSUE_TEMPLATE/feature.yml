@@ -1,0 +1,33 @@
+name: Propor uma funcionalidade
+description: Defina uma entrega pequena, motivada e verificável.
+title: "feat: "
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivação
+      description: Qual problema do usuário ou da operação precisa ser resolvido?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Escopo
+      description: Liste o que entra e o que fica explicitamente fora desta entrega.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Critério de pronto
+      description: Descreva resultados observáveis e testáveis.
+      placeholder: |
+        - [ ] Resultado observável 1
+        - [ ] Resultado observável 2
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Riscos e dependências
+      description: Indique impactos em tenant, segurança, dinheiro, auditoria, contrato ou migration.

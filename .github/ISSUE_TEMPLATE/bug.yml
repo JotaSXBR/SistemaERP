@@ -1,0 +1,51 @@
+name: Relatar um bug
+description: Registre um comportamento reproduzível que diverge do esperado.
+title: "fix: "
+body:
+  - type: markdown
+    attributes:
+      value: Não inclua segredos, dados pessoais, XML real ou conteúdo fiscal sensível.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Resumo
+      description: Descreva objetivamente o problema e seu impacto.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      placeholder: |
+        1. Acesse…
+        2. Execute…
+        3. Observe…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Comportamento observado
+    validations:
+      required: true
+  - type: dropdown
+    id: regression
+    attributes:
+      label: É uma regressão?
+      options:
+        - Não sei
+        - Sim, funcionava antes
+        - Não, nunca funcionou
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto técnico seguro
+      description: Informe ambiente, versão ou logs minimizados, sem dados sensíveis.
