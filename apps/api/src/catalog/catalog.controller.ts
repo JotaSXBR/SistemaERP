@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Inject,
   Param,
+  Patch,
   Post,
   Query,
 } from "@nestjs/common";
@@ -47,6 +48,8 @@ import {
   ProductListResponseDto,
   ResolveSupplierProductRequestDto,
   ResolveSupplierProductResponseDto,
+  UpdateProductRequestDto,
+  UpdateProductResponseDto,
 } from "./catalog.dto.js";
 import { CatalogService } from "./catalog.service.js";
 
@@ -91,6 +94,29 @@ function validateProduct(body: CreateProductRequestDto): CreateProductRequestDto
     unit.name.trim().length > 80 ||
     (unit.decimalScale !== undefined &&
       (!Number.isInteger(unit.decimalScale) || unit.decimalScale < 0 || unit.decimalScale > 10))
+  ) {
+    throw new BadRequestException();
+  }
+
+  return body;
+}
+
+function validateProductUpdate(body: UpdateProductRequestDto): UpdateProductRequestDto {
+  const candidate = body as UpdateProductRequestDto & { organizationId?: unknown; sku?: unknown };
+
+  if (
+    candidate.organizationId !== undefined ||
+    candidate.sku !== undefined ||
+    (body?.active === undefined &&
+      body?.shortDescription === undefined &&
+      body?.technicalDescription === undefined) ||
+    (body.active !== undefined && typeof body.active !== "boolean") ||
+    (body.shortDescription !== undefined &&
+      (typeof body.shortDescription !== "string" ||
+        body.shortDescription.trim().length === 0 ||
+        body.shortDescription.trim().length > 240)) ||
+    (body.technicalDescription !== undefined &&
+      (typeof body.technicalDescription !== "string" || body.technicalDescription.length > 4_000))
   ) {
     throw new BadRequestException();
   }
@@ -187,6 +213,27 @@ export class CatalogController {
     }
 
     return { product: await this.catalog.findProductById(id) };
+  }
+
+  @Patch("products/:id")
+  @Roles(MembershipRole.OWNER, MembershipRole.ADMIN)
+  @ApiParam({ format: "uuid", name: "id", type: String })
+  @ApiBody({ type: UpdateProductRequestDto })
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiOkResponse({ type: UpdateProductResponseDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto })
+  updateProduct(
+    @Param("id") id: string,
+    @Body() body: UpdateProductRequestDto,
+    @Headers("idempotency-key") idempotencyKey: string | undefined,
+  ): Promise<UpdateProductResponseDto> {
+    if (!UUID_PATTERN.test(id) || !idempotencyKey) {
+      throw new BadRequestException();
+    }
+
+    return this.catalog.updateProduct(id, validateProductUpdate(body), idempotencyKey);
   }
 
   @Post("products")

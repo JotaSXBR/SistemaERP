@@ -230,3 +230,29 @@ export class ProductDetailResponseDto {
   @ApiProperty({ type: ProductDetailDto })
   product!: ProductDetailDto;
 }
+
+export class UpdateProductRequestDto {
+  @ApiPropertyOptional({ type: Boolean })
+  active?: boolean;
+
+  @ApiPropertyOptional({ maxLength: 240, type: String })
+  shortDescription?: string;
+
+  @ApiPropertyOptional({
+    description: "Texto vazio remove a descrição técnica",
+    maxLength: 4000,
+    type: String,
+  })
+  technicalDescription?: string;
+}
+
+export class UpdateProductResponseDto {
+  @ApiProperty({ type: ProductDetailDto })
+  product!: ProductDetailDto;
+
+  @ApiProperty({
+    description: "Indica reaproveitamento seguro da resposta anterior",
+    type: Boolean,
+  })
+  replayed!: boolean;
+}

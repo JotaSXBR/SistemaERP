@@ -344,9 +344,12 @@ explícitos de carregamento, erro e vazio. As telas são somente leitura: consom
 `partnersControllerList` e `catalogControllerListProducts` do cliente gerado e não executam
 mutations.
 
-Ainda faltam para concluir o incremento 8.1: rotas de edição do catálogo; telas de criação e
-manutenção desses cadastros; apresentações adicionais com conversão variável; e atributos técnicos
-e fiscais enriquecidos.
+Produtos também podem ter `active`, `shortDescription` e `technicalDescription` atualizados de forma
+idempotente e auditada. SKU e unidade base seguem imutáveis, porque apresentações e mapeamentos de
+fornecedor os referenciam.
+
+Ainda faltam para concluir o incremento 8.1: telas de criação e manutenção desses cadastros;
+apresentações adicionais com conversão variável; e atributos técnicos e fiscais enriquecidos.
 
 ### 8.2 — Caixa de entrada fiscal
 
