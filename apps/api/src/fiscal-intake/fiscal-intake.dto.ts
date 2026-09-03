@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { FiscalDocumentStatus } from "@sistema-erp/database";
+import { FiscalDocumentStatus, FiscalDocumentValidationIssue } from "@sistema-erp/database";
 
 import { MappedProductDto, ResolveSupplierProductResponseDto } from "../catalog/catalog.dto.js";
 
@@ -61,6 +61,14 @@ export class NfeIntakePreviewSummaryDto {
   unmapped!: number;
 }
 
+export class NfeValidationDto {
+  @ApiProperty({ enum: FiscalDocumentValidationIssue, isArray: true })
+  issues!: FiscalDocumentValidationIssue[];
+
+  @ApiProperty({ enum: ["PASSED", "FAILED"] })
+  status!: "FAILED" | "PASSED";
+}
+
 export class NfeIntakePreviewDto {
   @ApiProperty({ type: String })
   accessKey!: string;
@@ -103,6 +111,9 @@ export class NfeIntakePreviewDto {
 
   @ApiProperty({ type: String })
   supplierTaxId!: string;
+
+  @ApiProperty({ type: NfeValidationDto })
+  validation!: NfeValidationDto;
 }
 
 export class NfeIntakeSupplierDto {
@@ -212,6 +223,9 @@ export class NfePersistentIntakeDto {
 
   @ApiProperty({ type: NfeIntakeSupplierDto })
   supplier!: NfeIntakeSupplierDto;
+
+  @ApiProperty({ type: NfeValidationDto })
+  validation!: NfeValidationDto;
 }
 
 export class CreateNfeIngestionResponseDto extends NfePersistentIntakeDto {

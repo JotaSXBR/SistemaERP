@@ -1,4 +1,13 @@
-import { BadRequestException, Body, Controller, Get, Headers, Inject, Post } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Inject,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -15,11 +24,14 @@ import { MembershipRole } from "@sistema-erp/database";
 
 import { Roles } from "../authorization/roles.decorator.js";
 import { ApiErrorResponseDto } from "../errors/api-error.dto.js";
+import { normalizeTaxId } from "../partners/tax-id.js";
 import {
   AddMembershipRequestDto,
   AddMembershipResponseDto,
   MembershipDto,
   OrganizationDto,
+  SetOrganizationFiscalIdentityRequestDto,
+  SetOrganizationFiscalIdentityResponseDto,
 } from "./organizations.dto.js";
 import { OrganizationsService } from "./organizations.service.js";
 
@@ -38,6 +50,23 @@ function validateMembershipInput(body: AddMembershipRequestDto): AddMembershipRe
   return body;
 }
 
+function validateFiscalIdentityInput(
+  body: SetOrganizationFiscalIdentityRequestDto,
+): SetOrganizationFiscalIdentityRequestDto {
+  const candidate = body as SetOrganizationFiscalIdentityRequestDto & { organizationId?: unknown };
+
+  if (
+    candidate.organizationId !== undefined ||
+    typeof body?.taxId !== "string" ||
+    !/^[-A-Za-z0-9./\s]{11,32}$/.test(body.taxId) ||
+    !/^[A-Z0-9]{11,32}$/.test(normalizeTaxId(body.taxId))
+  ) {
+    throw new BadRequestException();
+  }
+
+  return body;
+}
+
 @ApiBearerAuth()
 @ApiTags("organizations")
 @Controller("organizations/current")
@@ -49,6 +78,22 @@ export class OrganizationsController {
   @ApiOkResponse({ type: OrganizationDto })
   getCurrent(): Promise<OrganizationDto> {
     return this.organizations.getCurrent();
+  }
+
+  @Patch("fiscal-identity")
+  @Roles(MembershipRole.OWNER)
+  @ApiBody({ type: SetOrganizationFiscalIdentityRequestDto })
+  @ApiHeader({ name: "Idempotency-Key", required: true })
+  @ApiOkResponse({ type: SetOrganizationFiscalIdentityResponseDto })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto })
+  @ApiConflictResponse({ type: ApiErrorResponseDto })
+  @ApiForbiddenResponse({ type: ApiErrorResponseDto })
+  setFiscalIdentity(
+    @Body() body: SetOrganizationFiscalIdentityRequestDto,
+    @Headers("idempotency-key") idempotencyKey: string | undefined,
+  ): Promise<SetOrganizationFiscalIdentityResponseDto> {
+    if (!idempotencyKey) throw new BadRequestException();
+    return this.organizations.setFiscalIdentity(validateFiscalIdentityInput(body), idempotencyKey);
   }
 
   @Get("memberships")

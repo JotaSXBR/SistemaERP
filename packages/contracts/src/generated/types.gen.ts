@@ -55,9 +55,19 @@ export type SessionIdentityDto = {
 };
 
 export type OrganizationDto = {
+    fiscalTaxId?: string;
     id: string;
     name: string;
     slug: string;
+};
+
+export type SetOrganizationFiscalIdentityRequestDto = {
+    taxId: string;
+};
+
+export type SetOrganizationFiscalIdentityResponseDto = {
+    replayed: boolean;
+    taxId: string;
 };
 
 export type MembershipDto = {
@@ -319,6 +329,11 @@ export type NfeIntakePreviewSummaryDto = {
     unmapped: number;
 };
 
+export type NfeValidationDto = {
+    issues: Array<'ORGANIZATION_TAX_ID_NOT_CONFIGURED' | 'RECIPIENT_TAX_ID_MISMATCH'>;
+    status: 'PASSED' | 'FAILED';
+};
+
 export type NfeIntakePreviewDto = {
     accessKey: string;
     documentNumber: string;
@@ -340,6 +355,7 @@ export type NfeIntakePreviewDto = {
     summary: NfeIntakePreviewSummaryDto;
     supplierName: string;
     supplierTaxId: string;
+    validation: NfeValidationDto;
 };
 
 export type NfeInboxListItemDto = {
@@ -410,6 +426,7 @@ export type NfePersistentIntakeDto = {
     status: 'PENDING_VALIDATION' | 'VALIDATION_FAILED' | 'PENDING_SUPPLIER' | 'PENDING_MAPPING' | 'READY_FOR_REVIEW';
     summary: NfeIntakePreviewSummaryDto;
     supplier: NfeIntakeSupplierDto;
+    validation: NfeValidationDto;
 };
 
 export type CreateNfeIngestionResponseDto = {
@@ -429,6 +446,7 @@ export type CreateNfeIngestionResponseDto = {
     status: 'PENDING_VALIDATION' | 'VALIDATION_FAILED' | 'PENDING_SUPPLIER' | 'PENDING_MAPPING' | 'READY_FOR_REVIEW';
     summary: NfeIntakePreviewSummaryDto;
     supplier: NfeIntakeSupplierDto;
+    validation: NfeValidationDto;
     /**
      * Indica que o documento persistente já existia
      */
@@ -545,6 +563,31 @@ export type OrganizationsControllerGetCurrentResponses = {
 };
 
 export type OrganizationsControllerGetCurrentResponse = OrganizationsControllerGetCurrentResponses[keyof OrganizationsControllerGetCurrentResponses];
+
+export type OrganizationsControllerSetFiscalIdentityData = {
+    body: SetOrganizationFiscalIdentityRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/organizations/current/fiscal-identity';
+};
+
+export type OrganizationsControllerSetFiscalIdentityErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type OrganizationsControllerSetFiscalIdentityError = OrganizationsControllerSetFiscalIdentityErrors[keyof OrganizationsControllerSetFiscalIdentityErrors];
+
+export type OrganizationsControllerSetFiscalIdentityResponses = {
+    200: SetOrganizationFiscalIdentityResponseDto;
+};
+
+export type OrganizationsControllerSetFiscalIdentityResponse = OrganizationsControllerSetFiscalIdentityResponses[keyof OrganizationsControllerSetFiscalIdentityResponses];
 
 export type OrganizationsControllerListMembershipsData = {
     body?: never;

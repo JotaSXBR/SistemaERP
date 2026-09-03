@@ -22,9 +22,15 @@ describe("FiscalIntakeService", () => {
         resolveSupplierDocument: vi.fn(),
         resolveSupplierProducts,
       },
+      {
+        value: {
+          organization: {
+            findUniqueOrThrow: vi.fn().mockResolvedValue({ fiscalTaxId: "22222222222222" }),
+          },
+        },
+      } as never,
       undefined as never,
-      undefined as never,
-      undefined as never,
+      { getAuthenticated: vi.fn().mockReturnValue({ organizationId: "organization-a" }) } as never,
     );
 
     const preview = await service.preview(SYNTHETIC_NFE_XML);
@@ -39,6 +45,34 @@ describe("FiscalIntakeService", () => {
       totalValue: "1234.5600",
     });
     expect(preview.summary).toEqual({ matched: 0, supplierNotFound: 0, unmapped: 1 });
+    expect(preview.validation).toEqual({ issues: [], status: "PASSED" });
+  });
+
+  it("reports a recipient mismatch against the authenticated organization", async () => {
+    const service = new FiscalIntakeService(
+      {
+        resolveSupplierDocument: vi.fn(),
+        resolveSupplierProducts: vi
+          .fn()
+          .mockResolvedValue([{ status: "UNMAPPED", supplierCode: "000123" }]),
+      },
+      {
+        value: {
+          organization: {
+            findUniqueOrThrow: vi.fn().mockResolvedValue({ fiscalTaxId: "33333333333333" }),
+          },
+        },
+      } as never,
+      undefined as never,
+      { getAuthenticated: vi.fn().mockReturnValue({ organizationId: "organization-a" }) } as never,
+    );
+
+    const preview = await service.preview(SYNTHETIC_NFE_XML);
+
+    expect(preview.validation).toEqual({
+      issues: ["RECIPIENT_TAX_ID_MISMATCH"],
+      status: "FAILED",
+    });
   });
 
   it("does not query the catalog when XML parsing fails", async () => {
