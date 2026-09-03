@@ -338,9 +338,15 @@ Parceiros também podem ter `active` e `roles` atualizados de forma idempotente 
 permite que o fluxo fiscal reative um parceiro ou acrescente o papel `SUPPLIER` sem tentar duplicar
 o mesmo identificador fiscal.
 
-Ainda faltam para concluir o incremento 8.1: rotas de edição do catálogo; telas de listagem,
-criação e manutenção desses cadastros; apresentações adicionais com conversão variável; e atributos
-técnicos e fiscais enriquecidos.
+A aplicação web expõe `/partners` e `/products` como listagens autenticadas dos cadastros, com
+busca no servidor, filtro de papel do parceiro, paginação pelo deslocamento da API e estados
+explícitos de carregamento, erro e vazio. As telas são somente leitura: consomem
+`partnersControllerList` e `catalogControllerListProducts` do cliente gerado e não executam
+mutations.
+
+Ainda faltam para concluir o incremento 8.1: rotas de edição do catálogo; telas de criação e
+manutenção desses cadastros; apresentações adicionais com conversão variável; e atributos técnicos
+e fiscais enriquecidos.
 
 ### 8.2 — Caixa de entrada fiscal
 

@@ -256,8 +256,8 @@ efeito no estoque.
    identidade fiscal e o destinatário já estão cobertos.
 2. Implementar configuração persistente e seleção de storage por organização, download autenticado
    do XML e reconciliação segura de objetos órfãos.
-3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas gerais de
-   manutenção de parceiros e catálogo.
+3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas de criação
+   e manutenção de parceiros e catálogo; a listagem de ambos já está publicada na web.
 4. Somente depois implementar `receive`, depósitos e movimentos imutáveis da Fase 8.3.
 
 ## Mapa do código relevante
@@ -358,8 +358,8 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
-- rotas de edição de parceiros e catálogo na API: a leitura já existe, mas não há `PUT`/`PATCH`;
-- telas de listagem, criação e edição dos cadastros;
+- rotas de edição do catálogo na API: a leitura já existe, mas não há `PUT`/`PATCH` de produtos;
+- telas de criação e edição dos cadastros; a listagem de parceiros e produtos já existe;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
 
@@ -380,11 +380,12 @@ Para 8.3, somente depois das validações anteriores:
 
 ## Próximo passo recomendado
 
-Com a autenticação da web e a leitura de parceiros e catálogo publicadas, o próximo recorte são as
-telas de listagem desses cadastros, consumindo `partnersControllerList` e
-`catalogControllerListProducts` do cliente gerado, com busca, paginação e estado vazio. Depois vêm a
-edição dos cadastros — `PUT`/`PATCH` ainda não existem na API — e, por último, a configuração S3 por
-organização.
+As telas de listagem de parceiros (`/partners`) e produtos (`/products`) já estão publicadas,
+consumindo `partnersControllerList` e `catalogControllerListProducts` do cliente gerado, com busca
+no servidor, filtro de papel, paginação e estados de carregamento, erro e vazio. O próximo recorte é
+a edição dos cadastros: o catálogo ainda não tem `PATCH` de produtos na API, enquanto parceiros já
+oferecem `PATCH /api/v1/partners/{id}` sem tela correspondente. Depois vêm a configuração S3 por
+organização e as validações fiscais restantes.
 
 Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
 no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o
