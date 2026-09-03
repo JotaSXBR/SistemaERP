@@ -126,10 +126,18 @@ describe("catalog and supplier product mapping", () => {
     const passwordHash = await hashPassword("valid_password");
     const [organizationA, organizationB] = await Promise.all([
       database.organization.create({
-        data: { name: "Catalog Tenant A", slug: `catalog-a-${suffix}` },
+        data: {
+          fiscalTaxId: "22222222222222",
+          name: "Catalog Tenant A",
+          slug: `catalog-a-${suffix}`,
+        },
       }),
       database.organization.create({
-        data: { name: "Catalog Tenant B", slug: `catalog-b-${suffix}` },
+        data: {
+          fiscalTaxId: "33333333333333",
+          name: "Catalog Tenant B",
+          slug: `catalog-b-${suffix}`,
+        },
       }),
     ]);
     const [ownerA, ownerB, member] = await Promise.all([
@@ -386,6 +394,7 @@ describe("catalog and supplier product mapping", () => {
         },
       ],
       summary: { matched: 1, supplierNotFound: 0, unmapped: 0 },
+      validation: { issues: [], status: "PASSED" },
     });
   });
 
@@ -445,6 +454,7 @@ describe("catalog and supplier product mapping", () => {
         resolution: "MISSING_SUPPLIER_ROLE",
       },
       summary: { matched: 0, supplierNotFound: 1, unmapped: 0 },
+      validation: { issues: [], status: "PASSED" },
     });
     expect(replay.json()).toMatchObject({
       documentId: first.json<PersistentIntakeResponse>().documentId,
@@ -524,6 +534,57 @@ describe("catalog and supplier product mapping", () => {
     expect(
       await database.inboundFiscalDocument.count({
         where: { accessKey: "5".repeat(44), organizationId: fixture.organizationAId },
+      }),
+    ).toBe(1);
+  });
+
+  it("persists a recipient mismatch without advancing catalog snapshots", async () => {
+    const xml = SYNTHETIC_NFE_XML.replace(
+      "11111111111111111111111111111111111111111111",
+      "66666666666666666666666666666666666666666666",
+    );
+    const response = await application.inject({
+      headers: {
+        ...authenticated(fixture.ownerBToken, "recipient-mismatch"),
+        "content-type": "application/xml",
+      },
+      method: "POST",
+      payload: xml,
+      url: "/api/v1/fiscal-intake/nfe/ingestions",
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toMatchObject({
+      status: "VALIDATION_FAILED",
+      validation: { issues: ["RECIPIENT_TAX_ID_MISMATCH"], status: "FAILED" },
+    });
+    const documentId = response.json<PersistentIntakeResponse>().documentId;
+    expect(
+      await database.inboundFiscalDocumentItemMapping.count({
+        where: { documentItem: { documentId }, organizationId: fixture.organizationBId },
+      }),
+    ).toBe(0);
+
+    const identity = await application.inject({
+      headers: authenticated(fixture.ownerBToken, "recipient-mismatch-correction"),
+      method: "PATCH",
+      payload: { taxId: "22222222222222" },
+      url: "/api/v1/organizations/current/fiscal-identity",
+    });
+    const resolved = await application.inject({
+      headers: authenticated(fixture.ownerBToken),
+      method: "POST",
+      url: `/api/v1/fiscal-intake/nfe/documents/${documentId}/resolve`,
+    });
+
+    expect(identity.statusCode).toBe(200);
+    expect(resolved.json()).toMatchObject({
+      status: "READY_FOR_REVIEW",
+      validation: { issues: [], status: "PASSED" },
+    });
+    expect(
+      await database.inboundFiscalDocumentItemMapping.count({
+        where: { documentItem: { documentId }, organizationId: fixture.organizationBId },
       }),
     ).toBe(1);
   });
