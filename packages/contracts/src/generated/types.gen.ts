@@ -164,9 +164,27 @@ export type UnitOfMeasureDto = {
     name: string;
 };
 
+export type ProductBrandRefDto = {
+    code: string;
+    id: string;
+    name: string;
+};
+
+export type ProductCategoryRefDto = {
+    code: string;
+    id: string;
+    name: string;
+    /**
+     * Nomes dos ancestrais e do próprio nó, da raiz para a folha
+     */
+    path: Array<string>;
+};
+
 export type ProductListItemDto = {
     active: boolean;
     baseUnit: UnitOfMeasureDto;
+    brand?: ProductBrandRefDto;
+    category?: ProductCategoryRefDto;
     id: string;
     shortDescription: string;
     sku: string;
@@ -203,6 +221,8 @@ export type ProductPresentationDto = {
 export type ProductDetailDto = {
     active: boolean;
     baseUnit: UnitOfMeasureDto;
+    brand?: ProductBrandRefDto;
+    category?: ProductCategoryRefDto;
     id: string;
     presentations: Array<ProductPresentationDto>;
     shortDescription: string;
@@ -216,6 +236,14 @@ export type ProductDetailResponseDto = {
 
 export type UpdateProductRequestDto = {
     active?: boolean;
+    /**
+     * Nulo remove a marca do produto
+     */
+    brandId?: string | null;
+    /**
+     * Nulo remove a categoria do produto
+     */
+    categoryId?: string | null;
     shortDescription?: string;
     /**
      * Texto vazio remove a descrição técnica
@@ -239,6 +267,8 @@ export type CreateProductUnitRequestDto = {
 
 export type CreateProductRequestDto = {
     baseUnit: CreateProductUnitRequestDto;
+    brandId?: string;
+    categoryId?: string;
     shortDescription: string;
     sku: string;
     technicalDescription?: string;
@@ -305,6 +335,108 @@ export type ResolveSupplierProductRequestDto = {
 export type ResolveSupplierProductResponseDto = {
     mapping?: SupplierProductMappingDto;
     status: 'MATCHED' | 'SUPPLIER_NOT_FOUND' | 'UNMAPPED';
+};
+
+export type ProductCategoryDto = {
+    active: boolean;
+    code: string;
+    /**
+     * Zero para as raízes da taxonomia
+     */
+    depth: number;
+    id: string;
+    name: string;
+    parentId?: string;
+    /**
+     * Nomes dos ancestrais e do próprio nó, da raiz para a folha
+     */
+    path: Array<string>;
+};
+
+export type ProductCategoryListResponseDto = {
+    /**
+     * Taxonomia inteira do tenant, ordenada da raiz para as folhas
+     */
+    items: Array<ProductCategoryDto>;
+};
+
+export type CreateProductCategoryRequestDto = {
+    code: string;
+    name: string;
+    /**
+     * Ausente cria uma raiz da taxonomia
+     */
+    parentId?: string;
+};
+
+export type CreateProductCategoryResponseDto = {
+    category: ProductCategoryDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
+export type UpdateProductCategoryRequestDto = {
+    active?: boolean;
+    name?: string;
+};
+
+export type UpdateProductCategoryResponseDto = {
+    category: ProductCategoryDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
+export type ProductBrandDto = {
+    active: boolean;
+    code: string;
+    id: string;
+    name: string;
+};
+
+export type ProductBrandListResponseDto = {
+    items: Array<ProductBrandDto>;
+    /**
+     * Tamanho de página aplicado
+     */
+    limit: number;
+    /**
+     * Deslocamento aplicado
+     */
+    offset: number;
+    /**
+     * Total de marcas que atendem ao filtro
+     */
+    total: number;
+};
+
+export type CreateProductBrandRequestDto = {
+    code: string;
+    name: string;
+};
+
+export type CreateProductBrandResponseDto = {
+    brand: ProductBrandDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
+export type UpdateProductBrandRequestDto = {
+    active?: boolean;
+    name?: string;
+};
+
+export type UpdateProductBrandResponseDto = {
+    brand: ProductBrandDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
 };
 
 export type NfeIntakePreviewItemDto = {
@@ -763,6 +895,10 @@ export type CatalogControllerListProductsData = {
          * Trecho do SKU ou da descrição curta
          */
         search?: string;
+        /**
+         * Categoria da taxonomia; inclui os produtos das categorias descendentes
+         */
+        categoryId?: string;
         offset?: number;
         limit?: number;
         active?: boolean;
@@ -903,6 +1039,161 @@ export type CatalogControllerResolveSupplierProductResponses = {
 };
 
 export type CatalogControllerResolveSupplierProductResponse = CatalogControllerResolveSupplierProductResponses[keyof CatalogControllerResolveSupplierProductResponses];
+
+export type ClassificationControllerListCategoriesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        active?: boolean;
+    };
+    url: '/api/v1/catalog/categories';
+};
+
+export type ClassificationControllerListCategoriesErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+};
+
+export type ClassificationControllerListCategoriesError = ClassificationControllerListCategoriesErrors[keyof ClassificationControllerListCategoriesErrors];
+
+export type ClassificationControllerListCategoriesResponses = {
+    200: ProductCategoryListResponseDto;
+};
+
+export type ClassificationControllerListCategoriesResponse = ClassificationControllerListCategoriesResponses[keyof ClassificationControllerListCategoriesResponses];
+
+export type ClassificationControllerCreateCategoryData = {
+    body: CreateProductCategoryRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/catalog/categories';
+};
+
+export type ClassificationControllerCreateCategoryErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type ClassificationControllerCreateCategoryError = ClassificationControllerCreateCategoryErrors[keyof ClassificationControllerCreateCategoryErrors];
+
+export type ClassificationControllerCreateCategoryResponses = {
+    201: CreateProductCategoryResponseDto;
+};
+
+export type ClassificationControllerCreateCategoryResponse = ClassificationControllerCreateCategoryResponses[keyof ClassificationControllerCreateCategoryResponses];
+
+export type ClassificationControllerUpdateCategoryData = {
+    body: UpdateProductCategoryRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog/categories/{id}';
+};
+
+export type ClassificationControllerUpdateCategoryErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type ClassificationControllerUpdateCategoryError = ClassificationControllerUpdateCategoryErrors[keyof ClassificationControllerUpdateCategoryErrors];
+
+export type ClassificationControllerUpdateCategoryResponses = {
+    200: UpdateProductCategoryResponseDto;
+};
+
+export type ClassificationControllerUpdateCategoryResponse = ClassificationControllerUpdateCategoryResponses[keyof ClassificationControllerUpdateCategoryResponses];
+
+export type ClassificationControllerListBrandsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Trecho do código ou do nome da marca
+         */
+        search?: string;
+        offset?: number;
+        limit?: number;
+        active?: boolean;
+    };
+    url: '/api/v1/catalog/brands';
+};
+
+export type ClassificationControllerListBrandsErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+};
+
+export type ClassificationControllerListBrandsError = ClassificationControllerListBrandsErrors[keyof ClassificationControllerListBrandsErrors];
+
+export type ClassificationControllerListBrandsResponses = {
+    200: ProductBrandListResponseDto;
+};
+
+export type ClassificationControllerListBrandsResponse = ClassificationControllerListBrandsResponses[keyof ClassificationControllerListBrandsResponses];
+
+export type ClassificationControllerCreateBrandData = {
+    body: CreateProductBrandRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/catalog/brands';
+};
+
+export type ClassificationControllerCreateBrandErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type ClassificationControllerCreateBrandError = ClassificationControllerCreateBrandErrors[keyof ClassificationControllerCreateBrandErrors];
+
+export type ClassificationControllerCreateBrandResponses = {
+    201: CreateProductBrandResponseDto;
+};
+
+export type ClassificationControllerCreateBrandResponse = ClassificationControllerCreateBrandResponses[keyof ClassificationControllerCreateBrandResponses];
+
+export type ClassificationControllerUpdateBrandData = {
+    body: UpdateProductBrandRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog/brands/{id}';
+};
+
+export type ClassificationControllerUpdateBrandErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type ClassificationControllerUpdateBrandError = ClassificationControllerUpdateBrandErrors[keyof ClassificationControllerUpdateBrandErrors];
+
+export type ClassificationControllerUpdateBrandResponses = {
+    200: UpdateProductBrandResponseDto;
+};
+
+export type ClassificationControllerUpdateBrandResponse = ClassificationControllerUpdateBrandResponses[keyof ClassificationControllerUpdateBrandResponses];
 
 export type FiscalIntakeControllerPreviewData = {
     /**

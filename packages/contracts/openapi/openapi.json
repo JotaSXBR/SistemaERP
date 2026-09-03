@@ -783,6 +783,16 @@
             }
           },
           {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Categoria da taxonomia; inclui os produtos das categorias descendentes",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
             "name": "offset",
             "required": false,
             "in": "query",
@@ -1225,6 +1235,510 @@
             }
           },
           "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/categories": {
+      "get": {
+        "operationId": "ClassificationController_listCategories",
+        "parameters": [
+          {
+            "name": "active",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCategoryListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "ClassificationController_createCategory",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductCategoryRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductCategoryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/categories/{id}": {
+      "patch": {
+        "operationId": "ClassificationController_updateCategory",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductCategoryRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProductCategoryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/brands": {
+      "get": {
+        "operationId": "ClassificationController_listBrands",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Trecho do código ou do nome da marca",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "active",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductBrandListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "ClassificationController_createBrand",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductBrandRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductBrandResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/brands/{id}": {
+      "patch": {
+        "operationId": "ClassificationController_updateBrand",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductBrandRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProductBrandResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
             "description": "",
             "content": {
               "application/json": {
@@ -2203,6 +2717,54 @@
           "name"
         ]
       },
+      "ProductBrandRefDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "id",
+          "name"
+        ]
+      },
+      "ProductCategoryRefDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "description": "Nomes dos ancestrais e do próprio nó, da raiz para a folha",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "id",
+          "name",
+          "path"
+        ]
+      },
       "ProductListItemDto": {
         "type": "object",
         "properties": {
@@ -2211,6 +2773,12 @@
           },
           "baseUnit": {
             "$ref": "#/components/schemas/UnitOfMeasureDto"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/ProductBrandRefDto"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ProductCategoryRefDto"
           },
           "id": {
             "type": "string",
@@ -2305,6 +2873,12 @@
           "baseUnit": {
             "$ref": "#/components/schemas/UnitOfMeasureDto"
           },
+          "brand": {
+            "$ref": "#/components/schemas/ProductBrandRefDto"
+          },
+          "category": {
+            "$ref": "#/components/schemas/ProductCategoryRefDto"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -2350,6 +2924,18 @@
         "properties": {
           "active": {
             "type": "boolean"
+          },
+          "brandId": {
+            "type": "string",
+            "description": "Nulo remove a marca do produto",
+            "format": "uuid",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Nulo remove a categoria do produto",
+            "format": "uuid",
+            "nullable": true
           },
           "shortDescription": {
             "type": "string",
@@ -2404,6 +2990,14 @@
         "properties": {
           "baseUnit": {
             "$ref": "#/components/schemas/CreateProductUnitRequestDto"
+          },
+          "brandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
           },
           "shortDescription": {
             "type": "string"
@@ -2608,6 +3202,242 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "ProductCategoryDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "depth": {
+            "type": "number",
+            "description": "Zero para as raízes da taxonomia"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "description": "Nomes dos ancestrais e do próprio nó, da raiz para a folha",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "active",
+          "code",
+          "depth",
+          "id",
+          "name",
+          "path"
+        ]
+      },
+      "ProductCategoryListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "Taxonomia inteira do tenant, ordenada da raiz para as folhas",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductCategoryDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateProductCategoryRequestDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "parentId": {
+            "type": "string",
+            "description": "Ausente cria uma raiz da taxonomia",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "CreateProductCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/ProductCategoryDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "category",
+          "replayed"
+        ]
+      },
+      "UpdateProductCategoryRequestDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      },
+      "UpdateProductCategoryResponseDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/ProductCategoryDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "category",
+          "replayed"
+        ]
+      },
+      "ProductBrandDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "code",
+          "id",
+          "name"
+        ]
+      },
+      "ProductBrandListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductBrandDto"
+            }
+          },
+          "limit": {
+            "type": "number",
+            "description": "Tamanho de página aplicado"
+          },
+          "offset": {
+            "type": "number",
+            "description": "Deslocamento aplicado"
+          },
+          "total": {
+            "type": "number",
+            "description": "Total de marcas que atendem ao filtro"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ]
+      },
+      "CreateProductBrandRequestDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "CreateProductBrandResponseDto": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "$ref": "#/components/schemas/ProductBrandDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "brand",
+          "replayed"
+        ]
+      },
+      "UpdateProductBrandRequestDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      },
+      "UpdateProductBrandResponseDto": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "$ref": "#/components/schemas/ProductBrandDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "brand",
+          "replayed"
         ]
       },
       "NfeIntakePreviewItemDto": {

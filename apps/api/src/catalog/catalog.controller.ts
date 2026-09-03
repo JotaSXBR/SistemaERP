@@ -80,6 +80,10 @@ function validateProduct(body: CreateProductRequestDto): CreateProductRequestDto
     unit?.organizationId !== undefined ||
     typeof body?.sku !== "string" ||
     !CODE_PATTERN.test(body.sku) ||
+    (body.brandId !== undefined &&
+      (typeof body.brandId !== "string" || !UUID_PATTERN.test(body.brandId))) ||
+    (body.categoryId !== undefined &&
+      (typeof body.categoryId !== "string" || !UUID_PATTERN.test(body.categoryId))) ||
     typeof body.shortDescription !== "string" ||
     body.shortDescription.trim().length === 0 ||
     body.shortDescription.trim().length > 240 ||
@@ -108,9 +112,18 @@ function validateProductUpdate(body: UpdateProductRequestDto): UpdateProductRequ
     candidate.organizationId !== undefined ||
     candidate.sku !== undefined ||
     (body?.active === undefined &&
+      body?.brandId === undefined &&
+      body?.categoryId === undefined &&
       body?.shortDescription === undefined &&
       body?.technicalDescription === undefined) ||
     (body.active !== undefined && typeof body.active !== "boolean") ||
+    // Nulo remove o vinculo; qualquer outro valor precisa ser um UUID.
+    (body.brandId !== undefined &&
+      body.brandId !== null &&
+      (typeof body.brandId !== "string" || !UUID_PATTERN.test(body.brandId))) ||
+    (body.categoryId !== undefined &&
+      body.categoryId !== null &&
+      (typeof body.categoryId !== "string" || !UUID_PATTERN.test(body.categoryId))) ||
     (body.shortDescription !== undefined &&
       (typeof body.shortDescription !== "string" ||
         body.shortDescription.trim().length === 0 ||
@@ -183,6 +196,12 @@ export class CatalogController {
   })
   @ApiQuery({ name: "offset", required: false, schema: { minimum: 0, type: "integer" } })
   @ApiQuery({
+    description: "Categoria da taxonomia; inclui os produtos das categorias descendentes",
+    name: "categoryId",
+    required: false,
+    schema: { format: "uuid", type: "string" },
+  })
+  @ApiQuery({
     description: "Trecho do SKU ou da descrição curta",
     name: "search",
     required: false,
@@ -194,10 +213,20 @@ export class CatalogController {
     const page = parsePageRequest(query);
     const active = parseBoolean(query.active);
     const search = parseSearch(query.search);
+    const categoryId = query.categoryId;
+
+    if (
+      categoryId !== undefined &&
+      categoryId !== "" &&
+      (typeof categoryId !== "string" || !UUID_PATTERN.test(categoryId))
+    ) {
+      throw new BadRequestException();
+    }
 
     return this.catalog.listProducts({
       ...page,
       ...(active === undefined ? {} : { active }),
+      ...(categoryId ? { categoryId } : {}),
       ...(search ? { search } : {}),
     });
   }
