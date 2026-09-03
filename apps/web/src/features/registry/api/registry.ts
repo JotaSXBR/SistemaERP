@@ -1,7 +1,12 @@
 import {
+  catalogControllerFindProductById,
   catalogControllerListProducts,
+  catalogControllerUpdateProduct,
   partnersControllerList,
+  partnersControllerUpdate,
+  type PartnerDto,
   type PartnerListResponseDto,
+  type ProductDetailDto,
   type ProductListResponseDto,
 } from "@sistema-erp/contracts";
 
@@ -58,4 +63,41 @@ export async function listCatalogProducts(query: RegistryQuery): Promise<Product
   });
 
   return resultOrThrow(data, response?.status);
+}
+
+export async function updatePartner(
+  id: string,
+  input: { active?: boolean; roles?: PartnerRoleFilter[] },
+): Promise<PartnerDto> {
+  const { data, response } = await partnersControllerUpdate({
+    body: input,
+    client: apiClient,
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+    path: { id },
+  });
+
+  return resultOrThrow(data, response?.status).partner;
+}
+
+export async function getProductDetail(id: string): Promise<ProductDetailDto> {
+  const { data, response } = await catalogControllerFindProductById({
+    client: apiClient,
+    path: { id },
+  });
+
+  return resultOrThrow(data, response?.status).product;
+}
+
+export async function updateProduct(
+  id: string,
+  input: { active?: boolean; shortDescription?: string; technicalDescription?: string },
+): Promise<ProductDetailDto> {
+  const { data, response } = await catalogControllerUpdateProduct({
+    body: input,
+    client: apiClient,
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+    path: { id },
+  });
+
+  return resultOrThrow(data, response?.status).product;
 }

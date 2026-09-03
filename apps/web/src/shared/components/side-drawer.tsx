@@ -1,6 +1,6 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 
-export function IntakeDrawer({
+export function SideDrawer({
   children,
   onClose,
   title,
@@ -10,6 +10,7 @@ export function IntakeDrawer({
   title: string;
 }) {
   const closeButton = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     closeButton.current?.focus();
@@ -23,13 +24,13 @@ export function IntakeDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-ink-950/35" role="presentation">
       <section
-        aria-labelledby="intake-drawer-title"
+        aria-labelledby={titleId}
         aria-modal="true"
         className="h-full w-full max-w-xl overflow-y-auto border-l border-line bg-panel p-6 shadow-2xl sm:p-8"
         role="dialog"
       >
         <div className="flex items-start justify-between gap-4 border-b border-line pb-5">
-          <h2 className="text-xl font-semibold tracking-tight" id="intake-drawer-title">
+          <h2 className="text-xl font-semibold tracking-tight" id={titleId}>
             {title}
           </h2>
           <button

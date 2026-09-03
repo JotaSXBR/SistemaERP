@@ -340,16 +340,16 @@ o mesmo identificador fiscal.
 
 A aplicação web expõe `/partners` e `/products` como listagens autenticadas dos cadastros, com
 busca no servidor, filtro de papel do parceiro, paginação pelo deslocamento da API e estados
-explícitos de carregamento, erro e vazio. As telas são somente leitura: consomem
-`partnersControllerList` e `catalogControllerListProducts` do cliente gerado e não executam
-mutations.
+explícitos de carregamento, erro e vazio. Cada linha abre um drawer de edição para `OWNER` e `ADMIN`: parceiro altera papéis e situação,
+produto altera descrição curta, descrição técnica e situação. Membros sem papel administrativo veem
+a listagem sem a ação de editar. Tudo consome o cliente gerado; nenhuma URL é escrita à mão.
 
 Produtos também podem ter `active`, `shortDescription` e `technicalDescription` atualizados de forma
 idempotente e auditada. SKU e unidade base seguem imutáveis, porque apresentações e mapeamentos de
 fornecedor os referenciam.
 
-Ainda faltam para concluir o incremento 8.1: telas de criação e manutenção desses cadastros;
-apresentações adicionais com conversão variável; e atributos técnicos e fiscais enriquecidos.
+Ainda faltam para concluir o incremento 8.1: telas de criação desses cadastros; apresentações
+adicionais com conversão variável; e atributos técnicos e fiscais enriquecidos.
 
 ### 8.2 — Caixa de entrada fiscal
 

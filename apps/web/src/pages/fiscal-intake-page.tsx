@@ -10,9 +10,9 @@ import {
   listFiscalDocuments,
   resolveFiscalDocument,
 } from "../features/fiscal-intake/api/fiscal-intake.js";
-import { IntakeDrawer } from "../features/fiscal-intake/components/intake-drawer.js";
 import { ProductMappingForm } from "../features/fiscal-intake/components/product-mapping-form.js";
 import { SupplierGapForm } from "../features/fiscal-intake/components/supplier-gap-form.js";
+import { SideDrawer } from "../shared/components/side-drawer.js";
 
 const DOCUMENTS_QUERY_KEY = ["fiscal-intake", "documents"] as const;
 const MAX_XML_BYTES = 5 * 1024 * 1024;
@@ -173,7 +173,7 @@ export function FiscalIntakePage() {
       </div>
 
       {supplierDrawerOpen && document.data ? (
-        <IntakeDrawer onClose={() => setSupplierDrawerOpen(false)} title="Resolver fornecedor">
+        <SideDrawer onClose={() => setSupplierDrawerOpen(false)} title="Resolver fornecedor">
           <SupplierGapForm
             onCompleted={async () => {
               await refreshDocument();
@@ -181,11 +181,11 @@ export function FiscalIntakePage() {
             }}
             supplier={document.data.supplier}
           />
-        </IntakeDrawer>
+        </SideDrawer>
       ) : null}
 
       {mappingItem && document.data?.supplier.partnerId ? (
-        <IntakeDrawer onClose={() => setMappingItem(undefined)} title="Mapear produto">
+        <SideDrawer onClose={() => setMappingItem(undefined)} title="Mapear produto">
           <ProductMappingForm
             item={mappingItem}
             onCompleted={async () => {
@@ -194,7 +194,7 @@ export function FiscalIntakePage() {
             }}
             supplierId={document.data.supplier.partnerId}
           />
-        </IntakeDrawer>
+        </SideDrawer>
       ) : null}
     </div>
   );
