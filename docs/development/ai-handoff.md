@@ -263,8 +263,7 @@ efeito no estoque.
 2. Implementar configuração persistente e seleção de storage por organização, download autenticado
    do XML e reconciliação segura de objetos órfãos.
 3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas de criação
-   e manutenção de parceiros e catálogo; a listagem de ambos já está publicada na web e a API já
-   expõe `PATCH` para parceiro e produto.
+   de parceiros e catálogo; listagem e edição de ambos já estão publicadas na web.
 4. Somente depois implementar `receive`, depósitos e movimentos imutáveis da Fase 8.3.
 
 ## Mapa do código relevante
@@ -365,8 +364,7 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
-- telas de criação e edição dos cadastros; a listagem de parceiros e produtos já existe, e a API
-  já expõe `PATCH` para ambos;
+- telas de criação dos cadastros; listagem e edição de parceiros e produtos já existem;
 - edição de apresentações do produto, ainda sem rota própria;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
@@ -391,10 +389,11 @@ Para 8.3, somente depois das validações anteriores:
 As telas de listagem de parceiros (`/partners`) e produtos (`/products`) já estão publicadas,
 consumindo `partnersControllerList` e `catalogControllerListProducts` do cliente gerado, com busca
 no servidor, filtro de papel, paginação e estados de carregamento, erro e vazio. O próximo recorte é
-as telas de edição desses cadastros. A API já oferece os dois lados —
-`PATCH /api/v1/partners/{id}` para `active`/`roles` e `PATCH /api/v1/catalog/products/{id}` para
-`active`/`shortDescription`/`technicalDescription` — sem nenhuma tela correspondente. Depois vêm a
-configuração S3 por organização e as validações fiscais restantes.
+as telas de criação desses cadastros. A leitura e a edição já estão completas nas duas pontas:
+`/partners` e `/products` listam e editam via `PATCH /api/v1/partners/{id}` e
+`PATCH /api/v1/catalog/products/{id}`, em drawers restritos a `OWNER` e `ADMIN`. Depois vêm as
+apresentações com conversão variável, a configuração S3 por organização e as validações fiscais
+restantes.
 
 Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
 no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o
