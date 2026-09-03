@@ -12,3 +12,4 @@ ADRs registram decisões difíceis de reverter. Uma decisão aceita não deve se
 - [ADR-0006 — Primitivas de segurança e tenant](ADR-0006-platform-security-primitives.md)
 - [ADR-0007 — Armazenamento privado de documentos](ADR-0007-private-object-storage.md)
 - [ADR-0008 — Classificação do catálogo](ADR-0008-catalog-classification.md)
+- [ADR-0009 — Fronteira do dado fiscal](ADR-0009-fiscal-data-boundary.md)

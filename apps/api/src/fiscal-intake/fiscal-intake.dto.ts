@@ -140,6 +140,59 @@ export class NfePersistentItemResolutionDto {
   status!: "MATCHED" | "SUPPLIER_NOT_FOUND" | "UNMAPPED";
 }
 
+/**
+ * Transcricao do grupo `imposto` do XML. Sao os valores declarados pelo emitente; este sistema nao
+ * calcula tributo. Campos ausentes permanecem ausentes, nunca zero.
+ */
+export class NfeItemTaxDto {
+  @ApiPropertyOptional({ description: "vTotTrib", type: String })
+  approximateTaxValue?: string;
+  @ApiPropertyOptional({ type: String })
+  cbsValue?: string;
+  @ApiPropertyOptional({ type: String })
+  cofinsCst?: string;
+  @ApiPropertyOptional({ type: String })
+  cofinsValue?: string;
+  @ApiPropertyOptional({ type: String })
+  ibsCbsBase?: string;
+  @ApiPropertyOptional({ description: "cClassTrib da NT 2025.002", type: String })
+  ibsCbsClassification?: string;
+  @ApiPropertyOptional({ description: "CST de IBS/CBS", type: String })
+  ibsCbsCst?: string;
+  @ApiPropertyOptional({ type: String })
+  ibsValue?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsBase?: string;
+  @ApiPropertyOptional({ description: "pRedBC", type: String })
+  icmsBaseReductionRate?: string;
+  @ApiPropertyOptional({ description: "Codigo de Beneficio Fiscal (cBenef)", type: String })
+  icmsBenefitCode?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsCsosn?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsCst?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsRate?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsStBase?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsStValue?: string;
+  @ApiPropertyOptional({ type: String })
+  icmsValue?: string;
+  @ApiPropertyOptional({ type: String })
+  ipiCst?: string;
+  @ApiPropertyOptional({ type: String })
+  ipiRate?: string;
+  @ApiPropertyOptional({ type: String })
+  ipiValue?: string;
+  @ApiPropertyOptional({ description: "Origem da mercadoria", type: String })
+  origin?: string;
+  @ApiPropertyOptional({ type: String })
+  pisCst?: string;
+  @ApiPropertyOptional({ type: String })
+  pisValue?: string;
+}
+
 export class NfePersistentIntakeItemDto {
   @ApiPropertyOptional({ type: String })
   cest?: string;
@@ -165,6 +218,8 @@ export class NfePersistentIntakeItemDto {
   resolution!: NfePersistentItemResolutionDto;
   @ApiProperty({ type: String })
   supplierCode!: string;
+  @ApiPropertyOptional({ type: NfeItemTaxDto })
+  tax?: NfeItemTaxDto;
   @ApiProperty({ type: String })
   taxableQuantity!: string;
   @ApiProperty({ type: String })

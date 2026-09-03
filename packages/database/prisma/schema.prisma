@@ -77,6 +77,7 @@ model Organization {
   auditEvents             AuditEvent[]
   idempotencyRecords      IdempotencyRecord[]
   partners                Partner[]
+  inboundFiscalItemTaxes  InboundFiscalDocumentItemTax[]
   productBrands           ProductBrand[]
   productCategories       ProductCategory[]
   products                Product[]
@@ -290,11 +291,55 @@ model InboundFiscalDocumentItem {
   organization           Organization                      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   document               InboundFiscalDocument             @relation(fields: [documentId, organizationId], references: [id, organizationId], onDelete: Restrict)
   internalProductMapping InboundFiscalDocumentItemMapping?
+  tax                    InboundFiscalDocumentItemTax?
 
   @@unique([id, organizationId])
   @@unique([organizationId, documentId, itemNumber])
   @@index([organizationId, supplierCode])
   @@map("inbound_fiscal_document_items")
+}
+
+/// Transcricao do grupo `imposto` de um item da NF-e: o que o emitente declarou, nunca o que este
+/// sistema calcula. Todos os campos sao opcionais porque os grupos variam conforme CST, CSOSN e
+/// regime, e porque os dois regimes coexistem durante a transicao da reforma. O que nao esta
+/// projetado aqui continua recuperavel no XML original preservado no object storage.
+model InboundFiscalDocumentItemTax {
+  id                    String                    @id @default(uuid()) @db.Uuid
+  organizationId        String                    @map("organization_id") @db.Uuid
+  documentItemId        String                    @map("document_item_id") @db.Uuid
+  origin                String?                   @db.VarChar(1)
+  icmsCst               String?                   @map("icms_cst") @db.VarChar(2)
+  icmsCsosn             String?                   @map("icms_csosn") @db.VarChar(3)
+  /// Codigo de Beneficio Fiscal. Exigido em SP desde a Portaria SRE 70/2025; depende da operacao,
+  /// nao do produto, por isso vive no snapshot do documento.
+  icmsBenefitCode       String?                   @map("icms_benefit_code") @db.VarChar(10)
+  icmsBase              Decimal?                  @map("icms_base") @db.Decimal(24, 4)
+  icmsRate              Decimal?                  @map("icms_rate") @db.Decimal(9, 4)
+  icmsValue             Decimal?                  @map("icms_value") @db.Decimal(24, 4)
+  icmsBaseReductionRate Decimal?                  @map("icms_base_reduction_rate") @db.Decimal(9, 4)
+  icmsStBase            Decimal?                  @map("icms_st_base") @db.Decimal(24, 4)
+  icmsStValue           Decimal?                  @map("icms_st_value") @db.Decimal(24, 4)
+  ipiCst                String?                   @map("ipi_cst") @db.VarChar(2)
+  ipiRate               Decimal?                  @map("ipi_rate") @db.Decimal(9, 4)
+  ipiValue              Decimal?                  @map("ipi_value") @db.Decimal(24, 4)
+  pisCst                String?                   @map("pis_cst") @db.VarChar(2)
+  pisValue              Decimal?                  @map("pis_value") @db.Decimal(24, 4)
+  cofinsCst             String?                   @map("cofins_cst") @db.VarChar(2)
+  cofinsValue           Decimal?                  @map("cofins_value") @db.Decimal(24, 4)
+  /// Grupo IBSCBS da NT 2025.002, ausente nas notas de emitentes ainda nao obrigados.
+  ibsCbsCst             String?                   @map("ibs_cbs_cst") @db.VarChar(3)
+  ibsCbsClassification  String?                   @map("ibs_cbs_classification") @db.VarChar(6)
+  ibsCbsBase            Decimal?                  @map("ibs_cbs_base") @db.Decimal(24, 4)
+  ibsValue              Decimal?                  @map("ibs_value") @db.Decimal(24, 4)
+  cbsValue              Decimal?                  @map("cbs_value") @db.Decimal(24, 4)
+  approximateTaxValue   Decimal?                  @map("approximate_tax_value") @db.Decimal(24, 4)
+  createdAt             DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  organization          Organization              @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  documentItem          InboundFiscalDocumentItem @relation(fields: [documentItemId, organizationId], references: [id, organizationId], onDelete: Restrict)
+
+  @@unique([id, organizationId])
+  @@unique([documentItemId, organizationId])
+  @@map("inbound_fiscal_document_item_taxes")
 }
 
 model FiscalDocumentIngestion {

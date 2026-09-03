@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
   <NFe>
-    <infNFe Id="NFe11111111111111111111111111111111111111111111" versao="4.00">
+    <infNFe Id="NFe33333333333333333333333333333333333333333333" versao="4.00">
       <ide>
         <natOp>COMPRA PARA COMERCIALIZACAO</natOp>
         <serie>1</serie>
-        <nNF>42</nNF>
+        <nNF>43</nNF>
         <dhEmi>2026-08-31T10:30:00-03:00</dhEmi>
       </ide>
       <emit>
@@ -60,6 +60,17 @@
           <COFINS>
             <COFINSAliq><CST>01</CST><vBC>1234.5600</vBC><pCOFINS>7.6000</pCOFINS><vCOFINS>93.8300</vCOFINS></COFINSAliq>
           </COFINS>
+          <IBSCBS>
+            <CST>000</CST>
+            <cClassTrib>000001</cClassTrib>
+            <gIBSCBS>
+              <vBC>1234.5600</vBC>
+              <gIBSUF><pIBSUF>0.0500</pIBSUF><vIBSUF>0.6200</vIBSUF></gIBSUF>
+              <gIBSMun><pIBSMun>0.0500</pIBSMun><vIBSMun>0.6200</vIBSMun></gIBSMun>
+              <vIBS>1.2400</vIBS>
+              <gCBS><pCBS>0.9000</pCBS><vCBS>11.1100</vCBS></gCBS>
+            </gIBSCBS>
+          </IBSCBS>
         </imposto>
       </det>
       <total>

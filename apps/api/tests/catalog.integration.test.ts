@@ -15,6 +15,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApplication } from "../src/bootstrap.js";
 import { hashPassword } from "../src/identity/password.js";
 
+const REFORM_NFE_XML = readFileSync(
+  new URL("./fixtures/nfe-synthetic-reforma.xml", import.meta.url),
+  "utf8",
+);
+
 const SYNTHETIC_NFE_XML = readFileSync(
   new URL("./fixtures/nfe-synthetic.xml", import.meta.url),
   "utf8",
@@ -89,6 +94,9 @@ describe("catalog and supplier product mapping", () => {
       where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
     });
     await database.fiscalDocumentIngestion.deleteMany({
+      where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
+    });
+    await database.inboundFiscalDocumentItemTax.deleteMany({
       where: { organizationId: { in: [fixture.organizationAId, fixture.organizationBId] } },
     });
     await database.inboundFiscalDocumentItem.deleteMany({
@@ -544,6 +552,46 @@ describe("catalog and supplier product mapping", () => {
     expect(
       await database.inboundFiscalDocument.count({
         where: { accessKey: "5".repeat(44), organizationId: fixture.organizationAId },
+      }),
+    ).toBe(1);
+  });
+
+  it("preserves the declared tax group of each item and exposes it on the document", async () => {
+    const response = await application.inject({
+      headers: {
+        ...authenticated(fixture.ownerAToken, "tax-snapshot-ingest"),
+        "content-type": "application/xml",
+      },
+      method: "POST",
+      payload: REFORM_NFE_XML,
+      url: "/api/v1/fiscal-intake/nfe/ingestions",
+    });
+    const documentId = response.json<PersistentIntakeResponse>().documentId;
+    const detail = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "GET",
+      url: `/api/v1/fiscal-intake/nfe/documents/${documentId}`,
+    });
+
+    expect(response.statusCode).toBe(201);
+    const [item] = detail.json<{ items: { tax?: Record<string, string> }[] }>().items;
+    // Decimal normaliza zeros a direita no retorno: 11.1100 volta como 11.11. O valor numerico e
+    // identico e o XML original preservado no object storage segue sendo a fonte verbatim da
+    // escala declarada pelo emitente.
+    expect(item?.tax).toMatchObject({
+      cbsValue: "11.11",
+      ibsCbsClassification: "000001",
+      ibsCbsCst: "000",
+      icmsBenefitCode: "SP000001",
+      icmsCst: "20",
+      icmsValue: "98.76",
+      origin: "0",
+    });
+    // Nenhum campo ausente vira zero: sem CSOSN declarado, a chave nao existe na resposta.
+    expect(item?.tax && "icmsCsosn" in item.tax).toBe(false);
+    expect(
+      await database.inboundFiscalDocumentItemTax.count({
+        where: { documentItem: { documentId }, organizationId: fixture.organizationAId },
       }),
     ).toBe(1);
   });

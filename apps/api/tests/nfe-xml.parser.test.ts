@@ -5,6 +5,11 @@ import { describe, expect, it } from "vitest";
 import { NfeXmlParseError, parseNfeXml } from "../src/fiscal-intake/nfe-xml.parser.js";
 
 const ACCESS_KEY = "1".repeat(44);
+const REFORM_NFE_XML = readFileSync(
+  new URL("./fixtures/nfe-synthetic-reforma.xml", import.meta.url),
+  "utf8",
+);
+
 const SYNTHETIC_NFE_XML = readFileSync(
   new URL("./fixtures/nfe-synthetic.xml", import.meta.url),
   "utf8",
@@ -104,6 +109,71 @@ describe("parseNfeXml", () => {
     const xml = `<!DOCTYPE NFe [<!ENTITY example "unsafe">]>${syntheticNfeXml()}`;
 
     expectParseError(xml, "XML_DOCTYPE_NOT_ALLOWED");
+  });
+
+  it("transcreve o grupo imposto do regime atual sem calcular nada", () => {
+    const [item] = parseNfeXml(SYNTHETIC_NFE_XML).items;
+
+    expect(item?.tax).toMatchObject({
+      approximateTaxValue: "111.1100",
+      cofinsCst: "01",
+      cofinsValue: "93.8300",
+      icmsBase: "823.0400",
+      icmsBaseReductionRate: "33.3300",
+      icmsBenefitCode: "SP000001",
+      icmsCst: "20",
+      icmsRate: "12.0000",
+      icmsValue: "98.7600",
+      ipiCst: "50",
+      ipiRate: "5.0000",
+      ipiValue: "61.7300",
+      origin: "0",
+      pisCst: "01",
+      pisValue: "20.3700",
+    });
+    // Sem grupo IBSCBS, os campos da reforma permanecem ausentes em vez de zerados.
+    expect(item?.tax.ibsCbsCst).toBeUndefined();
+    expect(item?.tax.cbsValue).toBeUndefined();
+    expect(item?.tax.icmsCsosn).toBeUndefined();
+  });
+
+  it("transcreve o grupo IBSCBS da NT 2025.002 quando presente", () => {
+    const [item] = parseNfeXml(REFORM_NFE_XML).items;
+
+    expect(item?.tax).toMatchObject({
+      cbsValue: "11.1100",
+      ibsCbsBase: "1234.5600",
+      ibsCbsClassification: "000001",
+      ibsCbsCst: "000",
+      ibsValue: "1.2400",
+    });
+    // Os dois regimes coexistem na transição: o ICMS continua declarado no mesmo item.
+    expect(item?.tax.icmsCst).toBe("20");
+  });
+
+  it("aceita item sem grupo imposto e não inventa valores", () => {
+    const xml = SYNTHETIC_NFE_XML.replace(/<imposto>[\s\S]*?<\/imposto>/, "");
+    const [item] = parseNfeXml(xml).items;
+
+    expect(item?.tax).toEqual({});
+  });
+
+  it("lê CSOSN em vez de CST quando o emitente é do Simples Nacional", () => {
+    const xml = SYNTHETIC_NFE_XML.replace(
+      /<ICMS20>[\s\S]*?<\/ICMS20>/,
+      "<ICMSSN102><orig>0</orig><CSOSN>102</CSOSN></ICMSSN102>",
+    );
+    const [item] = parseNfeXml(xml).items;
+
+    expect(item?.tax.icmsCsosn).toBe("102");
+    expect(item?.tax.icmsCst).toBeUndefined();
+    expect(item?.tax.origin).toBe("0");
+  });
+
+  it("rejeita decimal inválido dentro do grupo imposto", () => {
+    const xml = SYNTHETIC_NFE_XML.replace("<vICMS>98.7600</vICMS>", "<vICMS>abc</vICMS>");
+
+    expectParseError(xml, "NFE_INVALID_DECIMAL");
   });
 
   it("rejeita documentos XML que não sejam NF-e", () => {

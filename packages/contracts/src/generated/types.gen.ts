@@ -532,6 +532,50 @@ export type NfePersistentItemResolutionDto = {
     status: 'MATCHED' | 'SUPPLIER_NOT_FOUND' | 'UNMAPPED';
 };
 
+export type NfeItemTaxDto = {
+    /**
+     * vTotTrib
+     */
+    approximateTaxValue?: string;
+    cbsValue?: string;
+    cofinsCst?: string;
+    cofinsValue?: string;
+    ibsCbsBase?: string;
+    /**
+     * cClassTrib da NT 2025.002
+     */
+    ibsCbsClassification?: string;
+    /**
+     * CST de IBS/CBS
+     */
+    ibsCbsCst?: string;
+    ibsValue?: string;
+    icmsBase?: string;
+    /**
+     * pRedBC
+     */
+    icmsBaseReductionRate?: string;
+    /**
+     * Codigo de Beneficio Fiscal (cBenef)
+     */
+    icmsBenefitCode?: string;
+    icmsCsosn?: string;
+    icmsCst?: string;
+    icmsRate?: string;
+    icmsStBase?: string;
+    icmsStValue?: string;
+    icmsValue?: string;
+    ipiCst?: string;
+    ipiRate?: string;
+    ipiValue?: string;
+    /**
+     * Origem da mercadoria
+     */
+    origin?: string;
+    pisCst?: string;
+    pisValue?: string;
+};
+
 export type NfePersistentIntakeItemDto = {
     cest?: string;
     cfop: string;
@@ -545,6 +589,7 @@ export type NfePersistentIntakeItemDto = {
     ncm: string;
     resolution: NfePersistentItemResolutionDto;
     supplierCode: string;
+    tax?: NfeItemTaxDto;
     taxableQuantity: string;
     taxableUnit: string;
     taxableUnitValue: string;
