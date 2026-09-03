@@ -214,6 +214,23 @@ export type ProductDetailResponseDto = {
     product: ProductDetailDto;
 };
 
+export type UpdateProductRequestDto = {
+    active?: boolean;
+    shortDescription?: string;
+    /**
+     * Texto vazio remove a descrição técnica
+     */
+    technicalDescription?: string;
+};
+
+export type UpdateProductResponseDto = {
+    product: ProductDetailDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
 export type CreateProductUnitRequestDto = {
     code: string;
     decimalScale?: number;
@@ -813,6 +830,33 @@ export type CatalogControllerFindProductByIdResponses = {
 };
 
 export type CatalogControllerFindProductByIdResponse = CatalogControllerFindProductByIdResponses[keyof CatalogControllerFindProductByIdResponses];
+
+export type CatalogControllerUpdateProductData = {
+    body: UpdateProductRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog/products/{id}';
+};
+
+export type CatalogControllerUpdateProductErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type CatalogControllerUpdateProductError = CatalogControllerUpdateProductErrors[keyof CatalogControllerUpdateProductErrors];
+
+export type CatalogControllerUpdateProductResponses = {
+    200: UpdateProductResponseDto;
+};
+
+export type CatalogControllerUpdateProductResponse = CatalogControllerUpdateProductResponses[keyof CatalogControllerUpdateProductResponses];
 
 export type CatalogControllerCreateSupplierMappingData = {
     body: CreateSupplierProductMappingRequestDto;

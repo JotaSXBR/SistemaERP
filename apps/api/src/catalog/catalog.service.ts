@@ -16,6 +16,7 @@ import type {
   ResolveSupplierProductResponseDto,
   SupplierProductMappingDto,
   UnitOfMeasureDto,
+  UpdateProductResponseDto,
 } from "./catalog.dto.js";
 
 function normalizeCode(value: string): string {
@@ -27,6 +28,12 @@ type ListProductsInput = {
   limit: number;
   offset: number;
   search?: string;
+};
+
+type UpdateProductInput = {
+  active?: boolean;
+  shortDescription?: string;
+  technicalDescription?: string;
 };
 
 type PersistedUnit = {
@@ -42,6 +49,39 @@ function unitResponse(unit: PersistedUnit): UnitOfMeasureDto {
     decimalScale: unit.decimalScale,
     id: unit.id,
     name: unit.name,
+  };
+}
+
+type ProductWithDetail = Prisma.ProductGetPayload<{
+  include: { baseUnit: true; presentations: { include: { unitOfMeasure: true } } };
+}>;
+
+const PRODUCT_DETAIL_INCLUDE = {
+  baseUnit: true,
+  presentations: {
+    include: { unitOfMeasure: true },
+    orderBy: [{ code: "asc" }, { id: "asc" }],
+  },
+} satisfies Prisma.ProductInclude;
+
+function productDetailResponse(product: ProductWithDetail): ProductDetailDto {
+  return {
+    active: product.active,
+    baseUnit: unitResponse(product.baseUnit),
+    id: product.id,
+    presentations: product.presentations.map((presentation) => ({
+      code: presentation.code,
+      ...(presentation.conversionFactor
+        ? { conversionFactor: presentation.conversionFactor.toString() }
+        : {}),
+      conversionMode: presentation.conversionMode,
+      id: presentation.id,
+      name: presentation.name,
+      unit: unitResponse(presentation.unitOfMeasure),
+    })),
+    shortDescription: product.shortDescription,
+    sku: product.sku,
+    ...(product.technicalDescription ? { technicalDescription: product.technicalDescription } : {}),
   };
 }
 
@@ -143,13 +183,7 @@ export class CatalogService {
   async findProductById(id: string): Promise<ProductDetailDto> {
     const { organizationId } = this.requestContext.getAuthenticated();
     const product = await this.database.value.product.findUnique({
-      include: {
-        baseUnit: true,
-        presentations: {
-          include: { unitOfMeasure: true },
-          orderBy: [{ code: "asc" }, { id: "asc" }],
-        },
-      },
+      include: PRODUCT_DETAIL_INCLUDE,
       where: { id_organizationId: { id, organizationId } },
     });
 
@@ -157,26 +191,7 @@ export class CatalogService {
       throw new NotFoundException();
     }
 
-    return {
-      active: product.active,
-      baseUnit: unitResponse(product.baseUnit),
-      id: product.id,
-      presentations: product.presentations.map((presentation) => ({
-        code: presentation.code,
-        ...(presentation.conversionFactor
-          ? { conversionFactor: presentation.conversionFactor.toString() }
-          : {}),
-        conversionMode: presentation.conversionMode,
-        id: presentation.id,
-        name: presentation.name,
-        unit: unitResponse(presentation.unitOfMeasure),
-      })),
-      shortDescription: product.shortDescription,
-      sku: product.sku,
-      ...(product.technicalDescription
-        ? { technicalDescription: product.technicalDescription }
-        : {}),
-    };
+    return productDetailResponse(product);
   }
 
   async createProduct(
@@ -203,6 +218,32 @@ export class CatalogService {
     });
 
     return { product: result.data as unknown as ProductDto, replayed: result.replayed };
+  }
+
+  async updateProduct(
+    id: string,
+    input: UpdateProductInput,
+    key: string,
+  ): Promise<UpdateProductResponseDto> {
+    const normalizedInput = {
+      id,
+      ...(input.active === undefined ? {} : { active: input.active }),
+      ...(input.shortDescription === undefined
+        ? {}
+        : { shortDescription: input.shortDescription.trim() }),
+      ...(input.technicalDescription === undefined
+        ? {}
+        : { technicalDescription: input.technicalDescription.trim() }),
+    };
+    const result = await this.idempotency.execute({
+      key,
+      operation: "catalog.products.update",
+      request: normalizedInput,
+      responseStatus: 200,
+      run: async (transaction) => this.updateProductTransaction(transaction, normalizedInput),
+    });
+
+    return { product: result.data as unknown as ProductDetailDto, replayed: result.replayed };
   }
 
   async createSupplierMapping(
@@ -318,6 +359,61 @@ export class CatalogService {
     });
 
     return { resolutions, supplierId: supplier.id, supplierStatus: "FOUND" };
+  }
+
+  private async updateProductTransaction(
+    transaction: Prisma.TransactionClient,
+    input: UpdateProductInput & { id: string },
+  ): Promise<Prisma.JsonObject> {
+    const context = this.requestContext.getAuthenticated();
+    const where = {
+      id_organizationId: { id: input.id, organizationId: context.organizationId },
+    };
+    const existing = await transaction.product.findUnique({ where });
+    if (!existing) {
+      throw new NotFoundException();
+    }
+
+    // SKU e unidade base permanecem imutáveis: ambos são referenciados por apresentações e
+    // mapeamentos de fornecedor, e trocá-los reescreveria o significado de dados já persistidos.
+    const product = await transaction.product.update({
+      data: {
+        ...(input.active === undefined ? {} : { active: input.active }),
+        ...(input.shortDescription === undefined
+          ? {}
+          : { shortDescription: input.shortDescription }),
+        ...(input.technicalDescription === undefined
+          ? {}
+          : { technicalDescription: input.technicalDescription || null }),
+      },
+      include: PRODUCT_DETAIL_INCLUDE,
+      where,
+    });
+    const response = productDetailResponse(product) as unknown as Prisma.JsonObject;
+
+    await transaction.auditEvent.create({
+      data: {
+        action: "catalog.products.updated",
+        actorUserId: context.userId,
+        correlationId: context.correlationId,
+        entityId: product.id,
+        entityType: "product",
+        metadata: {
+          activeChanged: input.active !== undefined && input.active !== existing.active,
+          shortDescriptionChanged:
+            input.shortDescription !== undefined &&
+            input.shortDescription !== existing.shortDescription,
+          sku: product.sku,
+          technicalDescriptionChanged:
+            input.technicalDescription !== undefined &&
+            (input.technicalDescription || null) !== existing.technicalDescription,
+        },
+        organizationId: context.organizationId,
+        requestId: context.requestId,
+      },
+    });
+
+    return response;
   }
 
   private async createProductTransaction(

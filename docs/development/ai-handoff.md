@@ -107,14 +107,20 @@ relações entre tenants.
 Rotas implementadas:
 
 - `GET /api/v1/partners` e `GET /api/v1/partners/{id}`;
-- `POST /api/v1/partners`;
+- `POST /api/v1/partners` e `PATCH /api/v1/partners/{id}`;
 - `GET /api/v1/catalog/products` e `GET /api/v1/catalog/products/{id}`;
-- `POST /api/v1/catalog/products`;
+- `POST /api/v1/catalog/products` e `PATCH /api/v1/catalog/products/{id}`;
 - `POST /api/v1/catalog/supplier-mappings`;
 - `POST /api/v1/catalog/supplier-mappings/resolve`.
 
-Criações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolução retorna
-`MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`.
+Criações e atualizações exigem `Idempotency-Key`, respeitam RBAC e geram auditoria. A resolução
+retorna `MATCHED`, `UNMAPPED` ou `SUPPLIER_NOT_FOUND`.
+
+`PATCH /api/v1/catalog/products/{id}` altera apenas `active`, `shortDescription` e
+`technicalDescription`, devolvendo o mesmo detalhe do `GET`; string vazia em `technicalDescription`
+remove o texto. SKU e unidade base são deliberadamente imutáveis: apresentações e mapeamentos de
+fornecedor os referenciam, e trocá-los reescreveria o significado de dados já persistidos. Uma
+troca real de SKU ou de unidade é decisão de negócio e precisa de um recorte próprio.
 
 As leituras estão liberadas para qualquer membro autenticado, porque listar cadastros não é operação
 privilegiada; escrita continua restrita a `OWNER` e `ADMIN`. Elas usam paginação explícita
@@ -257,7 +263,8 @@ efeito no estoque.
 2. Implementar configuração persistente e seleção de storage por organização, download autenticado
    do XML e reconciliação segura de objetos órfãos.
 3. Concluir apresentações/conversões do catálogo necessárias aos itens reais e as telas de criação
-   e manutenção de parceiros e catálogo; a listagem de ambos já está publicada na web.
+   e manutenção de parceiros e catálogo; a listagem de ambos já está publicada na web e a API já
+   expõe `PATCH` para parceiro e produto.
 4. Somente depois implementar `receive`, depósitos e movimentos imutáveis da Fase 8.3.
 
 ## Mapa do código relevante
@@ -358,8 +365,9 @@ CI remoto depois de abrir ou atualizar um PR.
 
 Para concluir 8.1:
 
-- rotas de edição do catálogo na API: a leitura já existe, mas não há `PUT`/`PATCH` de produtos;
-- telas de criação e edição dos cadastros; a listagem de parceiros e produtos já existe;
+- telas de criação e edição dos cadastros; a listagem de parceiros e produtos já existe, e a API
+  já expõe `PATCH` para ambos;
+- edição de apresentações do produto, ainda sem rota própria;
 - apresentações adicionais e conversões variáveis;
 - atributos técnicos e fiscais enriquecidos.
 
@@ -383,9 +391,10 @@ Para 8.3, somente depois das validações anteriores:
 As telas de listagem de parceiros (`/partners`) e produtos (`/products`) já estão publicadas,
 consumindo `partnersControllerList` e `catalogControllerListProducts` do cliente gerado, com busca
 no servidor, filtro de papel, paginação e estados de carregamento, erro e vazio. O próximo recorte é
-a edição dos cadastros: o catálogo ainda não tem `PATCH` de produtos na API, enquanto parceiros já
-oferecem `PATCH /api/v1/partners/{id}` sem tela correspondente. Depois vêm a configuração S3 por
-organização e as validações fiscais restantes.
+as telas de edição desses cadastros. A API já oferece os dois lados —
+`PATCH /api/v1/partners/{id}` para `active`/`roles` e `PATCH /api/v1/catalog/products/{id}` para
+`active`/`shortDescription`/`technicalDescription` — sem nenhuma tela correspondente. Depois vêm a
+configuração S3 por organização e as validações fiscais restantes.
 
 Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
 no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o

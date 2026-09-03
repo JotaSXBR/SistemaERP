@@ -43,6 +43,16 @@ type MappingResponse = {
   replayed: boolean;
 };
 type PersistentIntakeResponse = { documentId: string };
+type ProductDetailResponse = {
+  product: {
+    active: boolean;
+    presentations: { code: string }[];
+    shortDescription: string;
+    sku: string;
+    technicalDescription?: string;
+  };
+  replayed: boolean;
+};
 
 describe("catalog and supplier product mapping", () => {
   let application: NestFastifyApplication;
@@ -621,5 +631,132 @@ describe("catalog and supplier product mapping", () => {
     expect(unsupported.body).not.toContain("sensitive-content");
     expect(oversized.statusCode).toBe(413);
     expect(oversized.json()).toMatchObject({ error: { code: "PAYLOAD_TOO_LARGE" } });
+  });
+  it("updates a product idempotently and keeps sku and base unit immutable", async () => {
+    const created = await createProduct(fixture.ownerAToken, "product-update-base", "SKU-UPDATE-1");
+    const productId = created.json<ProductResponse>().product.id;
+    const update = {
+      headers: authenticated(fixture.ownerAToken, "product-update-1"),
+      method: "PATCH" as const,
+      payload: {
+        active: false,
+        shortDescription: "  Produto sintético revisado  ",
+        technicalDescription: "Ficha técnica sintética",
+      },
+      url: `/api/v1/catalog/products/${productId}`,
+    };
+    const first = await application.inject(update);
+    const replay = await application.inject(update);
+    const divergent = await application.inject({
+      ...update,
+      payload: { active: true },
+    });
+    const detail = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "GET",
+      url: `/api/v1/catalog/products/${productId}`,
+    });
+
+    expect(first.statusCode).toBe(200);
+    expect(first.json<ProductDetailResponse>()).toMatchObject({
+      product: {
+        active: false,
+        shortDescription: "Produto sintético revisado",
+        sku: "SKU-UPDATE-1",
+        technicalDescription: "Ficha técnica sintética",
+      },
+      replayed: false,
+    });
+    expect(first.json<ProductDetailResponse>().product.presentations).toHaveLength(1);
+    expect(replay.json<ProductDetailResponse>().replayed).toBe(true);
+    expect(divergent.statusCode).toBe(409);
+    expect(detail.json<ProductDetailResponse>().product).toMatchObject({
+      active: false,
+      shortDescription: "Produto sintético revisado",
+      sku: "SKU-UPDATE-1",
+    });
+  });
+
+  it("clears the technical description with an empty string", async () => {
+    const created = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "product-update-clear-base"),
+      method: "POST",
+      payload: {
+        baseUnit: { code: "KG", decimalScale: 4, name: "Quilograma" },
+        shortDescription: "Produto com ficha",
+        sku: "SKU-UPDATE-CLEAR",
+        technicalDescription: "Ficha a remover",
+      },
+      url: "/api/v1/catalog/products",
+    });
+    const cleared = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "product-update-clear"),
+      method: "PATCH",
+      payload: { technicalDescription: "" },
+      url: `/api/v1/catalog/products/${created.json<ProductResponse>().product.id}`,
+    });
+
+    expect(cleared.statusCode).toBe(200);
+    expect(cleared.json<ProductDetailResponse>().product.technicalDescription).toBeUndefined();
+  });
+
+  it("rejects invalid product updates and tenant or role escalation", async () => {
+    const created = await createProduct(
+      fixture.ownerAToken,
+      "product-update-guard-base",
+      "SKU-UPDATE-GUARD",
+    );
+    const productId = created.json<ProductResponse>().product.id;
+    const patch = (
+      payload: Record<string, unknown>,
+      key: string,
+      token = fixture.ownerAToken,
+      id = productId,
+    ) =>
+      application.inject({
+        headers: authenticated(token, key),
+        method: "PATCH",
+        payload,
+        url: `/api/v1/catalog/products/${id}`,
+      });
+
+    const empty = await patch({}, "product-update-empty");
+    const blankDescription = await patch({ shortDescription: "   " }, "product-update-blank");
+    const skuAttempt = await patch({ sku: "SKU-OTHER" }, "product-update-sku");
+    const tenantAttempt = await patch(
+      { active: false, organizationId: fixture.organizationBId },
+      "product-update-tenant",
+    );
+    const missingKey = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "PATCH",
+      payload: { active: false },
+      url: `/api/v1/catalog/products/${productId}`,
+    });
+    const memberAttempt = await patch(
+      { active: false },
+      "product-update-member",
+      fixture.memberToken,
+    );
+    const otherTenant = await patch(
+      { active: false },
+      "product-update-cross-tenant",
+      fixture.ownerBToken,
+    );
+    const unknown = await patch(
+      { active: false },
+      "product-update-unknown",
+      fixture.ownerAToken,
+      randomUUID(),
+    );
+
+    expect(empty.statusCode).toBe(400);
+    expect(blankDescription.statusCode).toBe(400);
+    expect(skuAttempt.statusCode).toBe(400);
+    expect(tenantAttempt.statusCode).toBe(400);
+    expect(missingKey.statusCode).toBe(400);
+    expect(memberAttempt.statusCode).toBe(403);
+    expect(otherTenant.statusCode).toBe(404);
+    expect(unknown.statusCode).toBe(404);
   });
 });
