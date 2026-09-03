@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: false
+  commands:
+    prettier:
+      glob: "*.{js,cjs,mjs,ts,tsx,json,jsonc,yml,yaml,md,css,html}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    eslint:
+      glob: "*.{js,cjs,mjs,ts,tsx}"
+      run: pnpm exec eslint --fix {staged_files}
+      stage_fixed: true

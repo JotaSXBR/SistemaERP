@@ -6,6 +6,7 @@ allowBuilds:
   "@prisma/engines": true
   "@scarf/scarf": false
   "esbuild@0.28.2": true
+  lefthook: true
   prisma: true
 
 # Correções de segurança em dependências transitivas do Prisma, que ainda não publicou

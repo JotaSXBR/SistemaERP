@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "pnpm --recursive --parallel --if-present run dev",
     "build": "pnpm db:generate && pnpm --recursive --if-present run build",
+    "commitlint": "commitlint",
     "contracts:check": "pnpm contracts:generate && git diff --exit-code -- packages/contracts/openapi packages/contracts/src/generated",
     "contracts:generate": "pnpm --filter @sistema-erp/api openapi:export && pnpm --filter @sistema-erp/contracts generate",
     "db:generate": "pnpm --filter @sistema-erp/database db:generate",
@@ -37,9 +38,12 @@
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm contracts:check"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2",
     "@eslint/js": "10.0.1",
     "eslint": "10.9.1",
     "globals": "17.11.0",
+    "lefthook": "2.1.12",
     "prettier": "3.9.6",
     "typescript": "6.0.3",
     "typescript-eslint": "8.68.0"
