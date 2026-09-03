@@ -51,6 +51,8 @@ export function AppLayout() {
           {status === "authenticated" ? (
             <>
               <NavigationLink label="Entrada fiscal" to="/fiscal-intake" />
+              <NavigationLink label="Parceiros" to="/partners" />
+              <NavigationLink label="Produtos" to="/products" />
               <NavigationLink label="Empresa" to="/organization" />
             </>
           ) : null}
