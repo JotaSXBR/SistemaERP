@@ -403,6 +403,63 @@ Para 8.3, somente depois das validações anteriores:
 - movimentos imutáveis e saldo derivado;
 - certificados de qualidade e limitações explícitas de rastreabilidade.
 
+## Questões em aberto com o proprietário
+
+Estas decisões dependem do negócio e ainda não têm resposta. Não as resolva por conta própria.
+
+### A classificação real usa facetas, não hierarquia
+
+O sistema legado classifica produtos por três eixos **ortogonais**, cada um com cadastro próprio:
+
+| Campo legado | Exemplo        | O que é                    |
+| ------------ | -------------- | -------------------------- |
+| Grupo        | "1020 FORJADO" | material, liga ou processo |
+| Tipo         | "VERGALHAO"    | tipo de produto            |
+| Modelo       | "REDONDO"      | formato ou perfil          |
+| Medida       | 12"            | dimensão                   |
+
+Isso **tensiona a ADR-0008**, que modelou classificação como taxonomia hierárquica. Não são níveis:
+um vergalhão pode ser 1020 ou 1045, e um 1020 pode ser vergalhão ou chapa. Numa árvore seria preciso
+escolher uma ordem de aninhamento e repetir a subárvore em cada ramo.
+
+A hierarquia continua útil para família e grupo comercial, e o `phase-8` de fato separa "família,
+grupo e marca" de "tipo de material, liga ou qualidade... e formato ou perfil" — são dois mecanismos
+distintos, e só o primeiro está implementado. A proposta em avaliação é acrescentar **facetas
+tipadas** (uma dimensão por eixo, com valores por tenant) ao lado da taxonomia existente, sem
+substituí-la. A ADR-0008 permanece válida como está até que uma nova ADR a revise.
+
+Duas perguntas precisam de resposta antes de escrever schema:
+
+1. Grupo, Tipo e Modelo são sempre esses três eixos, ou variam por linha de produto? Se amanhã entra
+   "acabamento" ou "tratamento térmico", a modelagem muda.
+2. `Medida` é atributo de classificação ou dimensão numérica? Se entra em cálculo de peso, é
+   geometria e precisa ser número com unidade, não o texto `12"`.
+
+As telas legadas de **Grupos**, **Tipos de Produtos** e **Modelos** ainda não foram analisadas e
+dizem mais sobre a estrutura do que o cadastro de produto que as referencia.
+
+### A emissão de NF-e entra no escopo, mas não agora
+
+O proprietário confirmou que o ERP **vai emitir NF-e no futuro**; o `phase-8` mantém emissão fora do
+escopo atual e isso continua correto. A consequência prática está na ADR-0009: enquanto a emissão
+não for requisito real com regras confirmadas pela contabilidade, não se constrói motor fiscal.
+
+O prazo de 4 de janeiro de 2027 para IBS/CBS no Simples Nacional vale para **emissão**. Enquanto a
+emissão continuar no sistema legado, o prazo não é deste projeto — confirme com o proprietário se o
+legado estará adequado antes de tratar isso como urgência.
+
+### O que não replicar do sistema legado
+
+O legado guarda como coluna o que deveria ser derivado ou versionado. Não repita:
+
+- `Estoque Atual`, `Custo Médio` e `Custo Reposição`: derivados de movimentos imutáveis;
+- `Data Última Entrada` e `Data Última Saída`: derivadas do histórico;
+- `Detalhes` ("1020 FORJADO REDONDO 12\""): concatenação das facetas gravada como texto; deve ser
+  gerada na exibição;
+- `Referência` (83010101111): código inteligente que embute grupo, tipo, modelo e medida; quebra
+  quando a classificação muda. O SKU permanece opaco;
+- `Preço` único no produto: preço real exige tabela com vigência.
+
 ## Próximo passo recomendado
 
 As telas de listagem de parceiros (`/partners`) e produtos (`/products`) já estão publicadas,
