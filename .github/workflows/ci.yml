@@ -13,6 +13,61 @@ permissions:
   contents: read
 
 jobs:
+  commits:
+    name: Validate commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version-file: .nvmrc
+
+      - name: Install commitlint
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Validate PR title and commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            printf '%s\n' "$PR_TITLE" | pnpm commitlint
+          fi
+
+          if git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            pnpm commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+          else
+            pnpm commitlint --last --verbose
+          fi
+
+  secrets:
+    name: Scan secrets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
   scope:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -134,19 +189,21 @@ jobs:
 
   verify:
     name: Validate workspace
-    needs: [scope, documentation, full]
+    needs: [commits, secrets, scope, documentation, full]
     if: always()
     runs-on: ubuntu-latest
 
     steps:
       - name: Check selected validation
         env:
+          COMMITS_RESULT: ${{ needs.commits.result }}
           DOCUMENTATION_RESULT: ${{ needs.documentation.result }}
           FULL_REQUIRED: ${{ needs.scope.outputs.full }}
           FULL_RESULT: ${{ needs.full.result }}
+          SECRETS_RESULT: ${{ needs.secrets.result }}
           SCOPE_RESULT: ${{ needs.scope.result }}
         run: |
-          if [ "$SCOPE_RESULT" != "success" ]; then
+          if [ "$COMMITS_RESULT" != "success" ] || [ "$SECRETS_RESULT" != "success" ] || [ "$SCOPE_RESULT" != "success" ]; then
             exit 1
           fi
 
