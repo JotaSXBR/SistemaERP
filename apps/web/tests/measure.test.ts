@@ -98,7 +98,36 @@ describe("formatInches", () => {
     expect(formatInches("31,75")).toBe('1 1/4"');
     expect(formatInches("38,10")).toBe('1 1/2"');
     expect(formatInches("50,80")).toBe('2"');
-    expect(formatInches("6000")).toBe('236 7/32"');
+  });
+
+  /**
+   * A tabela descreve a parte fracionária, e ela se repete a cada polegada. Estes casos cobrem a
+   * faixa que o dia a dia usa de verdade — barras e chapas de metros — e não só as primeiras
+   * polegadas.
+   */
+  it.each([
+    ["63,5", '2 1/2"'],
+    ["85,725", '3 3/8"'],
+    ["125,41", '4 15/16"'],
+    ["152,4", '6"'],
+    ["304,8", '12"'],
+    ["1000", '39 3/8"'],
+    ["1200", '47 1/4"'],
+    ["2540", '100"'],
+    ["3000", '118 1/8"'],
+    ["6000", '236 7/32"'],
+  ])("keeps the same rule far above one inch: %s mm is %s", (millimeters, expected) => {
+    expect(formatInches(millimeters)).toBe(expected);
+  });
+
+  it("applies every fraction of the table to a whole inch other than the first", () => {
+    // A mesma tabela, deslocada de 3": se a regra valesse só abaixo de 1", isto quebraria.
+    const threeInches = 76.2;
+    for (const [millimeters, fraction] of OFFICIAL_TABLE) {
+      const shifted = (threeInches + Number(millimeters.replace(",", "."))).toFixed(4);
+      const expected = fraction === '1"' ? '4"' : `3 ${fraction}`;
+      expect(formatInches(shifted)).toBe(expected);
+    }
   });
 
   it("shows anything below 1/32 inch as zero", () => {

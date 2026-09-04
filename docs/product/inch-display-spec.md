@@ -43,19 +43,28 @@ que decidiu o milímetro como unidade canônica e a polegada como apresentação
 | 15/32" | 11,91 | 31/32" | 24,61 |
 | 1/2"   | 12,7  | 1"     | 25,4  |
 
+**A tabela descreve a parte fracionária de qualquer polegada, não apenas a primeira.** Ela vale de
+0 a 1", e se repete a cada polegada inteira daí para cima: 3,18 mm é `1/8"`, e 79,38 mm — três
+polegadas a mais — é `3 1/8"`. Não há limite superior; 6000 mm é `236 7/32"`.
+
 A tabela é a série de trigésimos-avos de polegada, reduzida. Por isso arredondar para o múltiplo de
-1/32″ mais próximo seleciona a mesma linha que comparar a tabela item a item — é assim que
-`formatInches` está implementada, e é o que a suíte de testes verifica linha por linha.
+1/32" mais próximo seleciona a mesma linha que comparar a tabela item a item — é assim que
+`formatInches` está implementada, e é o que a suíte de testes verifica linha por linha, inclusive
+com a tabela inteira deslocada para uma polegada diferente da primeira.
 
 ## Regras de conversão
 
 - **Seleção**: a fração cujo valor de referência em milímetro tenha a menor diferença absoluta.
 - **Desempate**: distância idêntica entre duas frações consecutivas resolve pela **fração maior**.
 - **Abaixo de 1/32"** (menos de 0,79 mm): exibir `0"`.
-- **Acima de 1"**: separar parte inteira da fracionária e exibir `[inteiro] [fração]"`.
+- **Acima de 1"**: separar parte inteira da fracionária e exibir `[inteiro] [fração]"`. A regra vale
+  para qualquer valor, sem teto — a fração some quando a parte fracionária é zero.
   - 31,75 mm → `1 1/4"`
   - 38,10 mm → `1 1/2"`
   - 50,80 mm → `2"`
+  - 304,80 mm → `12"`
+  - 1000 mm → `39 3/8"`
+  - 6000 mm → `236 7/32"`
 
 ## Formato de exibição
 
