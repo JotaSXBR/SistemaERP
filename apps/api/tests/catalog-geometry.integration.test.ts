@@ -169,7 +169,7 @@ describe("catalog product geometry", () => {
 
     expect(updated.statusCode).toBe(200);
     const geometry = updated.json<{ product: ProductDetailResponse["product"] }>().product.geometry;
-    // A coluna é numeric(24, 10), então a escala volta completa; o número é o mesmo.
+    // Comparação numérica: o que importa é o valor, não a forma decimal em que ele volta.
     expect(Number(geometry.thicknessMm)).toBe(3.18);
     expect(Number(geometry.widthMm)).toBe(1200);
     expect(Number(geometry.lengthMm)).toBe(6000);

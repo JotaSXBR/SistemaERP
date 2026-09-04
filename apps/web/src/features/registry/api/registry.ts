@@ -1,4 +1,5 @@
 import {
+  attributesControllerListDefinitions,
   catalogControllerCreateProduct,
   catalogControllerFindProductById,
   catalogControllerListProducts,
@@ -10,8 +11,11 @@ import {
   type CreateProductRequestDto,
   type PartnerDto,
   type PartnerListResponseDto,
+  type ProductAttributeAssignmentDto,
+  type ProductAttributeDefinitionDto,
   type ProductDetailDto,
   type ProductDto,
+  type ProductGeometryUpdateDto,
   type ProductListResponseDto,
 } from "@sistema-erp/contracts";
 
@@ -113,9 +117,28 @@ export async function getProductDetail(id: string): Promise<ProductDetailDto> {
   return resultOrThrow(data, response?.status).product;
 }
 
+/**
+ * Só os eixos ativos entram no formulário: um eixo desativado continua válido nos produtos que já
+ * o usam, mas não deve ser oferecido para novas classificações.
+ */
+export async function listAttributeDefinitions(): Promise<ProductAttributeDefinitionDto[]> {
+  const { data, response } = await attributesControllerListDefinitions({
+    client: apiClient,
+    query: { active: true },
+  });
+
+  return resultOrThrow(data, response?.status).items;
+}
+
 export async function updateProduct(
   id: string,
-  input: { active?: boolean; shortDescription?: string; technicalDescription?: string },
+  input: {
+    active?: boolean;
+    attributes?: ProductAttributeAssignmentDto[];
+    geometry?: ProductGeometryUpdateDto;
+    shortDescription?: string;
+    technicalDescription?: string;
+  },
 ): Promise<ProductDetailDto> {
   const { data, response } = await catalogControllerUpdateProduct({
     body: input,
