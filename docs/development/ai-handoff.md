@@ -467,6 +467,27 @@ geometria — cadastrar e depois classificar/medir exige um `PATCH` —, e a int
 expõe nenhum dos dois. A conversão polegada↔milímetro é apresentação e mora na interface, que
 ainda não a tem.
 
+## Padrão de SKU — decisão pendente
+
+O SKU é hoje um código livre: a API só exige `CODE_PATTERN` (letras, dígitos, `-._/`, até 120
+caracteres), normaliza para maiúsculas e garante unicidade por organização. Não há padrão de
+formação, e o proprietário decidiu que vai haver um.
+
+**Insumo a caminho**: o proprietário mantém planilhas no Google Sheets onde vinha levantando
+manualmente os produtos que vende, com fórmulas que montam códigos. Ele vai disponibilizar o
+download para que as fórmulas sejam examinadas e o que for aproveitável entre no padrão.
+
+Enquanto isso não chega, **não invente um padrão de SKU** nem acrescente validação de formato — a
+planilha é a evidência de como o negócio já nomeia as coisas, e decidir antes de vê-la é decidir no
+escuro. Vale notar a tensão já registrada neste documento: o legado usa uma `Referência` inteligente
+(83010101111) que embute grupo, tipo, modelo e medida e **quebra quando a classificação muda**. Um
+padrão novo precisa dizer explicitamente se o SKU carrega significado ou permanece opaco — e a
+ADR-0010 já deu ao catálogo os mecanismos (facetas e geometria) para que o significado não precise
+morar dentro do código.
+
+Quando as planilhas chegarem, o recorte é: ler as fórmulas, propor o padrão em ADR própria e só
+então mexer em validação.
+
 Os próximos recortes são as apresentações com conversão variável, a configuração S3 por
 organização e as validações fiscais restantes.
 
