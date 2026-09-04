@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { REGISTRY_PAGE_SIZE } from "../api/registry.js";
 
 type RegistryListShellProps = {
+  /** Ação primária da tela (por exemplo, criar registro). Ausente para quem não tem permissão. */
+  actions?: ReactNode;
   children: ReactNode;
   description: string;
   emptyMessage: string;
@@ -35,6 +37,7 @@ function PageSummary({ offset, total }: { offset: number; total: number }) {
 }
 
 export function RegistryListShell({
+  actions,
   children,
   description,
   emptyMessage,
@@ -66,6 +69,7 @@ export function RegistryListShell({
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-[-0.035em] text-ink-950">{title}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-700">{description}</p>
+          {actions ? <div className="mt-5 flex flex-wrap gap-3">{actions}</div> : null}
         </div>
 
         <div className="w-full max-w-md">

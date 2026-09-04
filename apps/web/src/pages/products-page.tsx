@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { useSession } from "../features/authentication/session-context.js";
 import { listCatalogProducts } from "../features/registry/api/registry.js";
+import { ProductCreateForm } from "../features/registry/components/product-create-form.js";
 import { ProductEditForm } from "../features/registry/components/product-edit-form.js";
 import { RegistryListShell } from "../features/registry/components/registry-list-shell.js";
 import { SideDrawer } from "../shared/components/side-drawer.js";
@@ -13,6 +14,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function ProductsPage() {
   const { identity } = useSession();
   const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string>();
   const [search, setSearch] = useState("");
   const [offset, setOffset] = useState(0);
@@ -41,9 +43,25 @@ export function ProductsPage() {
     await queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
   }
 
+  async function refreshAfterCreate(): Promise<void> {
+    setCreating(false);
+    await queryClient.invalidateQueries({ queryKey: ["catalog", "products"] });
+  }
+
   return (
     <>
       <RegistryListShell
+        actions={
+          canWrite ? (
+            <button
+              className="min-h-11 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white transition hover:bg-brand-700"
+              onClick={() => setCreating(true)}
+              type="button"
+            >
+              Novo produto
+            </button>
+          ) : undefined
+        }
         description="Produtos internos desta empresa. A busca cobre o SKU e a descrição curta."
         emptyMessage={
           hasFilter
@@ -118,6 +136,12 @@ export function ProductsPage() {
           </tbody>
         </table>
       </RegistryListShell>
+
+      {creating ? (
+        <SideDrawer onClose={() => setCreating(false)} title="Novo produto">
+          <ProductCreateForm onCreated={refreshAfterCreate} />
+        </SideDrawer>
+      ) : null}
 
       {editingId ? (
         <SideDrawer onClose={() => setEditingId(undefined)} title="Editar produto">
