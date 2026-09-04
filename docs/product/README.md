@@ -9,6 +9,14 @@ modular e produzir fatos confiáveis para as fases seguintes.
 Escopos tributários devem ser confirmados com a contabilidade antes de entrar em produção. A
 documentação do produto não substitui interpretação fiscal ou jurídica.
 
+## Contexto do negócio
+
+O ERP atende uma distribuidora de aço e metais que corta material na medida solicitada pelo
+cliente. Como o negócio funciona — classificação por eixos que variam por linha de produto, preço
+derivado de peso teórico, ausência de controle de estoque hoje — está em
+[Domínio: distribuição de aço e metais](steel-distribution-domain.md), levantado com o
+proprietário e usado como base das decisões de modelagem.
+
 ## Sequência
 
 | Fase | Resultado esperado                                        | Estado     | Referência                                                     |

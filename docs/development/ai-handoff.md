@@ -1,6 +1,6 @@
 # Handoff do projeto para agentes de IA
 
-- Atualizado em: 2026-09-03
+- Atualizado em: 2026-09-04
 - Branch principal: `main`
 - Objetivo: permitir que outro agente retome o desenvolvimento sem reconstruir o contexto por
   tentativa e erro.
@@ -403,50 +403,32 @@ Para 8.3, somente depois das validações anteriores:
 - movimentos imutáveis e saldo derivado;
 - certificados de qualidade e limitações explícitas de rastreabilidade.
 
-## Questões em aberto com o proprietário
+## Questões respondidas pelo proprietário
 
-Estas decisões dependem do negócio e ainda não têm resposta. Não as resolva por conta própria.
+As perguntas que travavam a modelagem foram respondidas em 2026-09-04 (18 de 18). O levantamento
+completo está em [`docs/product/steel-distribution-domain.md`](../product/steel-distribution-domain.md);
+as decisões que ele destrava estão na
+[ADR-0010](../decisions/ADR-0010-product-attributes-and-geometry.md).
 
-### A classificação real usa facetas, não hierarquia
+O essencial para quem retoma o trabalho:
 
-O sistema legado classifica produtos por três eixos **ortogonais**, cada um com cadastro próprio:
-
-| Campo legado | Exemplo        | O que é                    |
-| ------------ | -------------- | -------------------------- |
-| Grupo        | "1020 FORJADO" | material, liga ou processo |
-| Tipo         | "VERGALHAO"    | tipo de produto            |
-| Modelo       | "REDONDO"      | formato ou perfil          |
-| Medida       | 12"            | dimensão                   |
-
-Isso **tensiona a ADR-0008**, que modelou classificação como taxonomia hierárquica. Não são níveis:
-um vergalhão pode ser 1020 ou 1045, e um 1020 pode ser vergalhão ou chapa. Numa árvore seria preciso
-escolher uma ordem de aninhamento e repetir a subárvore em cada ramo.
-
-A hierarquia continua útil para família e grupo comercial, e o `phase-8` de fato separa "família,
-grupo e marca" de "tipo de material, liga ou qualidade... e formato ou perfil" — são dois mecanismos
-distintos, e só o primeiro está implementado. A proposta em avaliação é acrescentar **facetas
-tipadas** (uma dimensão por eixo, com valores por tenant) ao lado da taxonomia existente, sem
-substituí-la. A ADR-0008 permanece válida como está até que uma nova ADR a revise.
-
-Duas perguntas precisam de resposta antes de escrever schema:
-
-1. Grupo, Tipo e Modelo são sempre esses três eixos, ou variam por linha de produto? Se amanhã entra
-   "acabamento" ou "tratamento térmico", a modelagem muda.
-2. `Medida` é atributo de classificação ou dimensão numérica? Se entra em cálculo de peso, é
-   geometria e precisa ser número com unidade, não o texto `12"`.
-
-As telas legadas de **Grupos**, **Tipos de Produtos** e **Modelos** ainda não foram analisadas e
-dizem mais sobre a estrutura do que o cadastro de produto que as referencia.
-
-### A emissão de NF-e entra no escopo, mas não agora
-
-O proprietário confirmou que o ERP **vai emitir NF-e no futuro**; o `phase-8` mantém emissão fora do
-escopo atual e isso continua correto. A consequência prática está na ADR-0009: enquanto a emissão
-não for requisito real com regras confirmadas pela contabilidade, não se constrói motor fiscal.
-
-O prazo de 4 de janeiro de 2027 para IBS/CBS no Simples Nacional vale para **emissão**. Enquanto a
-emissão continuar no sistema legado, o prazo não é deste projeto — confirme com o proprietário se o
-legado estará adequado antes de tratar isso como urgência.
+- **Os eixos de classificação variam por linha de produto.** Aço carbono tem liga e processo,
+  alumínio tem liga e têmpera, tubo tem schedule, bronze tem composição. Não são três eixos fixos,
+  e usuários com permissão devem poder criar eixos novos sem alteração de sistema. A ADR-0010
+  resolve isso com facetas tipadas **ao lado** da taxonomia da ADR-0008, que permanece válida.
+- **A medida entra em cálculo.** O preço sai de `comprimento × peso/m × preço/kg`. Medida é número
+  com unidade, persistido em milímetro; polegada é apresentação convertida na interface. Peso
+  teórico é informado no cadastro, não derivado por fórmula.
+- **Rastreabilidade por lote está fora de escopo** por decisão do proprietário. O estoque pode ser
+  saldo derivado de movimentos imutáveis sem identidade de lote. Certificados de qualidade também
+  são futuro.
+- **O prazo de 4 de janeiro de 2027 não é urgência deste projeto.** O legado já emite com IBS e CBS
+  e já resolveu o cBenef com a equivalência NCM fornecida pela contabilidade. A emissão no sistema
+  novo não tem prazo e será feita por **API de terceiros**, com prestador ainda não escolhido.
+- **Não existe controle de estoque hoje**, apenas um balanço anual em peso. Não há processo legado
+  a replicar; o desenho será do zero e o proprietário pediu apoio nele.
+- **~5.800 itens do catálogo legado** precisarão ser importados e reorganizados. A importação é
+  recorte próprio e não deve contaminar o cadastro manual.
 
 ### O que não replicar do sistema legado
 
@@ -462,14 +444,20 @@ O legado guarda como coluna o que deveria ser derivado ou versionado. Não repit
 
 ## Próximo passo recomendado
 
-As telas de listagem de parceiros (`/partners`) e produtos (`/products`) já estão publicadas,
-consumindo `partnersControllerList` e `catalogControllerListProducts` do cliente gerado, com busca
-no servidor, filtro de papel, paginação e estados de carregamento, erro e vazio. O próximo recorte é
-as telas de criação desses cadastros. A leitura e a edição já estão completas nas duas pontas:
-`/partners` e `/products` listam e editam via `PATCH /api/v1/partners/{id}` e
-`PATCH /api/v1/catalog/products/{id}`, em drawers restritos a `OWNER` e `ADMIN`. Depois vêm as
-apresentações com conversão variável, a configuração S3 por organização e as validações fiscais
-restantes.
+As telas de cadastro estão completas nas duas pontas: `/partners` e `/products` listam, editam e
+criam, com busca no servidor, filtros, paginação e estados de carregamento, erro e vazio. Escrita
+em drawers restritos a `OWNER` e `ADMIN`, sempre com `Idempotency-Key`.
+
+O próximo recorte é a **primeira metade da ADR-0010: facetas tipadas**. `ProductAttributeDefinition`,
+`ProductAttributeOption` e a junção com o produto, seguindo o padrão já estabelecido por
+`ProductCategory` e `ProductBrand` — `code` imutável por organização, `PATCH` de `name` e `active`,
+`onDelete: Restrict`, escrita restrita a `OWNER` e `ADMIN`.
+
+A geometria (segunda metade da ADR-0010) vem depois e é independente: são colunas `numeric` nulas
+no produto, com milímetro como unidade canônica. Depois vêm as apresentações com conversão
+variável, a configuração S3 por organização e as validações fiscais restantes.
+
+A importação dos ~5.800 itens do legado é recorte próprio e depende das duas metades da ADR-0010.
 
 Os dois advisories transitivos do Prisma (`deepmerge-ts` e `mysql2`) foram resolvidos por `overrides`
 no `pnpm-workspace.yaml`. Cada entrada tem comentário com o advisory e deve ser removida quando o
