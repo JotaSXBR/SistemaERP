@@ -245,6 +245,19 @@ model Product {
   baseUnitId           String                @map("base_unit_id") @db.Uuid
   categoryId           String?               @map("category_id") @db.Uuid
   brandId              String?               @map("brand_id") @db.Uuid
+  // Geometria da ADR-0010: colunas proprias porque os valores entram em calculo de preco. Nulo
+  // significa "nao se aplica a este produto" e nunca zero, que seria uma medida real. Dimensoes
+  // sempre em milimetro, a unidade canonica; polegada e apresentacao, convertida na interface.
+  thicknessMm          Decimal?              @map("thickness_mm") @db.Decimal(24, 10)
+  widthMm              Decimal?              @map("width_mm") @db.Decimal(24, 10)
+  heightMm             Decimal?              @map("height_mm") @db.Decimal(24, 10)
+  outerDiameterMm      Decimal?              @map("outer_diameter_mm") @db.Decimal(24, 10)
+  innerDiameterMm      Decimal?              @map("inner_diameter_mm") @db.Decimal(24, 10)
+  lengthMm             Decimal?              @map("length_mm") @db.Decimal(24, 10)
+  // Peso teorico informado pelas tabelas do fornecedor. O sistema nao deriva peso de densidade e
+  // geometria enquanto a formula nao for validada por engenharia (ADR-0010).
+  weightPerMeterKg     Decimal?              @map("weight_per_meter_kg") @db.Decimal(24, 10)
+  weightPerSquareMeterKg Decimal?            @map("weight_per_square_meter_kg") @db.Decimal(24, 10)
   active               Boolean               @default(true)
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime              @updatedAt @map("updated_at") @db.Timestamptz(3)

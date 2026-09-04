@@ -293,6 +293,41 @@ export type ProductAttributeDto = {
     optionName: string;
 };
 
+export type ProductGeometryDto = {
+    /**
+     * Altura em milímetros
+     */
+    heightMm?: string;
+    /**
+     * Diâmetro interno em milímetros
+     */
+    innerDiameterMm?: string;
+    /**
+     * Comprimento em milímetros
+     */
+    lengthMm?: string;
+    /**
+     * Diâmetro externo em milímetros
+     */
+    outerDiameterMm?: string;
+    /**
+     * Espessura em milímetros
+     */
+    thicknessMm?: string;
+    /**
+     * Peso teórico por metro, em quilogramas
+     */
+    weightPerMeterKg?: string;
+    /**
+     * Peso teórico por metro quadrado, em quilogramas
+     */
+    weightPerSquareMeterKg?: string;
+    /**
+     * Largura em milímetros
+     */
+    widthMm?: string;
+};
+
 export type ProductPresentationDto = {
     code: string;
     conversionMode: 'FIXED' | 'VARIABLE';
@@ -314,6 +349,10 @@ export type ProductDetailDto = {
     baseUnit: UnitOfMeasureDto;
     brand?: ProductBrandRefDto;
     category?: ProductCategoryRefDto;
+    /**
+     * Medidas do produto; medida ausente não se aplica ao produto
+     */
+    geometry: ProductGeometryDto;
     id: string;
     presentations: Array<ProductPresentationDto>;
     shortDescription: string;
@@ -330,6 +369,17 @@ export type ProductAttributeAssignmentDto = {
     optionId: string;
 };
 
+export type ProductGeometryUpdateDto = {
+    heightMm?: string | null;
+    innerDiameterMm?: string | null;
+    lengthMm?: string | null;
+    outerDiameterMm?: string | null;
+    thicknessMm?: string | null;
+    weightPerMeterKg?: string | null;
+    weightPerSquareMeterKg?: string | null;
+    widthMm?: string | null;
+};
+
 export type UpdateProductRequestDto = {
     active?: boolean;
     /**
@@ -344,6 +394,10 @@ export type UpdateProductRequestDto = {
      * Nulo remove a categoria do produto
      */
     categoryId?: string | null;
+    /**
+     * Medidas informadas são gravadas, nulo limpa a medida e ausente não altera
+     */
+    geometry?: ProductGeometryUpdateDto;
     shortDescription?: string;
     /**
      * Texto vazio remove a descrição técnica
