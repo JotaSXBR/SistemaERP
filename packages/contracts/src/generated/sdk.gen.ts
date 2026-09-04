@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerFindProductByIdData, CatalogControllerFindProductByIdErrors, CatalogControllerFindProductByIdResponses, CatalogControllerListProductsData, CatalogControllerListProductsErrors, CatalogControllerListProductsResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, CatalogControllerUpdateProductData, CatalogControllerUpdateProductErrors, CatalogControllerUpdateProductResponses, ClassificationControllerCreateBrandData, ClassificationControllerCreateBrandErrors, ClassificationControllerCreateBrandResponses, ClassificationControllerCreateCategoryData, ClassificationControllerCreateCategoryErrors, ClassificationControllerCreateCategoryResponses, ClassificationControllerListBrandsData, ClassificationControllerListBrandsErrors, ClassificationControllerListBrandsResponses, ClassificationControllerListCategoriesData, ClassificationControllerListCategoriesErrors, ClassificationControllerListCategoriesResponses, ClassificationControllerUpdateBrandData, ClassificationControllerUpdateBrandErrors, ClassificationControllerUpdateBrandResponses, ClassificationControllerUpdateCategoryData, ClassificationControllerUpdateCategoryErrors, ClassificationControllerUpdateCategoryResponses, FiscalIntakeControllerFindByIdData, FiscalIntakeControllerFindByIdErrors, FiscalIntakeControllerFindByIdResponses, FiscalIntakeControllerIngestData, FiscalIntakeControllerIngestErrors, FiscalIntakeControllerIngestResponses, FiscalIntakeControllerListData, FiscalIntakeControllerListErrors, FiscalIntakeControllerListResponses, FiscalIntakeControllerPreviewData, FiscalIntakeControllerPreviewErrors, FiscalIntakeControllerPreviewResponses, FiscalIntakeControllerResolveData, FiscalIntakeControllerResolveErrors, FiscalIntakeControllerResolveResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, OrganizationsControllerSetFiscalIdentityData, OrganizationsControllerSetFiscalIdentityErrors, OrganizationsControllerSetFiscalIdentityResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses, PartnersControllerFindByIdData, PartnersControllerFindByIdErrors, PartnersControllerFindByIdResponses, PartnersControllerListData, PartnersControllerListErrors, PartnersControllerListResponses, PartnersControllerUpdateData, PartnersControllerUpdateErrors, PartnersControllerUpdateResponses } from './types.gen.js';
+import type { AttributesControllerCreateDefinitionData, AttributesControllerCreateDefinitionErrors, AttributesControllerCreateDefinitionResponses, AttributesControllerCreateOptionData, AttributesControllerCreateOptionErrors, AttributesControllerCreateOptionResponses, AttributesControllerListDefinitionsData, AttributesControllerListDefinitionsErrors, AttributesControllerListDefinitionsResponses, AttributesControllerUpdateDefinitionData, AttributesControllerUpdateDefinitionErrors, AttributesControllerUpdateDefinitionResponses, AttributesControllerUpdateOptionData, AttributesControllerUpdateOptionErrors, AttributesControllerUpdateOptionResponses, AuditControllerListData, AuditControllerListErrors, AuditControllerListResponses, AuthControllerCreateSessionData, AuthControllerCreateSessionErrors, AuthControllerCreateSessionResponses, AuthControllerCurrentSessionData, AuthControllerCurrentSessionErrors, AuthControllerCurrentSessionResponses, AuthControllerRevokeSessionData, AuthControllerRevokeSessionErrors, AuthControllerRevokeSessionResponses, CatalogControllerCreateProductData, CatalogControllerCreateProductErrors, CatalogControllerCreateProductResponses, CatalogControllerCreateSupplierMappingData, CatalogControllerCreateSupplierMappingErrors, CatalogControllerCreateSupplierMappingResponses, CatalogControllerFindProductByIdData, CatalogControllerFindProductByIdErrors, CatalogControllerFindProductByIdResponses, CatalogControllerListProductsData, CatalogControllerListProductsErrors, CatalogControllerListProductsResponses, CatalogControllerResolveSupplierProductData, CatalogControllerResolveSupplierProductErrors, CatalogControllerResolveSupplierProductResponses, CatalogControllerUpdateProductData, CatalogControllerUpdateProductErrors, CatalogControllerUpdateProductResponses, ClassificationControllerCreateBrandData, ClassificationControllerCreateBrandErrors, ClassificationControllerCreateBrandResponses, ClassificationControllerCreateCategoryData, ClassificationControllerCreateCategoryErrors, ClassificationControllerCreateCategoryResponses, ClassificationControllerListBrandsData, ClassificationControllerListBrandsErrors, ClassificationControllerListBrandsResponses, ClassificationControllerListCategoriesData, ClassificationControllerListCategoriesErrors, ClassificationControllerListCategoriesResponses, ClassificationControllerUpdateBrandData, ClassificationControllerUpdateBrandErrors, ClassificationControllerUpdateBrandResponses, ClassificationControllerUpdateCategoryData, ClassificationControllerUpdateCategoryErrors, ClassificationControllerUpdateCategoryResponses, FiscalIntakeControllerFindByIdData, FiscalIntakeControllerFindByIdErrors, FiscalIntakeControllerFindByIdResponses, FiscalIntakeControllerIngestData, FiscalIntakeControllerIngestErrors, FiscalIntakeControllerIngestResponses, FiscalIntakeControllerListData, FiscalIntakeControllerListErrors, FiscalIntakeControllerListResponses, FiscalIntakeControllerPreviewData, FiscalIntakeControllerPreviewErrors, FiscalIntakeControllerPreviewResponses, FiscalIntakeControllerResolveData, FiscalIntakeControllerResolveErrors, FiscalIntakeControllerResolveResponses, HealthControllerLivenessData, HealthControllerLivenessResponses, HealthControllerReadinessData, HealthControllerReadinessErrors, HealthControllerReadinessResponses, OrganizationsControllerAddMembershipData, OrganizationsControllerAddMembershipErrors, OrganizationsControllerAddMembershipResponses, OrganizationsControllerGetCurrentData, OrganizationsControllerGetCurrentErrors, OrganizationsControllerGetCurrentResponses, OrganizationsControllerListMembershipsData, OrganizationsControllerListMembershipsErrors, OrganizationsControllerListMembershipsResponses, OrganizationsControllerSetFiscalIdentityData, OrganizationsControllerSetFiscalIdentityErrors, OrganizationsControllerSetFiscalIdentityResponses, PartnersControllerCreateData, PartnersControllerCreateErrors, PartnersControllerCreateResponses, PartnersControllerFindByIdData, PartnersControllerFindByIdErrors, PartnersControllerFindByIdResponses, PartnersControllerListData, PartnersControllerListErrors, PartnersControllerListResponses, PartnersControllerUpdateData, PartnersControllerUpdateErrors, PartnersControllerUpdateResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -102,6 +102,52 @@ export const partnersControllerFindById = <ThrowOnError extends boolean = false>
 export const partnersControllerUpdate = <ThrowOnError extends boolean = false>(options: Options<PartnersControllerUpdateData, ThrowOnError>): RequestResult<PartnersControllerUpdateResponses, PartnersControllerUpdateErrors, ThrowOnError> => (options.client ?? client).patch<PartnersControllerUpdateResponses, PartnersControllerUpdateErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/partners/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const attributesControllerListDefinitions = <ThrowOnError extends boolean = false>(options?: Options<AttributesControllerListDefinitionsData, ThrowOnError>): RequestResult<AttributesControllerListDefinitionsResponses, AttributesControllerListDefinitionsErrors, ThrowOnError> => (options?.client ?? client).get<AttributesControllerListDefinitionsResponses, AttributesControllerListDefinitionsErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/attribute-definitions',
+    ...options
+});
+
+export const attributesControllerCreateDefinition = <ThrowOnError extends boolean = false>(options: Options<AttributesControllerCreateDefinitionData, ThrowOnError>): RequestResult<AttributesControllerCreateDefinitionResponses, AttributesControllerCreateDefinitionErrors, ThrowOnError> => (options.client ?? client).post<AttributesControllerCreateDefinitionResponses, AttributesControllerCreateDefinitionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/attribute-definitions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const attributesControllerUpdateDefinition = <ThrowOnError extends boolean = false>(options: Options<AttributesControllerUpdateDefinitionData, ThrowOnError>): RequestResult<AttributesControllerUpdateDefinitionResponses, AttributesControllerUpdateDefinitionErrors, ThrowOnError> => (options.client ?? client).patch<AttributesControllerUpdateDefinitionResponses, AttributesControllerUpdateDefinitionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/attribute-definitions/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const attributesControllerCreateOption = <ThrowOnError extends boolean = false>(options: Options<AttributesControllerCreateOptionData, ThrowOnError>): RequestResult<AttributesControllerCreateOptionResponses, AttributesControllerCreateOptionErrors, ThrowOnError> => (options.client ?? client).post<AttributesControllerCreateOptionResponses, AttributesControllerCreateOptionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/attribute-options',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const attributesControllerUpdateOption = <ThrowOnError extends boolean = false>(options: Options<AttributesControllerUpdateOptionData, ThrowOnError>): RequestResult<AttributesControllerUpdateOptionResponses, AttributesControllerUpdateOptionErrors, ThrowOnError> => (options.client ?? client).patch<AttributesControllerUpdateOptionResponses, AttributesControllerUpdateOptionErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/catalog/attribute-options/{id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
