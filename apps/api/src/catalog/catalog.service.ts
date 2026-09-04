@@ -35,6 +35,12 @@ type ListProductsInput = {
 
 type UpdateProductInput = {
   active?: boolean;
+  /**
+   * Conjunto completo de facetas do produto: o que vier substitui o que existia, e um array vazio
+   * remove todas. Ausente não mexe nas facetas — a semântica de conjunto evita um PATCH que
+   * precisasse dizer separadamente o que adicionar e o que remover.
+   */
+  attributes?: Array<{ definitionId: string; optionId: string }>;
   brandId?: string | null;
   categoryId?: string | null;
   shortDescription?: string;
@@ -62,6 +68,10 @@ type ProductWithDetail = Prisma.ProductGetPayload<{
 }>;
 
 const PRODUCT_DETAIL_INCLUDE = {
+  attributes: {
+    include: { definition: true, option: true },
+    orderBy: [{ definitionId: "asc" }],
+  },
   baseUnit: true,
   brand: true,
   category: { include: { parent: { include: { parent: true } } } },
@@ -104,6 +114,14 @@ function categoryRef(category: PersistedCategoryNode | null): ProductCategoryRef
 function productDetailResponse(product: ProductWithDetail): ProductDetailDto {
   return {
     active: product.active,
+    attributes: product.attributes.map((assignment) => ({
+      definitionCode: assignment.definition.code,
+      definitionId: assignment.definitionId,
+      definitionName: assignment.definition.name,
+      optionCode: assignment.option.code,
+      optionId: assignment.optionId,
+      optionName: assignment.option.name,
+    })),
     baseUnit: unitResponse(product.baseUnit),
     ...(brandRef(product.brand) ? { brand: brandRef(product.brand)! } : {}),
     ...(categoryRef(product.category) ? { category: categoryRef(product.category)! } : {}),
@@ -308,6 +326,7 @@ export class CatalogService {
     const normalizedInput = {
       id,
       ...(input.active === undefined ? {} : { active: input.active }),
+      ...(input.attributes === undefined ? {} : { attributes: input.attributes }),
       ...(input.brandId === undefined ? {} : { brandId: input.brandId }),
       ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
       ...(input.shortDescription === undefined
@@ -463,6 +482,10 @@ export class CatalogService {
       ...(input.categoryId ? { categoryId: input.categoryId } : {}),
     });
 
+    if (input.attributes) {
+      await this.replaceAttributes(transaction, context.organizationId, input.id, input.attributes);
+    }
+
     const product = await transaction.product.update({
       data: {
         ...(input.active === undefined ? {} : { active: input.active }),
@@ -509,6 +532,47 @@ export class CatalogService {
    * Categoria e marca precisam pertencer ao mesmo tenant. A FK composta ja impede o vinculo entre
    * organizacoes, mas checar aqui devolve 404 em vez de deixar o banco lancar erro de constraint.
    */
+  /**
+   * Substitui o conjunto de facetas do produto. As opções são conferidas uma a uma para devolver
+   * `404` em vez de deixar a FK composta estourar erro de constraint — ela continua sendo a
+   * garantia final de que a opção pertence ao eixo declarado.
+   */
+  private async replaceAttributes(
+    transaction: Prisma.TransactionClient,
+    organizationId: string,
+    productId: string,
+    attributes: Array<{ definitionId: string; optionId: string }>,
+  ): Promise<void> {
+    const seen = new Set<string>();
+    for (const attribute of attributes) {
+      if (seen.has(attribute.definitionId)) {
+        // Dois valores para o mesmo eixo: a unicidade do banco recusaria, mas o conflito é do
+        // pedido, não do estado, então responde 409 antes de tentar gravar.
+        throw new ConflictException();
+      }
+      seen.add(attribute.definitionId);
+
+      const option = await transaction.productAttributeOption.findUnique({
+        where: { id_organizationId: { id: attribute.optionId, organizationId } },
+      });
+      if (!option || option.definitionId !== attribute.definitionId) {
+        throw new NotFoundException();
+      }
+    }
+
+    await transaction.productAttribute.deleteMany({ where: { organizationId, productId } });
+    if (attributes.length > 0) {
+      await transaction.productAttribute.createMany({
+        data: attributes.map((attribute) => ({
+          definitionId: attribute.definitionId,
+          optionId: attribute.optionId,
+          organizationId,
+          productId,
+        })),
+      });
+    }
+  }
+
   private async assertClassificationExists(
     transaction: Prisma.TransactionClient,
     organizationId: string,

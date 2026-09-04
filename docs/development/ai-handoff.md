@@ -448,14 +448,16 @@ As telas de cadastro estão completas nas duas pontas: `/partners` e `/products`
 criam, com busca no servidor, filtros, paginação e estados de carregamento, erro e vazio. Escrita
 em drawers restritos a `OWNER` e `ADMIN`, sempre com `Idempotency-Key`.
 
-O próximo recorte é a **primeira metade da ADR-0010: facetas tipadas**. `ProductAttributeDefinition`,
-`ProductAttributeOption` e a junção com o produto, seguindo o padrão já estabelecido por
-`ProductCategory` e `ProductBrand` — `code` imutável por organização, `PATCH` de `name` e `active`,
-`onDelete: Restrict`, escrita restrita a `OWNER` e `ADMIN`.
+A **primeira metade da ADR-0010: facetas tipadas** está feita. `ProductAttributeDefinition`,
+`ProductAttributeOption` e `ProductAttributeValue` seguem o padrão de `ProductCategory` e
+`ProductBrand` — `code` imutável por organização, `PATCH` de `name` e `active`, `onDelete: Restrict`,
+escrita restrita a `OWNER` e `ADMIN`. As facetas são atribuídas ao produto no `PATCH` de produto e
+aparecem em `ProductDetailDto`. Cuidado com o histórico: esse recorte foi mergeado por engano na
+branch `docs/catalog-attributes` (PR #33) e só chegou a `main` pelo PR #34.
 
-A geometria (segunda metade da ADR-0010) vem depois e é independente: são colunas `numeric` nulas
-no produto, com milímetro como unidade canônica. Depois vêm as apresentações com conversão
-variável, a configuração S3 por organização e as validações fiscais restantes.
+O próximo recorte é a **geometria (segunda metade da ADR-0010)**, independente das facetas: colunas
+`numeric` nulas no produto, com milímetro como unidade canônica. Depois vêm as apresentações com
+conversão variável, a configuração S3 por organização e as validações fiscais restantes.
 
 A importação dos ~5.800 itens do legado é recorte próprio e depende das duas metades da ADR-0010.
 

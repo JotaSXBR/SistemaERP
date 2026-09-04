@@ -81,6 +81,15 @@ Guardar as duas representações criaria a possibilidade de elas divergirem, e n
 verdade entre duas colunas que deveriam concordar. A conversão é exata e conhecida
 (1″ = 25,4 mm), então nada se perde ao derivá-la.
 
+A evidência decisiva vem da entrada fiscal: **o mesmo fornecedor alterna entre milímetro e polegada
+para o mesmo produto**, de nota para nota. Sem unidade canônica, a mesma barra entraria no catálogo
+como dois produtos diferentes conforme o XML que a trouxe. A unidade que vem no documento é
+snapshot do documento — já preservada em `commercialUnit` — e não a unidade do cadastro.
+
+Isso também vale para a criação de produto durante a ingestão (`ProductMappingForm`): a medida
+declarada no XML precisa ser normalizada para milímetro antes de virar cadastro, não copiada como
+veio.
+
 O mesmo vale para as escalas próprias do setor: "chapa 11" é um rótulo comercial de 3,18 mm, e
 pertence a uma faceta, enquanto 3,18 mm é o que vai na coluna de espessura.
 

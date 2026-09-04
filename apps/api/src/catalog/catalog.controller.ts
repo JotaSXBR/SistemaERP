@@ -54,6 +54,8 @@ import {
 import { CatalogService } from "./catalog.service.js";
 
 const CODE_PATTERN = /^[-A-Za-z0-9._/]{1,120}$/;
+/** Teto de facetas por produto: mais que isso indica erro de montagem do pedido. */
+const MAX_PRODUCT_ATTRIBUTES = 50;
 const TAX_ID_PATTERN = /^[-A-Za-z0-9./\s]{11,32}$/;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -112,6 +114,7 @@ function validateProductUpdate(body: UpdateProductRequestDto): UpdateProductRequ
     candidate.organizationId !== undefined ||
     candidate.sku !== undefined ||
     (body?.active === undefined &&
+      body?.attributes === undefined &&
       body?.brandId === undefined &&
       body?.categoryId === undefined &&
       body?.shortDescription === undefined &&
@@ -129,12 +132,31 @@ function validateProductUpdate(body: UpdateProductRequestDto): UpdateProductRequ
         body.shortDescription.trim().length === 0 ||
         body.shortDescription.trim().length > 240)) ||
     (body.technicalDescription !== undefined &&
-      (typeof body.technicalDescription !== "string" || body.technicalDescription.length > 4_000))
+      (typeof body.technicalDescription !== "string" ||
+        body.technicalDescription.length > 4_000)) ||
+    (body.attributes !== undefined && !isAttributeList(body.attributes))
   ) {
     throw new BadRequestException();
   }
 
   return body;
+}
+
+/** Confere apenas a forma; a existência da opção e sua coerência com o eixo ficam no serviço. */
+function isAttributeList(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.length <= MAX_PRODUCT_ATTRIBUTES &&
+    value.every(
+      (entry) =>
+        typeof entry === "object" &&
+        entry !== null &&
+        typeof (entry as { definitionId?: unknown }).definitionId === "string" &&
+        UUID_PATTERN.test((entry as { definitionId: string }).definitionId) &&
+        typeof (entry as { optionId?: unknown }).optionId === "string" &&
+        UUID_PATTERN.test((entry as { optionId: string }).optionId),
+    )
+  );
 }
 
 function validateMapping(
