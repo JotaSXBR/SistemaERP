@@ -473,9 +473,11 @@ O SKU é hoje um código livre: a API só exige `CODE_PATTERN` (letras, dígitos
 caracteres), normaliza para maiúsculas e garante unicidade por organização. Não há padrão de
 formação, e o proprietário decidiu que vai haver um.
 
-**Insumo a caminho**: o proprietário mantém planilhas no Google Sheets onde vinha levantando
-manualmente os produtos que vende, com fórmulas que montam códigos. Ele vai disponibilizar o
-download para que as fórmulas sejam examinadas e o que for aproveitável entre no padrão.
+**Insumo já analisado**: as quatro planilhas do proprietário foram lidas e o levantamento está em
+[`sku-legacy-analysis.md`](../product/sku-legacy-analysis.md) — 419 produtos, o padrão em uso
+(`MATERIAL-FORMA-TIPO-MEDIDA`), as seis divergências encontradas e as cinco perguntas que a ADR
+precisa responder. A análise também confirmou a fórmula de preço real do negócio e validou o
+mapeamento das colunas para as facetas e a geometria da ADR-0010.
 
 Enquanto isso não chega, **não invente um padrão de SKU** nem acrescente validação de formato — a
 planilha é a evidência de como o negócio já nomeia as coisas, e decidir antes de vê-la é decidir no
