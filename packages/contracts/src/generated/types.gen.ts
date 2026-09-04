@@ -420,9 +420,17 @@ export type CreateProductUnitRequestDto = {
 };
 
 export type CreateProductRequestDto = {
+    /**
+     * Facetas do produto já no cadastro, no máximo uma por eixo
+     */
+    attributes?: Array<ProductAttributeAssignmentDto>;
     baseUnit: CreateProductUnitRequestDto;
     brandId?: string;
     categoryId?: string;
+    /**
+     * Medidas do produto já no cadastro; medida ausente não se aplica
+     */
+    geometry?: ProductGeometryUpdateDto;
     shortDescription: string;
     sku: string;
     technicalDescription?: string;
@@ -430,8 +438,16 @@ export type CreateProductRequestDto = {
 
 export type ProductDto = {
     active: boolean;
+    /**
+     * Facetas técnicas do produto, no máximo uma por eixo
+     */
+    attributes: Array<ProductAttributeDto>;
     basePresentation: ProductPresentationDto;
     baseUnit: UnitOfMeasureDto;
+    /**
+     * Medidas do produto; medida ausente não se aplica ao produto
+     */
+    geometry: ProductGeometryDto;
     id: string;
     shortDescription: string;
     sku: string;

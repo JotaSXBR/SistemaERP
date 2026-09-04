@@ -3763,6 +3763,13 @@
       "CreateProductRequestDto": {
         "type": "object",
         "properties": {
+          "attributes": {
+            "description": "Facetas do produto já no cadastro, no máximo uma por eixo",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeAssignmentDto"
+            }
+          },
           "baseUnit": {
             "$ref": "#/components/schemas/CreateProductUnitRequestDto"
           },
@@ -3773,6 +3780,14 @@
           "categoryId": {
             "type": "string",
             "format": "uuid"
+          },
+          "geometry": {
+            "description": "Medidas do produto já no cadastro; medida ausente não se aplica",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductGeometryUpdateDto"
+              }
+            ]
           },
           "shortDescription": {
             "type": "string"
@@ -3796,11 +3811,26 @@
           "active": {
             "type": "boolean"
           },
+          "attributes": {
+            "description": "Facetas técnicas do produto, no máximo uma por eixo",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeDto"
+            }
+          },
           "basePresentation": {
             "$ref": "#/components/schemas/ProductPresentationDto"
           },
           "baseUnit": {
             "$ref": "#/components/schemas/UnitOfMeasureDto"
+          },
+          "geometry": {
+            "description": "Medidas do produto; medida ausente não se aplica ao produto",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductGeometryDto"
+              }
+            ]
           },
           "id": {
             "type": "string",
@@ -3818,8 +3848,10 @@
         },
         "required": [
           "active",
+          "attributes",
           "basePresentation",
           "baseUnit",
+          "geometry",
           "id",
           "shortDescription",
           "sku"

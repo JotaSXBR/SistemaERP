@@ -235,6 +235,61 @@ describe("catalog attributes", () => {
     ]);
   });
 
+  it("classifies the product already at creation", async () => {
+    const axis = await createDefinition("def-nasce", { code: "NASCE", name: "Nasce" });
+    const definitionId = axis.json<DefinitionResponse>().definition.id;
+    const option = await createOption("opt-nasce", {
+      code: "VALOR",
+      definitionId,
+      name: "Valor",
+    });
+    const optionId = option.json<OptionResponse>().option.id;
+
+    const created = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "prod-nasce"),
+      method: "POST",
+      payload: {
+        attributes: [{ definitionId, optionId }],
+        baseUnit: { code: "KG-N1", decimalScale: 3, name: "Quilograma" },
+        shortDescription: "Produto ja classificado",
+        sku: "SKU-NASCE",
+      },
+      url: "/api/v1/catalog/products",
+    });
+
+    expect(created.statusCode).toBe(201);
+    const attributes = created.json<{
+      product: { attributes: { definitionCode: string; optionCode: string }[] };
+    }>().product.attributes;
+    expect(attributes).toEqual([
+      expect.objectContaining({ definitionCode: "NASCE", optionCode: "VALOR" }),
+    ]);
+  });
+
+  it("does not create the product when a faceta at creation is unknown", async () => {
+    const created = await application.inject({
+      headers: authenticated(fixture.ownerAToken, "prod-nasce-invalida"),
+      method: "POST",
+      payload: {
+        attributes: [{ definitionId: randomUUID(), optionId: randomUUID() }],
+        baseUnit: { code: "KG-N2", decimalScale: 3, name: "Quilograma" },
+        shortDescription: "Produto que nao deve nascer",
+        sku: "SKU-NASCE-INVALIDO",
+      },
+      url: "/api/v1/catalog/products",
+    });
+
+    expect(created.statusCode).toBe(404);
+
+    // A transacao inteira volta atras: o produto nao pode existir sem a classificacao pedida.
+    const listed = await application.inject({
+      headers: authenticated(fixture.ownerAToken),
+      method: "GET",
+      url: "/api/v1/catalog/products?search=nao deve nascer",
+    });
+    expect(listed.json<{ items: unknown[] }>().items).toHaveLength(0);
+  });
+
   it("normalizes the code and rejects a duplicate axis", async () => {
     const first = await createDefinition("def-proc", { code: " processo ", name: "Processo" });
     expect(first.json<DefinitionResponse>().definition.code).toBe("PROCESSO");
