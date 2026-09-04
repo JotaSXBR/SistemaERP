@@ -54,6 +54,19 @@ import {
 import { CatalogService } from "./catalog.service.js";
 
 const CODE_PATTERN = /^[-A-Za-z0-9._/]{1,120}$/;
+/** Casa com `numeric(24, 10)`: até 14 dígitos inteiros e 10 decimais, sem sinal nem notação científica. */
+const DECIMAL_PATTERN = /^\d{1,14}(\.\d{1,10})?$/;
+/** As oito medidas da ADR-0010; qualquer outra chave no objeto é pedido malformado. */
+const GEOMETRY_FIELDS = new Set([
+  "heightMm",
+  "innerDiameterMm",
+  "lengthMm",
+  "outerDiameterMm",
+  "thicknessMm",
+  "weightPerMeterKg",
+  "weightPerSquareMeterKg",
+  "widthMm",
+]);
 /** Teto de facetas por produto: mais que isso indica erro de montagem do pedido. */
 const MAX_PRODUCT_ATTRIBUTES = 50;
 const TAX_ID_PATTERN = /^[-A-Za-z0-9./\s]{11,32}$/;
@@ -117,6 +130,7 @@ function validateProductUpdate(body: UpdateProductRequestDto): UpdateProductRequ
       body?.attributes === undefined &&
       body?.brandId === undefined &&
       body?.categoryId === undefined &&
+      body?.geometry === undefined &&
       body?.shortDescription === undefined &&
       body?.technicalDescription === undefined) ||
     (body.active !== undefined && typeof body.active !== "boolean") ||
@@ -134,12 +148,38 @@ function validateProductUpdate(body: UpdateProductRequestDto): UpdateProductRequ
     (body.technicalDescription !== undefined &&
       (typeof body.technicalDescription !== "string" ||
         body.technicalDescription.length > 4_000)) ||
-    (body.attributes !== undefined && !isAttributeList(body.attributes))
+    (body.attributes !== undefined && !isAttributeList(body.attributes)) ||
+    (body.geometry !== undefined && !isGeometryUpdate(body.geometry))
   ) {
     throw new BadRequestException();
   }
 
   return body;
+}
+
+/**
+ * Confere a forma das medidas. A ADR-0010 proíbe zero como sentinela de "não se aplica" — quem não
+ * tem a medida manda `null`, e por isso zero e negativo são recusados aqui. O valor chega como
+ * string decimal para não passar por ponto flutuante antes de virar `numeric` no banco.
+ */
+function isGeometryUpdate(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (entries.length === 0) {
+    return false;
+  }
+
+  return entries.every(([field, measure]) => {
+    if (!GEOMETRY_FIELDS.has(field)) return false;
+    if (measure === null) return true;
+
+    return (
+      typeof measure === "string" && DECIMAL_PATTERN.test(measure) && Number.parseFloat(measure) > 0
+    );
+  });
 }
 
 /** Confere apenas a forma; a existência da opção e sua coerência com o eixo ficam no serviço. */

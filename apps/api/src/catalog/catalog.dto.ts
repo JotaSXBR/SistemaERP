@@ -246,6 +246,72 @@ export class ProductListResponseDto {
   total!: number;
 }
 
+/**
+ * Geometria do produto. Toda dimensão é milímetro e todo peso é quilograma — a unidade canônica da
+ * ADR-0010. Os valores viajam como string decimal porque `number` em JSON é ponto flutuante, e
+ * medida que entra em cálculo de preço não pode perder precisão no transporte. Campo ausente
+ * significa "não se aplica a este produto", nunca zero.
+ */
+export class ProductGeometryDto {
+  @ApiPropertyOptional({ description: "Altura em milímetros", type: String })
+  heightMm?: string;
+
+  @ApiPropertyOptional({ description: "Diâmetro interno em milímetros", type: String })
+  innerDiameterMm?: string;
+
+  @ApiPropertyOptional({ description: "Comprimento em milímetros", type: String })
+  lengthMm?: string;
+
+  @ApiPropertyOptional({ description: "Diâmetro externo em milímetros", type: String })
+  outerDiameterMm?: string;
+
+  @ApiPropertyOptional({ description: "Espessura em milímetros", type: String })
+  thicknessMm?: string;
+
+  @ApiPropertyOptional({ description: "Peso teórico por metro, em quilogramas", type: String })
+  weightPerMeterKg?: string;
+
+  @ApiPropertyOptional({
+    description: "Peso teórico por metro quadrado, em quilogramas",
+    type: String,
+  })
+  weightPerSquareMeterKg?: string;
+
+  @ApiPropertyOptional({ description: "Largura em milímetros", type: String })
+  widthMm?: string;
+}
+
+/**
+ * Atualização de geometria campo a campo: o que vier é gravado, `null` limpa a medida e o que
+ * ficar de fora não muda. Difere das facetas de propósito — lá o array é o conjunto inteiro, aqui
+ * cada medida é independente das outras e uma edição parcial é o caso comum.
+ */
+export class ProductGeometryUpdateDto {
+  @ApiPropertyOptional({ nullable: true, type: String })
+  heightMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  innerDiameterMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  lengthMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  outerDiameterMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  thicknessMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  weightPerMeterKg?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  weightPerSquareMeterKg?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  widthMm?: string | null;
+}
+
 export class ProductDetailDto {
   @ApiProperty({ type: Boolean })
   active!: boolean;
@@ -265,6 +331,12 @@ export class ProductDetailDto {
 
   @ApiPropertyOptional({ type: ProductCategoryRefDto })
   category?: ProductCategoryRefDto;
+
+  @ApiProperty({
+    description: "Medidas do produto; medida ausente não se aplica ao produto",
+    type: ProductGeometryDto,
+  })
+  geometry!: ProductGeometryDto;
 
   @ApiProperty({ format: "uuid", type: String })
   id!: string;
@@ -322,6 +394,12 @@ export class UpdateProductRequestDto {
     type: String,
   })
   categoryId?: string | null;
+
+  @ApiPropertyOptional({
+    description: "Medidas informadas são gravadas, nulo limpa a medida e ausente não altera",
+    type: ProductGeometryUpdateDto,
+  })
+  geometry?: ProductGeometryUpdateDto;
 
   @ApiPropertyOptional({ maxLength: 240, type: String })
   shortDescription?: string;

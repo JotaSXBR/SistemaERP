@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { PartnerRole, ProductConversionMode, type Prisma } from "@sistema-erp/database";
+import { PartnerRole, Prisma, ProductConversionMode } from "@sistema-erp/database";
 
 import { DatabaseService } from "../database/database.service.js";
 import { IdempotencyService } from "../idempotency/idempotency.service.js";
@@ -14,6 +14,7 @@ import type {
   ProductCategoryRefDto,
   ProductDetailDto,
   ProductDto,
+  ProductGeometryDto,
   ProductListResponseDto,
   ResolveSupplierProductResponseDto,
   SupplierProductMappingDto,
@@ -43,9 +44,32 @@ type UpdateProductInput = {
   attributes?: Array<{ definitionId: string; optionId: string }>;
   brandId?: string | null;
   categoryId?: string | null;
+  /**
+   * Geometria campo a campo: o que vier e gravado, `null` limpa a medida e o que ficar de fora nao
+   * muda. Diferente das facetas de proposito — la o array e o conjunto inteiro, aqui cada medida e
+   * independente e a edicao parcial e o caso comum.
+   */
+  geometry?: Partial<Record<GeometryField, string | null>>;
   shortDescription?: string;
   technicalDescription?: string;
 };
+
+/**
+ * As oito medidas da ADR-0010. Manter a lista em um so lugar evita que resposta, gravacao e
+ * auditoria divirjam quando uma medida nova for acrescentada.
+ */
+const GEOMETRY_FIELDS = [
+  "heightMm",
+  "innerDiameterMm",
+  "lengthMm",
+  "outerDiameterMm",
+  "thicknessMm",
+  "weightPerMeterKg",
+  "weightPerSquareMeterKg",
+  "widthMm",
+] as const;
+
+export type GeometryField = (typeof GEOMETRY_FIELDS)[number];
 
 type PersistedUnit = {
   code: string;
@@ -111,6 +135,65 @@ function categoryRef(category: PersistedCategoryNode | null): ProductCategoryRef
   return { code: category.code, id: category.id, name: category.name, path };
 }
 
+/**
+ * Decimal nulo some da resposta em vez de virar `null` ou `0`: a ADR-0010 distingue "nao se aplica"
+ * de uma medida real, e zero seria uma medida real. O valor sai como string para nao passar por
+ * ponto flutuante — ele entra em calculo de preco do outro lado.
+ */
+function geometryResponse(product: {
+  [K in GeometryField]: Prisma.Decimal | null;
+}): ProductGeometryDto {
+  const geometry: ProductGeometryDto = {};
+  for (const field of GEOMETRY_FIELDS) {
+    const value = product[field];
+    if (value !== null) {
+      geometry[field] = value.toString();
+    }
+  }
+
+  return geometry;
+}
+
+/**
+ * Traduz a geometria recebida para o `data` do update. Medida ausente nao entra no objeto, entao a
+ * coluna nao e tocada; `null` explicito vira `null` no banco e limpa a medida.
+ */
+function geometryUpdateData(
+  geometry: Partial<Record<GeometryField, string | null>> | undefined,
+): Partial<Record<GeometryField, string | null>> {
+  if (!geometry) return {};
+
+  const data: Partial<Record<GeometryField, string | null>> = {};
+  for (const field of GEOMETRY_FIELDS) {
+    const value = geometry[field];
+    if (value !== undefined) {
+      data[field] = value;
+    }
+  }
+
+  return data;
+}
+
+/** Compara o que foi pedido com o que ja estava gravado, para a auditoria nao mentir sobre mudanca. */
+function changedGeometryFields(
+  geometry: Partial<Record<GeometryField, string | null>> | undefined,
+  existing: { [K in GeometryField]: Prisma.Decimal | null },
+): GeometryField[] {
+  if (!geometry) return [];
+
+  return GEOMETRY_FIELDS.filter((field) => {
+    const value = geometry[field];
+    if (value === undefined) return false;
+
+    const current = existing[field];
+    if (value === null) return current !== null;
+
+    // Comparacao decimal, e nao textual: "3.18" e "3.1800000000" sao o mesmo numero, e a coluna
+    // devolve a forma com escala completa.
+    return current === null || !current.equals(new Prisma.Decimal(value));
+  });
+}
+
 function productDetailResponse(product: ProductWithDetail): ProductDetailDto {
   return {
     active: product.active,
@@ -125,6 +208,7 @@ function productDetailResponse(product: ProductWithDetail): ProductDetailDto {
     baseUnit: unitResponse(product.baseUnit),
     ...(brandRef(product.brand) ? { brand: brandRef(product.brand)! } : {}),
     ...(categoryRef(product.category) ? { category: categoryRef(product.category)! } : {}),
+    geometry: geometryResponse(product),
     id: product.id,
     presentations: product.presentations.map((presentation) => ({
       code: presentation.code,
@@ -329,6 +413,7 @@ export class CatalogService {
       ...(input.attributes === undefined ? {} : { attributes: input.attributes }),
       ...(input.brandId === undefined ? {} : { brandId: input.brandId }),
       ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
+      ...(input.geometry === undefined ? {} : { geometry: input.geometry }),
       ...(input.shortDescription === undefined
         ? {}
         : { shortDescription: input.shortDescription.trim() }),
@@ -491,6 +576,7 @@ export class CatalogService {
         ...(input.active === undefined ? {} : { active: input.active }),
         ...(input.brandId === undefined ? {} : { brandId: input.brandId }),
         ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
+        ...geometryUpdateData(input.geometry),
         ...(input.shortDescription === undefined
           ? {}
           : { shortDescription: input.shortDescription }),
@@ -512,6 +598,7 @@ export class CatalogService {
         entityType: "product",
         metadata: {
           activeChanged: input.active !== undefined && input.active !== existing.active,
+          geometryChanged: changedGeometryFields(input.geometry, existing),
           shortDescriptionChanged:
             input.shortDescription !== undefined &&
             input.shortDescription !== existing.shortDescription,

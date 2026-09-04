@@ -455,9 +455,20 @@ escrita restrita a `OWNER` e `ADMIN`. As facetas são atribuídas ao produto no 
 aparecem em `ProductDetailDto`. Cuidado com o histórico: esse recorte foi mergeado por engano na
 branch `docs/catalog-attributes` (PR #33) e só chegou a `main` pelo PR #34.
 
-O próximo recorte é a **geometria (segunda metade da ADR-0010)**, independente das facetas: colunas
-`numeric` nulas no produto, com milímetro como unidade canônica. Depois vêm as apresentações com
-conversão variável, a configuração S3 por organização e as validações fiscais restantes.
+A **geometria (segunda metade da ADR-0010)** também está feita: oito colunas `numeric(24, 10)`
+nulas no produto — espessura, largura, altura, diâmetro externo e interno, comprimento, peso por
+metro e peso por metro quadrado. Dimensões sempre em milímetro e pesos em quilograma; medida
+ausente da resposta significa "não se aplica", nunca zero. O `PATCH` de produto atualiza medida a
+medida, `null` limpa, e a auditoria registra quais medidas mudaram de fato (comparação decimal, não
+textual). Os valores trafegam como string decimal para não passar por ponto flutuante.
+
+Duas lacunas conhecidas, ambas deliberadas: o `POST` de produto ainda não aceita facetas nem
+geometria — cadastrar e depois classificar/medir exige um `PATCH` —, e a interface web ainda não
+expõe nenhum dos dois. A conversão polegada↔milímetro é apresentação e mora na interface, que
+ainda não a tem.
+
+Os próximos recortes são as apresentações com conversão variável, a configuração S3 por
+organização e as validações fiscais restantes.
 
 A importação dos ~5.800 itens do legado é recorte próprio e depende das duas metades da ADR-0010.
 

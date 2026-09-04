@@ -1,6 +1,6 @@
 # ADR-0010 — Atributos técnicos e geometria do produto
 
-- Status: proposto
+- Status: Aceita
 - Data: 2026-09-04
 
 ## Contexto

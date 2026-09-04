@@ -3480,6 +3480,43 @@
           "optionName"
         ]
       },
+      "ProductGeometryDto": {
+        "type": "object",
+        "properties": {
+          "heightMm": {
+            "type": "string",
+            "description": "Altura em milímetros"
+          },
+          "innerDiameterMm": {
+            "type": "string",
+            "description": "Diâmetro interno em milímetros"
+          },
+          "lengthMm": {
+            "type": "string",
+            "description": "Comprimento em milímetros"
+          },
+          "outerDiameterMm": {
+            "type": "string",
+            "description": "Diâmetro externo em milímetros"
+          },
+          "thicknessMm": {
+            "type": "string",
+            "description": "Espessura em milímetros"
+          },
+          "weightPerMeterKg": {
+            "type": "string",
+            "description": "Peso teórico por metro, em quilogramas"
+          },
+          "weightPerSquareMeterKg": {
+            "type": "string",
+            "description": "Peso teórico por metro quadrado, em quilogramas"
+          },
+          "widthMm": {
+            "type": "string",
+            "description": "Largura em milímetros"
+          }
+        }
+      },
       "ProductPresentationDto": {
         "type": "object",
         "properties": {
@@ -3538,6 +3575,14 @@
           "category": {
             "$ref": "#/components/schemas/ProductCategoryRefDto"
           },
+          "geometry": {
+            "description": "Medidas do produto; medida ausente não se aplica ao produto",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductGeometryDto"
+              }
+            ]
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -3562,6 +3607,7 @@
           "active",
           "attributes",
           "baseUnit",
+          "geometry",
           "id",
           "presentations",
           "shortDescription",
@@ -3596,6 +3642,43 @@
           "optionId"
         ]
       },
+      "ProductGeometryUpdateDto": {
+        "type": "object",
+        "properties": {
+          "heightMm": {
+            "type": "string",
+            "nullable": true
+          },
+          "innerDiameterMm": {
+            "type": "string",
+            "nullable": true
+          },
+          "lengthMm": {
+            "type": "string",
+            "nullable": true
+          },
+          "outerDiameterMm": {
+            "type": "string",
+            "nullable": true
+          },
+          "thicknessMm": {
+            "type": "string",
+            "nullable": true
+          },
+          "weightPerMeterKg": {
+            "type": "string",
+            "nullable": true
+          },
+          "weightPerSquareMeterKg": {
+            "type": "string",
+            "nullable": true
+          },
+          "widthMm": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "UpdateProductRequestDto": {
         "type": "object",
         "properties": {
@@ -3620,6 +3703,14 @@
             "description": "Nulo remove a categoria do produto",
             "format": "uuid",
             "nullable": true
+          },
+          "geometry": {
+            "description": "Medidas informadas são gravadas, nulo limpa a medida e ausente não altera",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductGeometryUpdateDto"
+              }
+            ]
           },
           "shortDescription": {
             "type": "string",

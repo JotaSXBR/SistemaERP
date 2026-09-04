@@ -119,10 +119,11 @@ export async function createProduct(input: CreateProductRequestDto): Promise<Pro
   const created = resultOrThrow(data, response?.status).product;
   return {
     active: created.active,
-    // O POST de produto ainda nao aceita facetas, entao um produto recem-criado nunca tem
-    // nenhuma; classificar exige um PATCH posterior.
+    // O POST de produto ainda nao aceita facetas nem geometria, entao um produto recem-criado nao
+    // tem nenhuma das duas; classificar e medir exige um PATCH posterior.
     attributes: [],
     baseUnit: created.baseUnit,
+    geometry: {},
     id: created.id,
     presentations: [created.basePresentation],
     shortDescription: created.shortDescription,
