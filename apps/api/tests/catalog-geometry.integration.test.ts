@@ -246,6 +246,47 @@ describe("catalog product geometry", () => {
     expect(empty.statusCode).toBe(400);
   });
 
+  it("records measurements sent already at creation", async () => {
+    unitSequence += 1;
+    const created = await application.inject({
+      headers: authenticated(fixture.ownerToken, "geo-create-with-geometry"),
+      method: "POST",
+      payload: {
+        baseUnit: { code: `KG-${unitSequence}`, decimalScale: 3, name: "Quilograma" },
+        geometry: { lengthMm: "6000", outerDiameterMm: "25.4", weightPerMeterKg: "3.973" },
+        shortDescription: "Barra redonda 1 polegada",
+        sku: "GEO-NASCE-MEDIDA",
+      },
+      url: "/api/v1/catalog/products",
+    });
+
+    expect(created.statusCode).toBe(201);
+    const geometry = created.json<{ product: { geometry: Record<string, string | undefined> } }>()
+      .product.geometry;
+    expect(Number(geometry.outerDiameterMm)).toBe(25.4);
+    expect(Number(geometry.lengthMm)).toBe(6000);
+    expect(Number(geometry.weightPerMeterKg)).toBe(3.973);
+    // O que não foi informado não se aplica, e não vem como zero.
+    expect(geometry.thicknessMm).toBeUndefined();
+  });
+
+  it("refuses a zeroed measurement at creation, just like on update", async () => {
+    unitSequence += 1;
+    const created = await application.inject({
+      headers: authenticated(fixture.ownerToken, "geo-create-zero"),
+      method: "POST",
+      payload: {
+        baseUnit: { code: `KG-${unitSequence}`, decimalScale: 3, name: "Quilograma" },
+        geometry: { thicknessMm: "0" },
+        shortDescription: "Produto invalido",
+        sku: "GEO-NASCE-ZERO",
+      },
+      url: "/api/v1/catalog/products",
+    });
+
+    expect(created.statusCode).toBe(400);
+  });
+
   it("keeps the measurements out of reach for a member", async () => {
     const productId = await createProduct("geo-role-create", "GEO-PAPEL");
 

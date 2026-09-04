@@ -112,7 +112,10 @@ function validateProduct(body: CreateProductRequestDto): CreateProductRequestDto
     unit.name.trim().length === 0 ||
     unit.name.trim().length > 80 ||
     (unit.decimalScale !== undefined &&
-      (!Number.isInteger(unit.decimalScale) || unit.decimalScale < 0 || unit.decimalScale > 10))
+      (!Number.isInteger(unit.decimalScale) || unit.decimalScale < 0 || unit.decimalScale > 10)) ||
+    // Classificar e medir já no cadastro segue exatamente as regras do update.
+    (body.attributes !== undefined && !isAttributeList(body.attributes)) ||
+    (body.geometry !== undefined && !isGeometryUpdate(body.geometry))
   ) {
     throw new BadRequestException();
   }
