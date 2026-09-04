@@ -768,6 +768,427 @@
         ]
       }
     },
+    "/api/v1/catalog/attribute-definitions": {
+      "get": {
+        "operationId": "AttributesController_listDefinitions",
+        "parameters": [
+          {
+            "name": "active",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAttributeDefinitionListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      },
+      "post": {
+        "operationId": "AttributesController_createDefinition",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductAttributeDefinitionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductAttributeDefinitionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/attribute-definitions/{id}": {
+      "patch": {
+        "operationId": "AttributesController_updateDefinition",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductAttributeDefinitionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProductAttributeDefinitionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/attribute-options": {
+      "post": {
+        "operationId": "AttributesController_createOption",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductAttributeOptionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductAttributeOptionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/catalog/attribute-options/{id}": {
+      "patch": {
+        "operationId": "AttributesController_updateOption",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductAttributeOptionRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProductAttributeOptionResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/catalog/products": {
       "get": {
         "operationId": "CatalogController_listProducts",
@@ -2691,6 +3112,204 @@
           "replayed"
         ]
       },
+      "ProductAttributeOptionDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "code",
+          "id",
+          "name"
+        ]
+      },
+      "ProductAttributeDefinitionDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "options": {
+            "description": "Valores permitidos deste eixo, ordenados por nome",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeOptionDto"
+            }
+          }
+        },
+        "required": [
+          "active",
+          "code",
+          "id",
+          "name",
+          "options"
+        ]
+      },
+      "ProductAttributeDefinitionListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "description": "Eixos de classificação do tenant, com seus valores",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeDefinitionDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateProductAttributeDefinitionRequestDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "CreateProductAttributeDefinitionResponseDto": {
+        "type": "object",
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/ProductAttributeDefinitionDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "definition",
+          "replayed"
+        ]
+      },
+      "UpdateProductAttributeDefinitionRequestDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      },
+      "UpdateProductAttributeDefinitionResponseDto": {
+        "type": "object",
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/ProductAttributeDefinitionDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "definition",
+          "replayed"
+        ]
+      },
+      "CreateProductAttributeOptionRequestDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "definitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "code",
+          "definitionId",
+          "name"
+        ]
+      },
+      "CreateProductAttributeOptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "option": {
+            "$ref": "#/components/schemas/ProductAttributeOptionDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "option",
+          "replayed"
+        ]
+      },
+      "UpdateProductAttributeOptionRequestDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      },
+      "UpdateProductAttributeOptionResponseDto": {
+        "type": "object",
+        "properties": {
+          "option": {
+            "$ref": "#/components/schemas/ProductAttributeOptionDto"
+          },
+          "replayed": {
+            "type": "boolean",
+            "description": "Indica reaproveitamento seguro da resposta anterior"
+          }
+        },
+        "required": [
+          "option",
+          "replayed"
+        ]
+      },
       "UnitOfMeasureDto": {
         "type": "object",
         "properties": {
@@ -2828,6 +3447,39 @@
           "total"
         ]
       },
+      "ProductAttributeDto": {
+        "type": "object",
+        "properties": {
+          "definitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "definitionCode": {
+            "type": "string"
+          },
+          "definitionName": {
+            "type": "string"
+          },
+          "optionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "optionCode": {
+            "type": "string"
+          },
+          "optionName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "definitionId",
+          "definitionCode",
+          "definitionName",
+          "optionId",
+          "optionCode",
+          "optionName"
+        ]
+      },
       "ProductPresentationDto": {
         "type": "object",
         "properties": {
@@ -2870,6 +3522,13 @@
           "active": {
             "type": "boolean"
           },
+          "attributes": {
+            "description": "Facetas técnicas do produto, no máximo uma por eixo",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeDto"
+            }
+          },
           "baseUnit": {
             "$ref": "#/components/schemas/UnitOfMeasureDto"
           },
@@ -2901,6 +3560,7 @@
         },
         "required": [
           "active",
+          "attributes",
           "baseUnit",
           "id",
           "presentations",
@@ -2919,11 +3579,35 @@
           "product"
         ]
       },
+      "ProductAttributeAssignmentDto": {
+        "type": "object",
+        "properties": {
+          "definitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "optionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "definitionId",
+          "optionId"
+        ]
+      },
       "UpdateProductRequestDto": {
         "type": "object",
         "properties": {
           "active": {
             "type": "boolean"
+          },
+          "attributes": {
+            "description": "Conjunto completo de facetas: substitui as atuais, e um array vazio remove todas. Ausente não altera.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeAssignmentDto"
+            }
           },
           "brandId": {
             "type": "string",

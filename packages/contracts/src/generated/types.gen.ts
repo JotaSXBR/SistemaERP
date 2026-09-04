@@ -157,6 +157,84 @@ export type UpdatePartnerResponseDto = {
     replayed: boolean;
 };
 
+export type ProductAttributeOptionDto = {
+    active: boolean;
+    code: string;
+    id: string;
+    name: string;
+};
+
+export type ProductAttributeDefinitionDto = {
+    active: boolean;
+    code: string;
+    id: string;
+    name: string;
+    /**
+     * Valores permitidos deste eixo, ordenados por nome
+     */
+    options: Array<ProductAttributeOptionDto>;
+};
+
+export type ProductAttributeDefinitionListResponseDto = {
+    /**
+     * Eixos de classificação do tenant, com seus valores
+     */
+    items: Array<ProductAttributeDefinitionDto>;
+};
+
+export type CreateProductAttributeDefinitionRequestDto = {
+    code: string;
+    name: string;
+};
+
+export type CreateProductAttributeDefinitionResponseDto = {
+    definition: ProductAttributeDefinitionDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
+export type UpdateProductAttributeDefinitionRequestDto = {
+    active?: boolean;
+    name?: string;
+};
+
+export type UpdateProductAttributeDefinitionResponseDto = {
+    definition: ProductAttributeDefinitionDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
+export type CreateProductAttributeOptionRequestDto = {
+    code: string;
+    definitionId: string;
+    name: string;
+};
+
+export type CreateProductAttributeOptionResponseDto = {
+    option: ProductAttributeOptionDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
+export type UpdateProductAttributeOptionRequestDto = {
+    active?: boolean;
+    name?: string;
+};
+
+export type UpdateProductAttributeOptionResponseDto = {
+    option: ProductAttributeOptionDto;
+    /**
+     * Indica reaproveitamento seguro da resposta anterior
+     */
+    replayed: boolean;
+};
+
 export type UnitOfMeasureDto = {
     code: string;
     decimalScale: number;
@@ -206,6 +284,15 @@ export type ProductListResponseDto = {
     total: number;
 };
 
+export type ProductAttributeDto = {
+    definitionId: string;
+    definitionCode: string;
+    definitionName: string;
+    optionId: string;
+    optionCode: string;
+    optionName: string;
+};
+
 export type ProductPresentationDto = {
     code: string;
     conversionMode: 'FIXED' | 'VARIABLE';
@@ -220,6 +307,10 @@ export type ProductPresentationDto = {
 
 export type ProductDetailDto = {
     active: boolean;
+    /**
+     * Facetas técnicas do produto, no máximo uma por eixo
+     */
+    attributes: Array<ProductAttributeDto>;
     baseUnit: UnitOfMeasureDto;
     brand?: ProductBrandRefDto;
     category?: ProductCategoryRefDto;
@@ -234,8 +325,17 @@ export type ProductDetailResponseDto = {
     product: ProductDetailDto;
 };
 
+export type ProductAttributeAssignmentDto = {
+    definitionId: string;
+    optionId: string;
+};
+
 export type UpdateProductRequestDto = {
     active?: boolean;
+    /**
+     * Conjunto completo de facetas: substitui as atuais, e um array vazio remove todas. Ausente não altera.
+     */
+    attributes?: Array<ProductAttributeAssignmentDto>;
     /**
      * Nulo remove a marca do produto
      */
@@ -931,6 +1031,133 @@ export type PartnersControllerUpdateResponses = {
 };
 
 export type PartnersControllerUpdateResponse = PartnersControllerUpdateResponses[keyof PartnersControllerUpdateResponses];
+
+export type AttributesControllerListDefinitionsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        active?: boolean;
+    };
+    url: '/api/v1/catalog/attribute-definitions';
+};
+
+export type AttributesControllerListDefinitionsErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+};
+
+export type AttributesControllerListDefinitionsError = AttributesControllerListDefinitionsErrors[keyof AttributesControllerListDefinitionsErrors];
+
+export type AttributesControllerListDefinitionsResponses = {
+    200: ProductAttributeDefinitionListResponseDto;
+};
+
+export type AttributesControllerListDefinitionsResponse = AttributesControllerListDefinitionsResponses[keyof AttributesControllerListDefinitionsResponses];
+
+export type AttributesControllerCreateDefinitionData = {
+    body: CreateProductAttributeDefinitionRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/catalog/attribute-definitions';
+};
+
+export type AttributesControllerCreateDefinitionErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type AttributesControllerCreateDefinitionError = AttributesControllerCreateDefinitionErrors[keyof AttributesControllerCreateDefinitionErrors];
+
+export type AttributesControllerCreateDefinitionResponses = {
+    201: CreateProductAttributeDefinitionResponseDto;
+};
+
+export type AttributesControllerCreateDefinitionResponse = AttributesControllerCreateDefinitionResponses[keyof AttributesControllerCreateDefinitionResponses];
+
+export type AttributesControllerUpdateDefinitionData = {
+    body: UpdateProductAttributeDefinitionRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog/attribute-definitions/{id}';
+};
+
+export type AttributesControllerUpdateDefinitionErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type AttributesControllerUpdateDefinitionError = AttributesControllerUpdateDefinitionErrors[keyof AttributesControllerUpdateDefinitionErrors];
+
+export type AttributesControllerUpdateDefinitionResponses = {
+    200: UpdateProductAttributeDefinitionResponseDto;
+};
+
+export type AttributesControllerUpdateDefinitionResponse = AttributesControllerUpdateDefinitionResponses[keyof AttributesControllerUpdateDefinitionResponses];
+
+export type AttributesControllerCreateOptionData = {
+    body: CreateProductAttributeOptionRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/catalog/attribute-options';
+};
+
+export type AttributesControllerCreateOptionErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+    409: ApiErrorResponseDto;
+};
+
+export type AttributesControllerCreateOptionError = AttributesControllerCreateOptionErrors[keyof AttributesControllerCreateOptionErrors];
+
+export type AttributesControllerCreateOptionResponses = {
+    201: CreateProductAttributeOptionResponseDto;
+};
+
+export type AttributesControllerCreateOptionResponse = AttributesControllerCreateOptionResponses[keyof AttributesControllerCreateOptionResponses];
+
+export type AttributesControllerUpdateOptionData = {
+    body: UpdateProductAttributeOptionRequestDto;
+    headers: {
+        'Idempotency-Key': string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/catalog/attribute-options/{id}';
+};
+
+export type AttributesControllerUpdateOptionErrors = {
+    400: ApiErrorResponseDto;
+    401: ApiErrorResponseDto;
+    403: ApiErrorResponseDto;
+    404: ApiErrorResponseDto;
+};
+
+export type AttributesControllerUpdateOptionError = AttributesControllerUpdateOptionErrors[keyof AttributesControllerUpdateOptionErrors];
+
+export type AttributesControllerUpdateOptionResponses = {
+    200: UpdateProductAttributeOptionResponseDto;
+};
+
+export type AttributesControllerUpdateOptionResponse = AttributesControllerUpdateOptionResponses[keyof AttributesControllerUpdateOptionResponses];
 
 export type CatalogControllerListProductsData = {
     body?: never;

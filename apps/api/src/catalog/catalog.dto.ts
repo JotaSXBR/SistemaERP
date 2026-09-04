@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+
+import { ProductAttributeDto } from "./attributes.dto.js";
 import { ProductConversionMode } from "@sistema-erp/database";
 
 export class UnitOfMeasureDto {
@@ -248,6 +250,13 @@ export class ProductDetailDto {
   @ApiProperty({ type: Boolean })
   active!: boolean;
 
+  @ApiProperty({
+    description: "Facetas técnicas do produto, no máximo uma por eixo",
+    isArray: true,
+    type: ProductAttributeDto,
+  })
+  attributes!: ProductAttributeDto[];
+
   @ApiProperty({ type: UnitOfMeasureDto })
   baseUnit!: UnitOfMeasureDto;
 
@@ -278,9 +287,25 @@ export class ProductDetailResponseDto {
   product!: ProductDetailDto;
 }
 
+export class ProductAttributeAssignmentDto {
+  @ApiProperty({ format: "uuid", type: String })
+  definitionId!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  optionId!: string;
+}
+
 export class UpdateProductRequestDto {
   @ApiPropertyOptional({ type: Boolean })
   active?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      "Conjunto completo de facetas: substitui as atuais, e um array vazio remove todas. Ausente não altera.",
+    isArray: true,
+    type: ProductAttributeAssignmentDto,
+  })
+  attributes?: ProductAttributeAssignmentDto[];
 
   @ApiPropertyOptional({
     description: "Nulo remove a marca do produto",

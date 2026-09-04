@@ -78,6 +78,9 @@ model Organization {
   idempotencyRecords      IdempotencyRecord[]
   partners                Partner[]
   inboundFiscalItemTaxes  InboundFiscalDocumentItemTax[]
+  productAttributeDefs    ProductAttributeDefinition[]
+  productAttributeOptions ProductAttributeOption[]
+  productAttributes       ProductAttribute[]
   productBrands           ProductBrand[]
   productCategories       ProductCategory[]
   products                Product[]
@@ -171,6 +174,68 @@ model ProductBrand {
   @@map("product_brands")
 }
 
+/// Eixo de classificacao tecnica, criado pelo proprio tenant. Existe porque os eixos variam por
+/// linha de produto: tubo tem schedule, aluminio tem tempera, aco carbono nao tem nenhum dos dois.
+/// Colunas fixas obrigariam uma migration a cada eixo novo. Ver ADR-0010.
+model ProductAttributeDefinition {
+  id             String                   @id @default(uuid()) @db.Uuid
+  organizationId String                   @map("organization_id") @db.Uuid
+  code           String                   @db.VarChar(40)
+  name           String                   @db.VarChar(120)
+  active         Boolean                  @default(true)
+  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization             @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  options        ProductAttributeOption[]
+  assignments    ProductAttribute[]
+
+  @@unique([id, organizationId])
+  @@unique([organizationId, code])
+  @@map("product_attribute_definitions")
+}
+
+/// Valor permitido de um eixo. Enumeracao controlada, nunca texto livre: facetas servem para
+/// agrupar e buscar, e nao entram em calculo.
+model ProductAttributeOption {
+  id             String                     @id @default(uuid()) @db.Uuid
+  organizationId String                     @map("organization_id") @db.Uuid
+  definitionId   String                     @map("definition_id") @db.Uuid
+  code           String                     @db.VarChar(40)
+  name           String                     @db.VarChar(120)
+  active         Boolean                    @default(true)
+  createdAt      DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  definition     ProductAttributeDefinition @relation(fields: [definitionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  assignments    ProductAttribute[]
+
+  @@unique([id, organizationId])
+  @@unique([id, definitionId, organizationId])
+  @@unique([organizationId, definitionId, code])
+  @@index([organizationId, definitionId])
+  @@map("product_attribute_options")
+}
+
+/// Faceta atribuida a um produto. A unicidade (product_id, definition_id) garante no maximo um
+/// valor por eixo: um produto nao e 1020 e 1045 ao mesmo tempo.
+model ProductAttribute {
+  id             String                     @id @default(uuid()) @db.Uuid
+  organizationId String                     @map("organization_id") @db.Uuid
+  productId      String                     @map("product_id") @db.Uuid
+  definitionId   String                     @map("definition_id") @db.Uuid
+  optionId       String                     @map("option_id") @db.Uuid
+  createdAt      DateTime                   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime                   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  organization   Organization               @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product        Product                    @relation(fields: [productId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  definition     ProductAttributeDefinition @relation(fields: [definitionId, organizationId], references: [id, organizationId], onDelete: Restrict)
+  option         ProductAttributeOption     @relation(fields: [optionId, definitionId, organizationId], references: [id, definitionId, organizationId], onDelete: Restrict)
+
+  @@unique([productId, definitionId])
+  @@index([organizationId, optionId])
+  @@map("product_attributes")
+}
+
 model Product {
   id                   String                @id @default(uuid()) @db.Uuid
   organizationId       String                @map("organization_id") @db.Uuid
@@ -188,6 +253,7 @@ model Product {
   category             ProductCategory?      @relation(fields: [categoryId, organizationId], references: [id, organizationId], onDelete: Restrict)
   brand                ProductBrand?         @relation(fields: [brandId, organizationId], references: [id, organizationId], onDelete: Restrict)
   presentations        ProductPresentation[]
+  attributes           ProductAttribute[]
 
   @@unique([id, organizationId])
   @@unique([organizationId, sku])
