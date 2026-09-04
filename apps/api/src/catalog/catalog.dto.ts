@@ -66,15 +66,63 @@ export class ProductBrandRefDto {
   name!: string;
 }
 
+/**
+ * Geometria do produto. Toda dimensão é milímetro e todo peso é quilograma — a unidade canônica da
+ * ADR-0010. Os valores viajam como string decimal porque `number` em JSON é ponto flutuante, e
+ * medida que entra em cálculo de preço não pode perder precisão no transporte. Campo ausente
+ * significa "não se aplica a este produto", nunca zero.
+ */
+export class ProductGeometryDto {
+  @ApiPropertyOptional({ description: "Altura em milímetros", type: String })
+  heightMm?: string;
+
+  @ApiPropertyOptional({ description: "Diâmetro interno em milímetros", type: String })
+  innerDiameterMm?: string;
+
+  @ApiPropertyOptional({ description: "Comprimento em milímetros", type: String })
+  lengthMm?: string;
+
+  @ApiPropertyOptional({ description: "Diâmetro externo em milímetros", type: String })
+  outerDiameterMm?: string;
+
+  @ApiPropertyOptional({ description: "Espessura em milímetros", type: String })
+  thicknessMm?: string;
+
+  @ApiPropertyOptional({ description: "Peso teórico por metro, em quilogramas", type: String })
+  weightPerMeterKg?: string;
+
+  @ApiPropertyOptional({
+    description: "Peso teórico por metro quadrado, em quilogramas",
+    type: String,
+  })
+  weightPerSquareMeterKg?: string;
+
+  @ApiPropertyOptional({ description: "Largura em milímetros", type: String })
+  widthMm?: string;
+}
+
 export class ProductDto {
   @ApiProperty({ type: Boolean })
   active!: boolean;
+
+  @ApiProperty({
+    description: "Facetas técnicas do produto, no máximo uma por eixo",
+    isArray: true,
+    type: ProductAttributeDto,
+  })
+  attributes!: ProductAttributeDto[];
 
   @ApiProperty({ type: ProductPresentationDto })
   basePresentation!: ProductPresentationDto;
 
   @ApiProperty({ type: UnitOfMeasureDto })
   baseUnit!: UnitOfMeasureDto;
+
+  @ApiProperty({
+    description: "Medidas do produto; medida ausente não se aplica ao produto",
+    type: ProductGeometryDto,
+  })
+  geometry!: ProductGeometryDto;
 
   @ApiProperty({ format: "uuid", type: String })
   id!: string;
@@ -89,6 +137,45 @@ export class ProductDto {
   technicalDescription?: string;
 }
 
+export class ProductAttributeAssignmentDto {
+  @ApiProperty({ format: "uuid", type: String })
+  definitionId!: string;
+
+  @ApiProperty({ format: "uuid", type: String })
+  optionId!: string;
+}
+
+/**
+ * Atualização de geometria campo a campo: o que vier é gravado, `null` limpa a medida e o que
+ * ficar de fora não muda. Difere das facetas de propósito — lá o array é o conjunto inteiro, aqui
+ * cada medida é independente das outras e uma edição parcial é o caso comum.
+ */
+export class ProductGeometryUpdateDto {
+  @ApiPropertyOptional({ nullable: true, type: String })
+  heightMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  innerDiameterMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  lengthMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  outerDiameterMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  thicknessMm?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  weightPerMeterKg?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  weightPerSquareMeterKg?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  widthMm?: string | null;
+}
+
 export class CreateProductUnitRequestDto {
   @ApiProperty({ type: String })
   code!: string;
@@ -101,6 +188,13 @@ export class CreateProductUnitRequestDto {
 }
 
 export class CreateProductRequestDto {
+  @ApiPropertyOptional({
+    description: "Facetas do produto já no cadastro, no máximo uma por eixo",
+    isArray: true,
+    type: ProductAttributeAssignmentDto,
+  })
+  attributes?: ProductAttributeAssignmentDto[];
+
   @ApiProperty({ type: CreateProductUnitRequestDto })
   baseUnit!: CreateProductUnitRequestDto;
 
@@ -109,6 +203,12 @@ export class CreateProductRequestDto {
 
   @ApiPropertyOptional({ format: "uuid", type: String })
   categoryId?: string;
+
+  @ApiPropertyOptional({
+    description: "Medidas do produto já no cadastro; medida ausente não se aplica",
+    type: ProductGeometryUpdateDto,
+  })
+  geometry?: ProductGeometryUpdateDto;
 
   @ApiProperty({ type: String })
   shortDescription!: string;
@@ -246,72 +346,6 @@ export class ProductListResponseDto {
   total!: number;
 }
 
-/**
- * Geometria do produto. Toda dimensão é milímetro e todo peso é quilograma — a unidade canônica da
- * ADR-0010. Os valores viajam como string decimal porque `number` em JSON é ponto flutuante, e
- * medida que entra em cálculo de preço não pode perder precisão no transporte. Campo ausente
- * significa "não se aplica a este produto", nunca zero.
- */
-export class ProductGeometryDto {
-  @ApiPropertyOptional({ description: "Altura em milímetros", type: String })
-  heightMm?: string;
-
-  @ApiPropertyOptional({ description: "Diâmetro interno em milímetros", type: String })
-  innerDiameterMm?: string;
-
-  @ApiPropertyOptional({ description: "Comprimento em milímetros", type: String })
-  lengthMm?: string;
-
-  @ApiPropertyOptional({ description: "Diâmetro externo em milímetros", type: String })
-  outerDiameterMm?: string;
-
-  @ApiPropertyOptional({ description: "Espessura em milímetros", type: String })
-  thicknessMm?: string;
-
-  @ApiPropertyOptional({ description: "Peso teórico por metro, em quilogramas", type: String })
-  weightPerMeterKg?: string;
-
-  @ApiPropertyOptional({
-    description: "Peso teórico por metro quadrado, em quilogramas",
-    type: String,
-  })
-  weightPerSquareMeterKg?: string;
-
-  @ApiPropertyOptional({ description: "Largura em milímetros", type: String })
-  widthMm?: string;
-}
-
-/**
- * Atualização de geometria campo a campo: o que vier é gravado, `null` limpa a medida e o que
- * ficar de fora não muda. Difere das facetas de propósito — lá o array é o conjunto inteiro, aqui
- * cada medida é independente das outras e uma edição parcial é o caso comum.
- */
-export class ProductGeometryUpdateDto {
-  @ApiPropertyOptional({ nullable: true, type: String })
-  heightMm?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  innerDiameterMm?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  lengthMm?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  outerDiameterMm?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  thicknessMm?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  weightPerMeterKg?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  weightPerSquareMeterKg?: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  widthMm?: string | null;
-}
-
 export class ProductDetailDto {
   @ApiProperty({ type: Boolean })
   active!: boolean;
@@ -357,14 +391,6 @@ export class ProductDetailDto {
 export class ProductDetailResponseDto {
   @ApiProperty({ type: ProductDetailDto })
   product!: ProductDetailDto;
-}
-
-export class ProductAttributeAssignmentDto {
-  @ApiProperty({ format: "uuid", type: String })
-  definitionId!: string;
-
-  @ApiProperty({ format: "uuid", type: String })
-  optionId!: string;
 }
 
 export class UpdateProductRequestDto {

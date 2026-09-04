@@ -379,6 +379,16 @@ export class CatalogService {
     key: string,
   ): Promise<CreateProductResponseDto> {
     const normalizedInput = {
+      // As classes de DTO viram objetos planos aqui: o registro de idempotência guarda JSON, e
+      // uma instância de classe não satisfaz `Prisma.JsonObject`.
+      ...(input.attributes === undefined
+        ? {}
+        : {
+            attributes: input.attributes.map((assignment) => ({
+              definitionId: assignment.definitionId,
+              optionId: assignment.optionId,
+            })),
+          }),
       baseUnit: {
         code: normalizeCode(input.baseUnit.code),
         decimalScale: input.baseUnit.decimalScale ?? 4,
@@ -386,6 +396,7 @@ export class CatalogService {
       },
       ...(input.brandId ? { brandId: input.brandId } : {}),
       ...(input.categoryId ? { categoryId: input.categoryId } : {}),
+      ...(input.geometry === undefined ? {} : { geometry: geometryUpdateData(input.geometry) }),
       shortDescription: input.shortDescription.trim(),
       sku: normalizeCode(input.sku),
       ...(input.technicalDescription?.trim()
@@ -687,9 +698,11 @@ export class CatalogService {
   private async createProductTransaction(
     transaction: Prisma.TransactionClient,
     input: {
+      attributes?: Array<{ definitionId: string; optionId: string }>;
       baseUnit: { code: string; decimalScale: number; name: string };
       brandId?: string;
       categoryId?: string;
+      geometry?: Partial<Record<GeometryField, string | null>>;
       shortDescription: string;
       sku: string;
       technicalDescription?: string;
@@ -737,8 +750,27 @@ export class CatalogService {
         sku: input.sku,
         ...(input.brandId ? { brandId: input.brandId } : {}),
         ...(input.categoryId ? { categoryId: input.categoryId } : {}),
+        ...geometryUpdateData(input.geometry),
         ...(input.technicalDescription ? { technicalDescription: input.technicalDescription } : {}),
       },
+    });
+
+    // As facetas são gravadas depois do produto porque a junção referencia o produto criado. A
+    // mesma checagem do update vale aqui, e um eixo inexistente aborta a transação inteira: um
+    // produto não deve nascer classificado pela metade.
+    if (input.attributes) {
+      await this.replaceAttributes(
+        transaction,
+        context.organizationId,
+        product.id,
+        input.attributes,
+      );
+    }
+
+    const attributes = await transaction.productAttribute.findMany({
+      include: { definition: true, option: true },
+      orderBy: [{ definitionId: "asc" }],
+      where: { organizationId: context.organizationId, productId: product.id },
     });
     const presentation = await transaction.productPresentation.create({
       data: {
@@ -753,6 +785,14 @@ export class CatalogService {
     });
     const response: Prisma.JsonObject = {
       active: product.active,
+      attributes: attributes.map((assignment) => ({
+        definitionCode: assignment.definition.code,
+        definitionId: assignment.definitionId,
+        definitionName: assignment.definition.name,
+        optionCode: assignment.option.code,
+        optionId: assignment.optionId,
+        optionName: assignment.option.name,
+      })),
       basePresentation: {
         code: presentation.code,
         conversionFactor: presentation.conversionFactor?.toString() ?? "1",
@@ -772,6 +812,7 @@ export class CatalogService {
         id: unit.id,
         name: unit.name,
       },
+      geometry: geometryResponse(product) as unknown as Prisma.JsonObject,
       id: product.id,
       shortDescription: product.shortDescription,
       sku: product.sku,
@@ -787,7 +828,12 @@ export class CatalogService {
         correlationId: context.correlationId,
         entityId: product.id,
         entityType: "product",
-        metadata: { baseUnitCode: unit.code, sku: product.sku },
+        metadata: {
+          attributeCount: attributes.length,
+          baseUnitCode: unit.code,
+          geometryFields: GEOMETRY_FIELDS.filter((field) => product[field] !== null),
+          sku: product.sku,
+        },
         organizationId: context.organizationId,
         requestId: context.requestId,
       },
