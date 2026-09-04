@@ -1,12 +1,17 @@
 import {
+  catalogControllerCreateProduct,
   catalogControllerFindProductById,
   catalogControllerListProducts,
   catalogControllerUpdateProduct,
+  partnersControllerCreate,
   partnersControllerList,
   partnersControllerUpdate,
+  type CreatePartnerRequestDto,
+  type CreateProductRequestDto,
   type PartnerDto,
   type PartnerListResponseDto,
   type ProductDetailDto,
+  type ProductDto,
   type ProductListResponseDto,
 } from "@sistema-erp/contracts";
 
@@ -77,6 +82,26 @@ export async function updatePartner(
   });
 
   return resultOrThrow(data, response?.status).partner;
+}
+
+export async function createPartner(input: CreatePartnerRequestDto): Promise<PartnerDto> {
+  const { data, response } = await partnersControllerCreate({
+    body: input,
+    client: apiClient,
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+  });
+
+  return resultOrThrow(data, response?.status).partner;
+}
+
+export async function createProduct(input: CreateProductRequestDto): Promise<ProductDto> {
+  const { data, response } = await catalogControllerCreateProduct({
+    body: input,
+    client: apiClient,
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+  });
+
+  return resultOrThrow(data, response?.status).product;
 }
 
 export async function getProductDetail(id: string): Promise<ProductDetailDto> {

@@ -1,4 +1,5 @@
 .cache
+.gitnexus
 build
 coverage
 dist

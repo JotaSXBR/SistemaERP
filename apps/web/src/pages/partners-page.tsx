@@ -5,6 +5,7 @@ import type { PartnerDto } from "@sistema-erp/contracts";
 
 import { useSession } from "../features/authentication/session-context.js";
 import { listPartners, type PartnerRoleFilter } from "../features/registry/api/registry.js";
+import { PartnerCreateForm } from "../features/registry/components/partner-create-form.js";
 import { PartnerEditForm } from "../features/registry/components/partner-edit-form.js";
 import { RegistryListShell } from "../features/registry/components/registry-list-shell.js";
 import { formatTaxId } from "../features/registry/format-tax-id.js";
@@ -34,6 +35,7 @@ const TYPE_LABELS: Record<string, string> = {
 export function PartnersPage() {
   const { identity } = useSession();
   const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<PartnerDto>();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState<PartnerRoleFilter | "">("");
@@ -64,9 +66,25 @@ export function PartnersPage() {
     await queryClient.invalidateQueries({ queryKey: ["partners", "list"] });
   }
 
+  async function refreshAfterCreate(): Promise<void> {
+    setCreating(false);
+    await queryClient.invalidateQueries({ queryKey: ["partners", "list"] });
+  }
+
   return (
     <>
       <RegistryListShell
+        actions={
+          canWrite ? (
+            <button
+              className="min-h-11 rounded-xl bg-brand-600 px-5 text-sm font-semibold text-white transition hover:bg-brand-700"
+              onClick={() => setCreating(true)}
+              type="button"
+            >
+              Novo parceiro
+            </button>
+          ) : undefined
+        }
         description="Fornecedores, clientes e transportadoras desta empresa. A busca cobre razão social, nome fantasia e identificador fiscal."
         emptyMessage={
           hasFilter
@@ -168,6 +186,12 @@ export function PartnersPage() {
           </tbody>
         </table>
       </RegistryListShell>
+
+      {creating ? (
+        <SideDrawer onClose={() => setCreating(false)} title="Novo parceiro">
+          <PartnerCreateForm onCreated={refreshAfterCreate} />
+        </SideDrawer>
+      ) : null}
 
       {editing ? (
         <SideDrawer onClose={() => setEditing(undefined)} title="Editar parceiro">
