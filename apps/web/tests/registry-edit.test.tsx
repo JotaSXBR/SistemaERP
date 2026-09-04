@@ -8,6 +8,9 @@ import { clearSessionToken, writeSessionToken } from "../src/shared/api/session-
 
 const PARTNER_ID = "11111111-1111-4111-8111-111111111111";
 const PRODUCT_ID = "22222222-2222-4222-8222-222222222222";
+const DEFINITION_ID = "33333333-3333-4333-8333-333333333333";
+const OPTION_ID = "44444444-4444-4444-8444-444444444444";
+const OTHER_OPTION_ID = "55555555-5555-4555-8555-555555555555";
 
 type Recorded = { body: unknown; method: string; pathname: string };
 
@@ -22,9 +25,21 @@ function stubRegistryApi(options: { role?: string } = {}) {
     taxId: "11222333000181",
     type: "ORGANIZATION",
   };
+  const definition = {
+    active: true,
+    code: "LIGA",
+    id: DEFINITION_ID,
+    name: "Liga",
+    options: [
+      { active: true, code: "SAE-1020", id: OPTION_ID, name: "SAE 1020" },
+      { active: true, code: "SAE-1045", id: OTHER_OPTION_ID, name: "SAE 1045" },
+    ],
+  };
   const product = {
     active: true,
+    attributes: [] as { definitionId: string; optionId: string }[],
     baseUnit: { code: "KG", decimalScale: 4, id: "unit-id", name: "Quilograma" },
+    geometry: { thicknessMm: "3.18" } as Record<string, string>,
     id: PRODUCT_ID,
     presentations: [
       {
@@ -85,14 +100,26 @@ function stubRegistryApi(options: { role?: string } = {}) {
           total: 1,
         });
       }
+      if (url.pathname === "/api/v1/catalog/attribute-definitions" && request.method === "GET") {
+        return json({ items: [definition] });
+      }
       if (url.pathname === `/api/v1/catalog/products/${PRODUCT_ID}`) {
         if (request.method === "PATCH") {
           const patch = body as {
             active?: boolean;
+            attributes?: { definitionId: string; optionId: string }[];
+            geometry?: Record<string, string | null>;
             shortDescription?: string;
             technicalDescription?: string;
           };
           if (patch.active !== undefined) product.active = patch.active;
+          if (patch.attributes) product.attributes = patch.attributes;
+          if (patch.geometry) {
+            // Espelha o contrato: medida nula deixa de existir na resposta, não vira zero.
+            product.geometry = Object.fromEntries(
+              Object.entries(patch.geometry).filter(([, measure]) => measure !== null),
+            ) as Record<string, string>;
+          }
           if (patch.shortDescription) product.shortDescription = patch.shortDescription;
           if (patch.technicalDescription !== undefined) {
             product.technicalDescription = patch.technicalDescription;
@@ -180,10 +207,116 @@ describe("edição de cadastros", () => {
     expect(patch?.pathname).toBe(`/api/v1/catalog/products/${PRODUCT_ID}`);
     expect(patch?.body).toEqual({
       active: true,
+      attributes: [],
+      // O formulário mostra as oito medidas, então todas viajam: as em branco como nulo.
+      geometry: {
+        heightMm: null,
+        innerDiameterMm: null,
+        lengthMm: null,
+        outerDiameterMm: null,
+        thicknessMm: "3.18",
+        weightPerMeterKg: null,
+        weightPerSquareMeterKg: null,
+        widthMm: null,
+      },
       shortDescription: "Produto revisado",
       technicalDescription: "",
     });
     expect(await screen.findByText("Produto revisado")).toBeInTheDocument();
+  });
+
+  it("grava medidas digitadas com vírgula e mostra a polegada equivalente", async () => {
+    const requests = stubRegistryApi();
+    const user = userEvent.setup();
+    renderAt("/products");
+
+    await user.click(await screen.findByRole("button", { name: /Editar SKU-001/ }));
+    const drawer = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(drawer).getByLabelText(/Espessura/)).toHaveValue("3,18"));
+
+    // 3,18 mm é a "chapa 11" do setor, que equivale a 1/8".
+    expect(within(drawer).getByText("≈ 0,125″")).toBeInTheDocument();
+
+    await user.type(within(drawer).getByLabelText(/Largura/), "1200");
+    await user.type(within(drawer).getByLabelText(/Peso por metro quadrado/), "24,964");
+    await user.click(within(drawer).getByRole("button", { name: "Salvar produto" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const patch = requests.find((entry) => entry.method === "PATCH");
+    const geometry = (patch?.body as { geometry: Record<string, string | null> }).geometry;
+    // A vírgula é apresentação; a API recebe ponto.
+    expect(geometry.weightPerSquareMeterKg).toBe("24.964");
+    expect(geometry.widthMm).toBe("1200");
+    expect(geometry.thicknessMm).toBe("3.18");
+  });
+
+  it("apaga a medida que deixou de se aplicar ao produto", async () => {
+    const requests = stubRegistryApi();
+    const user = userEvent.setup();
+    renderAt("/products");
+
+    await user.click(await screen.findByRole("button", { name: /Editar SKU-001/ }));
+    const drawer = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(drawer).getByLabelText(/Espessura/)).toHaveValue("3,18"));
+
+    await user.clear(within(drawer).getByLabelText(/Espessura/));
+    await user.click(within(drawer).getByRole("button", { name: "Salvar produto" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const patch = requests.find((entry) => entry.method === "PATCH");
+    const geometry = (patch?.body as { geometry: Record<string, string | null> }).geometry;
+    // Campo em branco vira nulo, e nulo é "não se aplica" — nunca zero.
+    expect(geometry.thicknessMm).toBeNull();
+  });
+
+  it("recusa medida zerada antes de chamar a API", async () => {
+    const requests = stubRegistryApi();
+    const user = userEvent.setup();
+    renderAt("/products");
+
+    await user.click(await screen.findByRole("button", { name: /Editar SKU-001/ }));
+    const drawer = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(drawer).getByLabelText(/Espessura/)).toHaveValue("3,18"));
+
+    await user.clear(within(drawer).getByLabelText(/Espessura/));
+    await user.type(within(drawer).getByLabelText(/Espessura/), "0");
+    await user.click(within(drawer).getByRole("button", { name: "Salvar produto" }));
+
+    expect(
+      await within(drawer).findByText("Informe um número maior que zero, ou deixe em branco."),
+    ).toBeInTheDocument();
+    expect(requests.some((entry) => entry.method === "PATCH")).toBe(false);
+  });
+
+  it("classifica o produto pelo eixo e remove a faceta ao escolher não classificado", async () => {
+    const requests = stubRegistryApi();
+    const user = userEvent.setup();
+    renderAt("/products");
+
+    await user.click(await screen.findByRole("button", { name: /Editar SKU-001/ }));
+    const drawer = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(drawer).getByLabelText("Liga")).toBeInTheDocument());
+
+    await user.selectOptions(within(drawer).getByLabelText("Liga"), OPTION_ID);
+    await user.click(within(drawer).getByRole("button", { name: "Salvar produto" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const patch = requests.find((entry) => entry.method === "PATCH");
+    expect((patch?.body as { attributes: unknown }).attributes).toEqual([
+      { definitionId: DEFINITION_ID, optionId: OPTION_ID },
+    ]);
+
+    // A faceta gravada volta selecionada, e "Não classificado" a remove do conjunto.
+    await user.click(await screen.findByRole("button", { name: /Editar SKU-001/ }));
+    const reopened = await screen.findByRole("dialog");
+    await waitFor(() => expect(within(reopened).getByLabelText("Liga")).toHaveValue(OPTION_ID));
+
+    await user.selectOptions(within(reopened).getByLabelText("Liga"), "");
+    await user.click(within(reopened).getByRole("button", { name: "Salvar produto" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    const last = requests.filter((entry) => entry.method === "PATCH").at(-1);
+    expect((last?.body as { attributes: unknown }).attributes).toEqual([]);
   });
 
   it("recusa descrição curta vazia antes de chamar a API", async () => {
