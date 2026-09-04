@@ -1,7 +1,7 @@
 import type { ProductAttributeDefinitionDto } from "@sistema-erp/contracts";
 import type { UseFormRegister } from "react-hook-form";
 
-import { toInches } from "../measure.js";
+import { formatInches } from "../measure.js";
 
 /**
  * As oito medidas da ADR-0010, na ordem em que fazem sentido para quem cadastra: primeiro o que
@@ -50,7 +50,7 @@ export function ProductGeometryFields({
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {GEOMETRY_FIELDS.map((field) => {
-          const inches = field.unit === "mm" ? toInches(values[field.name]) : undefined;
+          const inches = field.unit === "mm" ? formatInches(values[field.name]) : undefined;
 
           return (
             <div key={field.name}>
@@ -71,8 +71,9 @@ export function ProductGeometryFields({
                   Informe um número maior que zero, ou deixe em branco.
                 </p>
               ) : inches ? (
-                // Polegada é apresentação, nunca cadastro: o que vai para o banco é o milímetro.
-                <p className="mt-2 text-xs text-ink-500">≈ {inches}″</p>
+                // Polegada é apresentação, nunca cadastro: o que vai para o banco é o milímetro. O
+                // texto sai pronto de `formatInches`, no único formato que a especificação admite.
+                <p className="mt-2 text-xs text-ink-500">{inches}</p>
               ) : null}
             </div>
           );
