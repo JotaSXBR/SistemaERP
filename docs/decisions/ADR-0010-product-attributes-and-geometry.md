@@ -79,7 +79,13 @@ convertida na interface nos dois sentidos, nunca uma segunda coluna.
 
 Guardar as duas representações criaria a possibilidade de elas divergirem, e não existe fonte de
 verdade entre duas colunas que deveriam concordar. A conversão é exata e conhecida
-(1″ = 25,4 mm), então nada se perde ao derivá-la.
+(1" = 25,4 mm), então nada se perde ao derivá-la.
+
+Como a polegada é exibida está normatizado em
+[`inch-display-spec.md`](../product/inch-display-spec.md): sempre uma das frações convencionais da
+indústria, escolhida por proximidade, nunca decimal de polegada. O arredondamento para a fração é
+justamente por que a polegada não serve como cadastro — ela perde informação que o milímetro
+guarda.
 
 A evidência decisiva vem da entrada fiscal: **o mesmo fornecedor alterna entre milímetro e polegada
 para o mesmo produto**, de nota para nota. Sem unidade canônica, a mesma barra entraria no catálogo

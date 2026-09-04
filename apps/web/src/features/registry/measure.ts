@@ -24,16 +24,50 @@ export function isMeasureInput(value: string | undefined): boolean {
 }
 
 /**
- * Equivalente em polegadas, só para leitura ao lado do campo. O cadastro continua sendo o valor em
- * milímetro; esta é a apresentação que a ADR-0010 manda manter fora do banco.
+ * Denominador das frações que o setor usa. A tabela oficial da especificação é exatamente a série
+ * de trigésimos-avos reduzida — 1/32, 1/16 (2/32), 3/32, 1/8 (4/32)… —, então arredondar para o
+ * múltiplo de 1/32 mais próximo escolhe a mesma fração que comparar com a tabela linha a linha.
  */
-export function toInches(millimeters: string): string | undefined {
+const FRACTION_DENOMINATOR = 32;
+
+/** Reduz a fração dividindo pelos fatores de dois, os únicos possíveis com denominador 32. */
+function reduceFraction(numerator: number): { denominator: number; numerator: number } {
+  let currentNumerator = numerator;
+  let denominator = FRACTION_DENOMINATOR;
+  while (currentNumerator % 2 === 0 && denominator % 2 === 0) {
+    currentNumerator /= 2;
+    denominator /= 2;
+  }
+
+  return { denominator, numerator: currentNumerator };
+}
+
+/**
+ * Equivalente em polegadas, só para leitura ao lado do campo. O cadastro continua em milímetro;
+ * esta é a apresentação que a ADR-0010 manda manter fora do banco.
+ *
+ * A especificação de exibição de polegadas (`docs/product/inch-display-spec.md`) proíbe decimal de
+ * polegada: o valor é sempre uma das frações convencionais, escolhida por proximidade, com empate
+ * resolvido para a fração maior — que é o que `Math.round` faz com o meio exato. Abaixo de 1/32″ a
+ * exibição é `0"`.
+ */
+export function formatInches(millimeters: string): string | undefined {
   const parsed = parseMeasureInput(millimeters);
   if (parsed === undefined) return undefined;
 
-  const inches = Number.parseFloat(parsed) / MILLIMETERS_PER_INCH;
-  // Três casas bastam para reconhecer as medidas do setor (1/8" = 0,125") sem fingir precisão.
-  return inches.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+  const thirtySeconds = Math.round(
+    (Number.parseFloat(parsed) / MILLIMETERS_PER_INCH) * FRACTION_DENOMINATOR,
+  );
+  if (thirtySeconds === 0) return '0"';
+
+  const whole = Math.floor(thirtySeconds / FRACTION_DENOMINATOR);
+  const remainder = thirtySeconds % FRACTION_DENOMINATOR;
+  if (remainder === 0) return `${whole}"`;
+
+  const fraction = reduceFraction(remainder);
+  const fractionText = `${fraction.numerator}/${fraction.denominator}`;
+
+  return whole === 0 ? `${fractionText}"` : `${whole} ${fractionText}"`;
 }
 
 /** Formata a medida vinda da API para exibição, trocando o ponto pela vírgula do português. */

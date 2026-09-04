@@ -235,7 +235,7 @@ describe("edição de cadastros", () => {
     await waitFor(() => expect(within(drawer).getByLabelText(/Espessura/)).toHaveValue("3,18"));
 
     // 3,18 mm é a "chapa 11" do setor, que equivale a 1/8".
-    expect(within(drawer).getByText("≈ 0,125″")).toBeInTheDocument();
+    expect(within(drawer).getByText('1/8"')).toBeInTheDocument();
 
     await user.type(within(drawer).getByLabelText(/Largura/), "1200");
     await user.type(within(drawer).getByLabelText(/Peso por metro quadrado/), "24,964");
