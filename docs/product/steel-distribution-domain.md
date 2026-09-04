@@ -68,6 +68,20 @@ milímetros. As duas representações são o mesmo valor, não dois campos indep
 
 **As unidades de venda variam**: milímetro, polegada, peça, metro — e o faturamento é em quilo.
 
+**O fornecedor oscila entre milímetro e polegada para o mesmo produto.** Há fornecedor que trata o
+milímetro como verdade na NF-e mas às vezes emite em polegada, e o inverso também acontece. Não é
+divergência entre fornecedores, que seria previsível: é o mesmo fornecedor alternando entre notas.
+
+A consequência é que a unidade que chega no XML **não pode ser a unidade do cadastro**. Se o produto
+fosse criado com o que veio no documento, a mesma barra viraria dois produtos distintos conforme a
+nota que a trouxe. A chave de correspondência já protege parte disso — o vínculo é
+`fornecedor + código do fornecedor`, e o código não oscila — mas a medida e a unidade precisam ser
+normalizadas na entrada.
+
+O proprietário pretende **criar os produtos durante a ingestão do XML**, para que o padrão nasça
+junto com o catálogo em vez de ser corrigido depois. Esse fluxo já existe em `ProductMappingForm`
+("Criar produto"), que cria produto e mapeamento de fornecedor durante a resolução do item.
+
 ## Estoque
 
 **Não existe controle de estoque hoje.** Há um balanço anual, no fim do ano, para saber a
