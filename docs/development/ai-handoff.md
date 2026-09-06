@@ -17,6 +17,8 @@ leia, nesta ordem:
 5. `docs/product/phase-8-receiving-inventory.md`;
 6. este handoff e o código existente.
 
+Se for usar as skills GitNexus, rode primeiro o bootstrap do índice (`npx gitnexus analyze`, ou conforme `docs/development/gitnexus.md`) antes das análises de impacto.
+
 Se houver divergência, `AGENTS.md`, ADRs e documentos de arquitetura têm precedência sobre este
 resumo. Confirme o estado real com `git status`, `git log` e os testes; não presuma que este arquivo
 é mais recente que o código.
