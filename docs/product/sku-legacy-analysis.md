@@ -168,6 +168,22 @@ Candidatos naturais a opções das facetas já existentes, extraídos das 419 li
   linha a linha. É atributo do material, não do produto individual; hoje caberia em
   `technicalDescription`, ao custo de repetir o mesmo texto em dezenas de produtos
 
+## Decisão do proprietário (2026-09-04)
+
+Duas definições já dadas, que estreitam a ADR:
+
+1. **O SKU é imutável.** Confirma a regra que o sistema já aplica.
+2. **O SKU deve carregar conhecimento único do material**, para que procurar por SKU seja fácil.
+   Ou seja, permanece um código falante — a alternativa opaca está descartada.
+
+**A tensão que sobra, e que a ADR precisa resolver:** imutável e falante ao mesmo tempo significa
+que reclassificar um produto não pode mudar o código. Na prática, ou o SKU carrega apenas o que
+**não muda** na vida do produto (o material e a geometria são candidatos; a situação comercial e
+possivelmente a forma não são), ou reclassificar passa a exigir produto novo. Escolher o que entra
+no código é escolher o que se declara imutável.
+
+Ficou para validar na próxima sessão.
+
 ## Perguntas que a ADR do SKU precisa responder
 
 1. **O SKU carrega significado ou é opaco?** A planilha mostra um código falante, e ele é útil no
