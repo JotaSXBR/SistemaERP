@@ -86,6 +86,14 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          # After history rewrite, github.event.before may point to a missing object.
+          # Prefer full validation rather than failing the workflow.
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            echo "BASE_SHA ausente ou invalido; forcando validacao completa."
+            echo "full=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | awk '$0 !~ /\.md$/ { found=1 } END { exit(found ? 0 : 1) }'; then
             echo "full=true" >> "$GITHUB_OUTPUT"
           else
@@ -108,7 +116,13 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: git diff --check "$BASE_SHA" "$HEAD_SHA"
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            echo "BASE_SHA ausente ou invalido; nada a validar via diff."
+            exit 0
+          fi
+
+          git diff --check "$BASE_SHA" "$HEAD_SHA"
 
   full:
     name: Run full validation
