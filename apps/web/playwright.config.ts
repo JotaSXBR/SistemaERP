@@ -8,6 +8,7 @@ const apiDirectory = fileURLToPath(new URL("../api", import.meta.url));
 export default defineConfig({
   ...(isContinuousIntegration ? { workers: 1 } : {}),
   forbidOnly: isContinuousIntegration,
+  failOnFlakyTests: isContinuousIntegration,
   fullyParallel: true,
   outputDir: "test-results",
   projects: [
@@ -19,7 +20,7 @@ export default defineConfig({
   reporter: isContinuousIntegration
     ? [["github"], ["html", { open: "never", outputFolder: "playwright-report" }]]
     : "list",
-  retries: isContinuousIntegration ? 2 : 0,
+  retries: isContinuousIntegration ? 1 : 0,
   testDir: "./e2e",
   use: {
     baseURL: "http://127.0.0.1:5173",

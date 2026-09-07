@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "pnpm --recursive --parallel --if-present run dev",
-    "build": "pnpm db:generate && pnpm --recursive --if-present run build",
+    "build": "pnpm db:generate && pnpm build:prepared",
     "commitlint": "commitlint",
     "contracts:check": "pnpm contracts:generate && git diff --exit-code -- packages/contracts/openapi packages/contracts/src/generated",
     "contracts:generate": "pnpm --filter @sistema-erp/api openapi:export && pnpm --filter @sistema-erp/contracts generate",
@@ -26,16 +26,20 @@
     "infra:logs": "docker compose logs --follow postgres minio minio-init",
     "infra:status": "docker compose ps",
     "infra:up": "docker compose up --detach --wait",
-    "lint": "pnpm db:generate && pnpm --filter @sistema-erp/contracts build && eslint .",
+    "lint": "pnpm db:generate && pnpm lint:prepared",
     "nfe:validate": "pnpm --filter @sistema-erp/api nfe:validate",
-    "typecheck": "pnpm db:generate && tsc --project tsconfig.json --noEmit && pnpm --recursive --if-present run typecheck",
-    "test": "pnpm db:generate && pnpm --recursive --if-present run test",
+    "typecheck": "pnpm db:generate && pnpm typecheck:prepared",
+    "test": "pnpm db:generate && pnpm test:prepared",
     "test:e2e:container": "pnpm db:migrate:deploy && pnpm test:e2e",
     "test:e2e": "pnpm --recursive --if-present run test:e2e",
     "test:e2e:docker": "docker compose --profile test run --build --rm e2e",
     "test:e2e:install": "pnpm --filter @sistema-erp/web exec playwright install --with-deps chromium",
     "test:s3:integration": "S3_INTEGRATION_TESTS=true pnpm --filter @sistema-erp/api exec vitest run tests/s3-object-storage.integration.test.ts",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm contracts:check"
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm contracts:check",
+    "lint:prepared": "pnpm --filter @sistema-erp/contracts build && eslint .",
+    "typecheck:prepared": "tsc --project tsconfig.json --noEmit && pnpm --recursive --if-present run typecheck",
+    "test:prepared": "pnpm --recursive --if-present run test",
+    "build:prepared": "pnpm --recursive --if-present run build"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

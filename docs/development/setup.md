@@ -9,6 +9,12 @@
 - Git;
 - editor conectado ao ambiente Linux quando estiver no Windows.
 
+## Disponibilidade nas máquinas do proprietário
+
+Confirmado pelo proprietário em 2026-09-07: Docker Desktop está instalado somente na máquina de trabalho. A máquina de casa não tem Docker Desktop; sua ausência nesse ambiente é esperada.
+
+Na máquina de casa, execute as verificações que não dependem de serviços em contêiner, como formatação, lint, typecheck, build e testes unitários. Testes que exigem PostgreSQL ou MinIO e E2E com esses serviços devem ser validados na máquina de trabalho ou no CI do GitHub. Registre quais verificações ficaram pendentes por falta de infraestrutura, sem tratar essa ausência como defeito do projeto ou reduzir os checks obrigatórios do CI.
+
 ## Regras locais
 
 - Não versione `.env` ou credenciais.

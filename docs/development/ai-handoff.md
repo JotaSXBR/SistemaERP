@@ -1,6 +1,6 @@
 # Handoff do projeto para agentes de IA
 
-- Atualizado em: 2026-09-04
+- Atualizado em: 2026-09-07
 - Branch principal: `main`
 - Objetivo: permitir que outro agente retome o desenvolvimento sem reconstruir o contexto por
   tentativa e erro.
@@ -371,10 +371,17 @@ Na implementação da prévia HTTP, `pnpm verify` validou:
 - build de todos os workspaces;
 - regeneração determinística do OpenAPI e do cliente TypeScript.
 
-A suíte existente também cobre banco, web e um E2E Playwright do diagnóstico. Valide cada entrega
+A suíte também inclui E2E Playwright de diagnóstico, login/logout, cadastro persistente de produto
+e ingestão/reimportação de XML sintético, com tenant exclusivo por tentativa. O CI executa o
+contrato S3 contra MinIO privado e versionado; o storage da API nos E2E permanece em memória.
+Valide cada entrega
 proporcionalmente ao risco conforme `AGENTS.md`; `pnpm verify` permanece obrigatório para mudanças
 críticas ou transversais, não para docs-only. O CI executa a suíte completa quando há arquivo não
-Markdown e somente uma checagem leve do diff para documentação. O agente não aguarda ativamente o
+Markdown e `git diff --check` mais Prettier nos arquivos Markdown alterados para documentação.
+O cliente Prisma é gerado uma vez no CI, antes dos comandos `*:prepared`; os comandos locais
+continuam preparando o cliente. A validação de commits/título roda em workflow separado, inclusive
+quando o título do PR é editado, mantendo `Validate commits` como check obrigatório.
+O agente não aguarda ativamente o
 CI remoto depois de abrir ou atualizar um PR.
 
 ## O que ainda falta

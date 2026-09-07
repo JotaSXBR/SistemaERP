@@ -13,45 +13,6 @@ permissions:
   contents: read
 
 jobs:
-  commits:
-    name: Validate commits
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository history
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          cache: pnpm
-          node-version-file: .nvmrc
-
-      - name: Install commitlint
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Validate PR title and commit messages
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-          EVENT_NAME: ${{ github.event_name }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-          PR_TITLE: ${{ github.event.pull_request.title || '' }}
-        run: |
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            printf '%s\n' "$PR_TITLE" | pnpm commitlint
-          fi
-
-          if git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
-            pnpm commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
-          else
-            pnpm commitlint --last --verbose
-          fi
-
   secrets:
     name: Scan secrets
     runs-on: ubuntu-latest
@@ -112,6 +73,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          cache: pnpm
+          node-version-file: .nvmrc
+
+      - name: Install formatting tools
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
       - name: Check documentation changes
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -123,6 +96,7 @@ jobs:
           fi
 
           git diff --check "$BASE_SHA" "$HEAD_SHA"
+          git diff --name-only --diff-filter=ACMR -z "$BASE_SHA" "$HEAD_SHA" -- "*.md" | xargs -0 -r pnpm exec prettier --check --
 
   full:
     name: Run full validation
@@ -168,23 +142,45 @@ jobs:
       - name: Apply database migrations
         run: pnpm db:migrate:deploy
 
+      - name: Generate database client once
+        run: pnpm db:generate
+
       - name: Check formatting
         run: pnpm format:check
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint:prepared
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm typecheck:prepared
 
       - name: Run unit and integration tests
-        run: pnpm test
+        run: pnpm test:prepared
 
       - name: Build
-        run: pnpm build
+        run: pnpm build:prepared
 
       - name: Check generated API artifacts
         run: pnpm contracts:check
+
+      - name: Start private versioned MinIO
+        env:
+          POSTGRES_DB: sistema_erp
+          POSTGRES_USER: sistema_erp
+          POSTGRES_PASSWORD: ci_only
+          MINIO_ROOT_USER: ci_minio
+          MINIO_ROOT_PASSWORD: ci_minio_only
+          MINIO_BUCKET: ci-fiscal-documents
+        run: |
+          docker compose up --detach --wait minio
+          docker compose run --rm minio-init
+
+      - name: Test S3 storage contract
+        env:
+          MINIO_ROOT_USER: ci_minio
+          MINIO_ROOT_PASSWORD: ci_minio_only
+          MINIO_BUCKET: ci-fiscal-documents
+        run: pnpm test:s3:integration
 
       - name: Install Chromium
         run: pnpm test:e2e:install
@@ -203,21 +199,20 @@ jobs:
 
   verify:
     name: Validate workspace
-    needs: [commits, secrets, scope, documentation, full]
+    needs: [secrets, scope, documentation, full]
     if: always()
     runs-on: ubuntu-latest
 
     steps:
       - name: Check selected validation
         env:
-          COMMITS_RESULT: ${{ needs.commits.result }}
           DOCUMENTATION_RESULT: ${{ needs.documentation.result }}
           FULL_REQUIRED: ${{ needs.scope.outputs.full }}
           FULL_RESULT: ${{ needs.full.result }}
           SECRETS_RESULT: ${{ needs.secrets.result }}
           SCOPE_RESULT: ${{ needs.scope.result }}
         run: |
-          if [ "$COMMITS_RESULT" != "success" ] || [ "$SECRETS_RESULT" != "success" ] || [ "$SCOPE_RESULT" != "success" ]; then
+          if [ "$SECRETS_RESULT" != "success" ] || [ "$SCOPE_RESULT" != "success" ]; then
             exit 1
           fi
 
