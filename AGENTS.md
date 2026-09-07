@@ -25,6 +25,9 @@ de conflito, ADRs e documentos de arquitetura prevalecem sobre resumos operacion
 - Abra PR contra `main`, descrevendo mudanças, validações e o que não foi validado. Use `Closes #N`
   quando houver issue.
 - Não faça merge em `main` sem pedido humano.
+- Antes de mergear, verifique se a branch tem commits soltos que o squash-merge pode perder:
+  `git fetch origin && git cherry origin/main origin/<branch>`. Commits com `+` não estão na
+  main e serão perdidos; resgate (cherry-pick + PR) ou confirme descarte.
 
 ## Regras obrigatórias
 
